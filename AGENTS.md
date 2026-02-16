@@ -23,9 +23,25 @@ bunx tsc --noEmit
 
 # Run type check on a single file
 bunx tsc --noEmit src/components/button.ts
+
+# Run tests in real browsers (Chromium, Firefox, WebKit)
+bun test
+
+# Run tests in watch mode
+bun test:watch
+
+# Run specific test file
+bunx web-test-runner src/components/button.test.ts --node-resolve
 ```
 
-**Note:** No test framework is configured yet. TypeScript strict mode serves as the primary type-checking mechanism.
+## Testing
+
+Tests use **@web/test-runner** which runs tests in real browsers via Playwright. This ensures components behave identically to production environments.
+
+- Test files use `.test.ts` suffix (e.g., `button.test.ts`)
+- Tests are placed alongside the source files they test
+- The test framework uses TDD mode (suite/test setup)
+- All three browser engines (Chromium, Firefox, WebKit) run by default
 
 ## Code Style Guidelines
 
