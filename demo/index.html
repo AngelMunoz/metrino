@@ -66,6 +66,8 @@
       .demo-item {
         padding: var(--metro-spacing-lg, 16px);
         background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
+        overflow: hidden;
+        min-width: 0;
       }
 
       .demo-label {
@@ -461,7 +463,7 @@
             <metro-button>Item 3</metro-button>
           </metro-stack-panel>
         </div>
-        <div class="demo-item">
+        <div class="demo-item wide-item">
           <div class="demo-label">Stack Panel (Horizontal)</div>
           <metro-stack-panel orientation="horizontal" style="--metro-gap: 8px;">
             <metro-button>A</metro-button>
@@ -469,7 +471,7 @@
             <metro-button>C</metro-button>
           </metro-stack-panel>
         </div>
-        <div class="demo-item">
+        <div class="demo-item wide-item">
           <div class="demo-label">Wrap Panel</div>
           <metro-wrap-panel style="gap: 8px;">
             <metro-button>One</metro-button>
@@ -540,14 +542,45 @@
       </div>
       
       <h3>Split View</h3>
+      <p style="margin-bottom: 12px; color: var(--metro-foreground-secondary);">Three display modes: overlay (slides over), inline (pushes content), compact (always shows 48px strip)</p>
+      
+      <h4 style="margin: 12px 0 8px; color: var(--metro-foreground-secondary);">Overlay Mode (default)</h4>
       <div class="interactive-demo" style="height: 200px; position: relative;">
-        <metro-split-view id="split-view-demo">
+        <metro-split-view id="split-view-overlay">
           <nav slot="pane" style="padding: 16px;">
             <p style="margin-bottom: 8px;">Pane Content</p>
-            <metro-button id="split-view-toggle">Toggle</metro-button>
+            <p style="font-size: 12px; color: var(--metro-foreground-secondary);">Click backdrop to close</p>
           </nav>
           <div style="padding: 16px;">
-            <p>Main content area. Click Toggle to show/hide the pane.</p>
+            <p>Main content area.</p>
+            <metro-button id="split-view-overlay-toggle">Toggle Pane</metro-button>
+          </div>
+        </metro-split-view>
+      </div>
+      
+      <h4 style="margin: 12px 0 8px; color: var(--metro-foreground-secondary);">Inline Mode</h4>
+      <div class="interactive-demo" style="height: 200px; position: relative;">
+        <metro-split-view id="split-view-inline" display-mode="inline">
+          <nav slot="pane" style="padding: 16px;">
+            <p>Inline Pane</p>
+          </nav>
+          <div style="padding: 16px;">
+            <p>Content is pushed by pane.</p>
+            <metro-button id="split-view-inline-toggle">Toggle Pane</metro-button>
+          </div>
+        </metro-split-view>
+      </div>
+      
+      <h4 style="margin: 12px 0 8px; color: var(--metro-foreground-secondary);">Compact Mode</h4>
+      <div class="interactive-demo" style="height: 200px; position: relative;">
+        <metro-split-view id="split-view-compact" display-mode="compact" open>
+          <nav slot="pane" style="padding: 16px;">
+            <p>Compact Pane</p>
+            <p style="font-size: 12px;">Always 48px when closed</p>
+          </nav>
+          <div style="padding: 16px;">
+            <p>Pane is always partially visible.</p>
+            <metro-button id="split-view-compact-toggle">Expand/Collapse</metro-button>
           </div>
         </metro-split-view>
       </div>
@@ -924,12 +957,20 @@
         }
       }, 100);
 
-      // Split view toggle
-      document.getElementById("split-view-toggle")?.addEventListener("click", () => {
-        const splitView = document.getElementById("split-view-demo");
-        if (splitView) {
-          splitView.open = !splitView.open;
-        }
+      // Split view toggles
+      document.getElementById("split-view-overlay-toggle")?.addEventListener("click", () => {
+        const splitView = document.getElementById("split-view-overlay");
+        if (splitView) splitView.toggle();
+      });
+
+      document.getElementById("split-view-inline-toggle")?.addEventListener("click", () => {
+        const splitView = document.getElementById("split-view-inline");
+        if (splitView) splitView.toggle();
+      });
+
+      document.getElementById("split-view-compact-toggle")?.addEventListener("click", () => {
+        const splitView = document.getElementById("split-view-compact");
+        if (splitView) splitView.toggle();
       });
 
       // Tooltip setup
@@ -944,7 +985,6 @@
       tooltipBtns.forEach(({ id, placement }) => {
         const btn = document.getElementById(id);
         if (btn && tooltip) {
-          tooltip.placement = placement;
           btn.addEventListener("mouseenter", () => {
             tooltip.placement = placement;
             tooltip.show(btn);
@@ -979,7 +1019,7 @@
       
       document.getElementById("close-flyout-btn")?.addEventListener("click", () => {
         const flyout = document.getElementById("flyout-demo");
-        if (flyout) flyout.open = false;
+        if (flyout) flyout.hide();
       });
 
       // Toast
@@ -994,12 +1034,13 @@
         });
       });
 
-      // Animation triggers
+      // Animation triggers - for regular divs
       function playAnimation(targetId, animationClass) {
         const target = document.getElementById(targetId);
         if (!target) return;
         target.classList.remove(animationClass);
-        target.style.opacity = "0";
+        target.style.removeProperty("opacity");
+        target.style.removeProperty("animation");
         void target.offsetWidth;
         target.classList.add(animationClass);
       }
@@ -1020,30 +1061,60 @@
         playAnimation("anim-turnstile-target", "metro-animate-turnstile-in");
       });
 
-      document.getElementById("anim-stagger-btn")?.addEventListener("click", () => {
-        const container = document.getElementById("anim-stagger-target");
+      // For web components (shadow DOM), we need to animate the host elements
+      // since CSS classes can't penetrate shadow roots
+      function animateStaggerChildren(containerId, baseDelay = 50) {
+        const container = document.getElementById(containerId);
         if (!container) return;
-        container.classList.remove("metro-entrance-stagger");
+        
         const children = Array.from(container.children);
-        children.forEach(child => {
+        children.forEach((child, index) => {
+          child.style.removeProperty("opacity");
+          child.style.removeProperty("animation");
+          child.style.removeProperty("transform");
+          
+          void child.offsetWidth;
+          
           child.style.opacity = "0";
-          child.style.animation = "none";
+          child.style.transform = "translateY(20px)";
+          
+          setTimeout(() => {
+            child.style.transition = "opacity 250ms cubic-bezier(0.1, 0.9, 0.2, 1), transform 250ms cubic-bezier(0.1, 0.9, 0.2, 1)";
+            child.style.opacity = "1";
+            child.style.transform = "translateY(0)";
+          }, index * baseDelay);
         });
-        void container.offsetWidth;
-        container.classList.add("metro-entrance-stagger");
+      }
+
+      function animateFeatherChildren(containerId, baseDelay = 50) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const children = Array.from(container.children);
+        children.forEach((child, index) => {
+          child.style.removeProperty("opacity");
+          child.style.removeProperty("animation");
+          child.style.removeProperty("transform");
+          
+          void child.offsetWidth;
+          
+          child.style.opacity = "0";
+          child.style.transform = "perspective(1000px) rotateY(45deg) translateX(30px)";
+          
+          setTimeout(() => {
+            child.style.transition = "opacity 333ms cubic-bezier(0.1, 0.9, 0.2, 1), transform 333ms cubic-bezier(0.1, 0.9, 0.2, 1)";
+            child.style.opacity = "1";
+            child.style.transform = "perspective(1000px) rotateY(0deg) translateX(0)";
+          }, index * baseDelay);
+        });
+      }
+
+      document.getElementById("anim-stagger-btn")?.addEventListener("click", () => {
+        animateStaggerChildren("anim-stagger-target");
       });
 
       document.getElementById("anim-feather-btn")?.addEventListener("click", () => {
-        const container = document.getElementById("anim-feather-target");
-        if (!container) return;
-        container.classList.remove("metro-turnstile-feather");
-        const children = Array.from(container.children);
-        children.forEach(child => {
-          child.style.opacity = "0";
-          child.style.animation = "none";
-        });
-        void container.offsetWidth;
-        container.classList.add("metro-turnstile-feather");
+        animateFeatherChildren("anim-feather-target");
       });
     </script>
   </body>

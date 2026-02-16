@@ -11,6 +11,7 @@ const baseStyles = css`
     display: block;
   }
   .tooltip {
+    position: fixed;
     background: var(--metro-background, #1f1f1f);
     border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
     color: var(--metro-foreground, #ffffff);
@@ -19,17 +20,14 @@ const baseStyles = css`
     font-size: var(--metro-font-size-small, 12px);
     border-radius: 0;
     white-space: nowrap;
-    animation: tooltipEnter var(--metro-transition-fast, 167ms) ease-out;
+    opacity: 0;
+    transition: opacity var(--metro-transition-fast, 167ms) ease-out;
   }
-  @keyframes tooltipEnter {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  :host([open]) .tooltip {
+    opacity: 1;
+  }
+  :host([open]) .tooltip {
+    opacity: 1;
   }
 `;
 
@@ -67,7 +65,6 @@ export class MetroTooltip extends LitElement {
   show(target: Element): void {
     this.#target = target;
     this.open = true;
-    this.updateComplete.then(() => this.#positionTooltip());
   }
 
   hide(): void {
@@ -86,6 +83,12 @@ export class MetroTooltip extends LitElement {
       this.#hideTimeout = null;
     }
     this.hide();
+  }
+
+  protected updated(changedProperties: Map<string, unknown>): void {
+    if (changedProperties.has("open") && this.open && this.#target) {
+      requestAnimationFrame(() => this.#positionTooltip());
+    }
   }
 
   #positionTooltip(): void {

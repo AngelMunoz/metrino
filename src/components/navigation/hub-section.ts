@@ -4,18 +4,26 @@ const baseStyles = css`
   :host {
     display: flex;
     flex-direction: column;
-    background: var(--metro-highlight, rgba(255,255,255,0.1));
-    padding: var(--metro-spacing-md, 12px);
     min-width: 200px;
     flex: 1;
   }
   .section-header {
-    font-size: var(--metro-font-size-large, 20px);
-    font-weight: 300;
-    color: var(--metro-accent, #0078d4);
+    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
+    font-size: var(--metro-font-size-xxlarge, 42px);
+    font-weight: 200;
+    color: var(--metro-foreground, #ffffff);
     margin: 0 0 var(--metro-spacing-md, 12px) 0;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    padding: var(--metro-spacing-sm, 8px) 0;
+    cursor: pointer;
+    transition: color var(--metro-transition-fast, 167ms) ease-out;
+    user-select: none;
+  }
+  .section-header:hover {
+    color: var(--metro-accent, #0078d4);
+  }
+  .section-content {
+    padding: var(--metro-spacing-md, 12px);
+    padding-top: 0;
   }
 `;
 
@@ -36,7 +44,9 @@ export class MetroHubSection extends LitElement {
   render() {
     return html`
       ${this.header ? html`<h3 class="section-header">${this.header}</h3>` : ""}
-      <slot></slot>
+      <div class="section-content">
+        <slot></slot>
+      </div>
     `;
   }
 }

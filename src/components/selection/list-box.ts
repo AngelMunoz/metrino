@@ -116,14 +116,7 @@ export class MetroListBox extends LitElement {
         break;
         
       case "multiple":
-        if (isCtrlClick) {
-          this.#toggleItem(index);
-        } else if (isShiftClick && this.#lastSelectedIndex >= 0) {
-          this.#selectRange(this.#lastSelectedIndex, index);
-        } else {
-          this.#clearSelection();
-          this.#selectItem(index);
-        }
+        this.#toggleItem(index);
         break;
         
       case "extended":

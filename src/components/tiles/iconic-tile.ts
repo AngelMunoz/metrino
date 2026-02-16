@@ -38,6 +38,21 @@ const baseStyles = css`
     font-weight: 300;
     margin-bottom: var(--metro-spacing-xs, 4px);
   }
+  .tile-badge {
+    position: absolute;
+    top: var(--metro-spacing-xs, 4px);
+    right: var(--metro-spacing-xs, 4px);
+    min-width: 18px;
+    height: 18px;
+    background: var(--metro-accent, #0078d4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 4px;
+  }
   :host([size="small"]) { width: 70px; height: 70px; }
   :host([size="small"]) .tile-title { display: none; }
   :host([size="small"]) .tile-icon { margin-bottom: 0; }
@@ -51,12 +66,14 @@ export class MetroIconicTile extends LitElement {
     icon: { type: String, reflect: true },
     title: { type: String, reflect: true },
     count: { type: Number, reflect: true },
+    badge: { type: String, reflect: true },
   };
 
   declare size: TileSize;
   declare icon: string;
   declare title: string;
   declare count: number;
+  declare badge: string;
 
   static styles = baseStyles;
 
@@ -66,12 +83,14 @@ export class MetroIconicTile extends LitElement {
     this.icon = "";
     this.title = "";
     this.count = 0;
+    this.badge = "";
   }
 
   render() {
     const iconSize = this.size === "small" ? "medium" : this.size === "large" ? "xlarge" : "large";
     return html`
       <div class="tile-container" @click=${this.#handleClick}>
+        ${this.badge ? html`<div class="tile-badge">${this.badge}</div>` : ""}
         ${this.icon
           ? html`<div class="tile-icon">
               <metro-icon icon=${this.icon} size=${iconSize}></metro-icon>

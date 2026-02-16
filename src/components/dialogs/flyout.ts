@@ -10,22 +10,18 @@ const baseStyles = css`
     display: block;
   }
   .flyout {
-    position: absolute;
+    position: fixed;
     background: var(--metro-background, #1f1f1f);
     border: 1px solid var(--metro-border, rgba(255,255,255,0.2));
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     min-width: 160px;
-    animation: flyoutEnter var(--metro-transition-fast, 167ms) ease-out;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity var(--metro-transition-fast, 167ms) ease-out, transform var(--metro-transition-fast, 167ms) ease-out;
   }
-  @keyframes flyoutEnter {
-    from {
-      opacity: 0;
-      transform: translateY(-8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  :host([open]) .flyout {
+    opacity: 1;
+    transform: translateY(0);
   }
   .backdrop {
     position: fixed;
@@ -65,7 +61,6 @@ export class MetroFlyout extends LitElement {
   show(target: Element): void {
     this.#target = target;
     this.open = true;
-    this.updateComplete.then(() => this.#positionFlyout());
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
   }
 
@@ -74,18 +69,25 @@ export class MetroFlyout extends LitElement {
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
   }
 
+  protected updated(changedProperties: Map<string, unknown>): void {
+    if (changedProperties.has("open") && this.open && this.#target) {
+      requestAnimationFrame(() => this.#positionFlyout());
+    }
+  }
+
   #positionFlyout(): void {
     if (!this.#target) return;
     const rect = this.#target.getBoundingClientRect();
     const flyout = this.shadowRoot?.querySelector(".flyout") as HTMLElement;
     if (!flyout) return;
 
+    const flyoutRect = flyout.getBoundingClientRect();
     let top = 0;
     let left = 0;
 
     switch (this.placement) {
       case "top":
-        top = rect.top - flyout.offsetHeight;
+        top = rect.top - flyoutRect.height;
         left = rect.left;
         break;
       case "bottom":
@@ -94,7 +96,7 @@ export class MetroFlyout extends LitElement {
         break;
       case "left":
         top = rect.top;
-        left = rect.left - flyout.offsetWidth;
+        left = rect.left - flyoutRect.width;
         break;
       case "right":
         top = rect.top;

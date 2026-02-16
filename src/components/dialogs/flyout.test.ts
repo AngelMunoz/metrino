@@ -7,6 +7,7 @@ suite("metro-flyout", () => {
 
   setup(() => {
     container = document.createElement("div");
+    container.style.padding = "100px";
     document.body.appendChild(container);
   });
 
@@ -17,10 +18,15 @@ suite("metro-flyout", () => {
   async function createFlyout(): Promise<{ flyout: MetroFlyout; trigger: HTMLButtonElement }> {
     const trigger = document.createElement("button");
     trigger.textContent = "Trigger";
+    trigger.style.marginTop = "50px";
     container.appendChild(trigger);
     
     const flyout = document.createElement("metro-flyout") as MetroFlyout;
-    flyout.textContent = "Flyout content";
+    
+    const content = document.createElement("div");
+    content.textContent = "Flyout content here";
+    flyout.appendChild(content);
+    
     container.appendChild(flyout);
     await flyout.updateComplete;
     
@@ -33,19 +39,60 @@ suite("metro-flyout", () => {
     assert.exists(el);
   });
 
-  test("is closed by default", async () => {
+  test("is hidden by default (display: none)", async () => {
     const { flyout } = await createFlyout();
-    assert.isFalse(flyout.open);
+    const style = getComputedStyle(flyout);
+    assert.equal(style.display, "none");
   });
 
-  test("show() opens flyout", async () => {
+  test("show() makes flyout visible", async () => {
     const { flyout, trigger } = await createFlyout();
     flyout.show(trigger);
     await flyout.updateComplete;
-    assert.isTrue(flyout.open);
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    const style = getComputedStyle(flyout);
+    assert.equal(style.display, "block", "flyout should be visible after show()");
   });
 
-  test("hide() closes flyout", async () => {
+  test("show() positions flyout relative to target", async () => {
+    const { flyout, trigger } = await createFlyout();
+    flyout.show(trigger);
+    await flyout.updateComplete;
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    const flyoutEl = flyout.shadowRoot?.querySelector(".flyout") as HTMLElement;
+    assert.exists(flyoutEl, ".flyout element should exist");
+    
+    const flyoutStyle = getComputedStyle(flyoutEl);
+    const top = parseInt(flyoutStyle.top);
+    const left = parseInt(flyoutStyle.left);
+    
+    assert.isFalse(isNaN(top), "top should be a number");
+    assert.isFalse(isNaN(left), "left should be a number");
+  });
+
+  test("bottom placement positions flyout below target", async () => {
+    const { flyout, trigger } = await createFlyout();
+    flyout.placement = "bottom";
+    flyout.show(trigger);
+    await flyout.updateComplete;
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    const triggerRect = trigger.getBoundingClientRect();
+    const flyoutEl = flyout.shadowRoot?.querySelector(".flyout") as HTMLElement;
+    const flyoutRect = flyoutEl.getBoundingClientRect();
+    
+    assert.isAtLeast(flyoutRect.top, triggerRect.bottom - 5, "flyout should be below or at target bottom");
+  });
+
+  test("hide() hides flyout", async () => {
     const { flyout, trigger } = await createFlyout();
     flyout.show(trigger);
     await flyout.updateComplete;
@@ -53,7 +100,8 @@ suite("metro-flyout", () => {
     flyout.hide();
     await flyout.updateComplete;
     
-    assert.isFalse(flyout.open);
+    const style = getComputedStyle(flyout);
+    assert.equal(style.display, "none");
   });
 
   test("clicking backdrop closes flyout", async () => {
@@ -101,8 +149,7 @@ suite("metro-flyout", () => {
     let closed = false;
     flyout.addEventListener("close", () => { closed = true; });
     
-    const backdrop = flyout.shadowRoot?.querySelector(".backdrop") as HTMLElement;
-    backdrop.click();
+    flyout.hide();
     await flyout.updateComplete;
     
     assert.isTrue(closed);

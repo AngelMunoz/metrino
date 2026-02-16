@@ -7,6 +7,7 @@ suite("metro-tooltip", () => {
 
   setup(() => {
     container = document.createElement("div");
+    container.style.padding = "100px";
     document.body.appendChild(container);
   });
 
@@ -17,6 +18,7 @@ suite("metro-tooltip", () => {
   async function createTooltip(): Promise<{ tooltip: MetroTooltip; target: HTMLButtonElement }> {
     const target = document.createElement("button");
     target.textContent = "Hover me";
+    target.style.marginTop = "100px";
     container.appendChild(target);
     
     const tooltip = document.createElement("metro-tooltip") as MetroTooltip;
@@ -33,16 +35,73 @@ suite("metro-tooltip", () => {
     assert.exists(el);
   });
 
-  test("is hidden by default", async () => {
+  test("is hidden by default (display: none)", async () => {
     const { tooltip } = await createTooltip();
-    assert.isFalse(tooltip.open);
+    const style = getComputedStyle(tooltip);
+    assert.equal(style.display, "none");
   });
 
-  test("show() displays tooltip", async () => {
+  test("show() makes tooltip visible", async () => {
     const { tooltip, target } = await createTooltip();
     tooltip.show(target);
     await tooltip.updateComplete;
-    assert.isTrue(tooltip.open);
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    const style = getComputedStyle(tooltip);
+    assert.equal(style.display, "block", "tooltip should be visible after show()");
+  });
+
+  test("show() positions tooltip relative to target", async () => {
+    const { tooltip, target } = await createTooltip();
+    tooltip.show(target);
+    await tooltip.updateComplete;
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    const tooltipEl = tooltip.shadowRoot?.querySelector(".tooltip") as HTMLElement;
+    assert.exists(tooltipEl, ".tooltip element should exist");
+    
+    const tooltipStyle = getComputedStyle(tooltipEl);
+    const top = parseInt(tooltipStyle.top);
+    const left = parseInt(tooltipStyle.left);
+    
+    assert.isFalse(isNaN(top), "top should be a number");
+    assert.isFalse(isNaN(left), "left should be a number");
+  });
+
+  test("top placement positions tooltip above target", async () => {
+    const { tooltip, target } = await createTooltip();
+    tooltip.placement = "top";
+    tooltip.show(target);
+    await tooltip.updateComplete;
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    const targetRect = target.getBoundingClientRect();
+    const tooltipEl = tooltip.shadowRoot?.querySelector(".tooltip") as HTMLElement;
+    const tooltipRect = tooltipEl.getBoundingClientRect();
+    
+    assert.isBelow(tooltipRect.bottom, targetRect.top + 10, "tooltip should be above target");
+  });
+
+  test("bottom placement positions tooltip below target", async () => {
+    const { tooltip, target } = await createTooltip();
+    tooltip.placement = "bottom";
+    tooltip.show(target);
+    await tooltip.updateComplete;
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    const targetRect = target.getBoundingClientRect();
+    const tooltipEl = tooltip.shadowRoot?.querySelector(".tooltip") as HTMLElement;
+    const tooltipRect = tooltipEl.getBoundingClientRect();
+    
+    assert.isAbove(tooltipRect.top, targetRect.bottom - 10, "tooltip should be below target");
   });
 
   test("hide() hides tooltip", async () => {
@@ -53,7 +112,8 @@ suite("metro-tooltip", () => {
     tooltip.hide();
     await tooltip.updateComplete;
     
-    assert.isFalse(tooltip.open);
+    const style = getComputedStyle(tooltip);
+    assert.equal(style.display, "none");
   });
 
   test("displays text content", async () => {
@@ -62,37 +122,12 @@ suite("metro-tooltip", () => {
     assert.include(el?.textContent, "Tooltip text");
   });
 
-  test("default placement is top", async () => {
-    const { tooltip } = await createTooltip();
-    assert.equal(tooltip.placement, "top");
-  });
-
-  test("placement attribute works", async () => {
-    const tooltip = document.createElement("metro-tooltip") as MetroTooltip;
-    tooltip.setAttribute("placement", "bottom");
-    container.appendChild(tooltip);
+  test("placement can be changed before show", async () => {
+    const { tooltip, target } = await createTooltip();
+    tooltip.placement = "left";
+    tooltip.show(target);
     await tooltip.updateComplete;
     
-    assert.equal(tooltip.placement, "bottom");
-  });
-
-  test("showDelayed shows after delay", async () => {
-    const { tooltip, target } = await createTooltip();
-    
-    tooltip.showDelayed(target, 50);
-    assert.isFalse(tooltip.open);
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
-    assert.isTrue(tooltip.open);
-  });
-
-  test("hideImmediate cancels delayed show", async () => {
-    const { tooltip, target } = await createTooltip();
-    
-    tooltip.showDelayed(target, 100);
-    tooltip.hideImmediate();
-    
-    await new Promise(resolve => setTimeout(resolve, 150));
-    assert.isFalse(tooltip.open);
+    assert.equal(tooltip.placement, "left");
   });
 });

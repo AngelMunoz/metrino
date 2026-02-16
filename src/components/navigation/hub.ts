@@ -5,18 +5,27 @@ const baseStyles = css`
     display: block;
     font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
   }
+  .hub-title {
+    font-size: var(--metro-font-size-xxlarge, 42px);
+    font-weight: 200;
+    color: var(--metro-foreground, #ffffff);
+    margin: 0 0 var(--metro-spacing-xl, 24px) 0;
+    padding: 0 var(--metro-spacing-lg, 16px);
+  }
   .hub-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--metro-spacing-lg, 16px);
-    padding: var(--metro-spacing-lg, 16px);
-  }
-  .hub-title {
-    font-size: var(--metro-font-size-xlarge, 28px);
-    font-weight: 300;
-    color: var(--metro-foreground, #ffffff);
-    margin: 0 0 var(--metro-spacing-lg, 16px) 0;
+    gap: var(--metro-spacing-xl, 24px);
     padding: 0 var(--metro-spacing-lg, 16px);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hub-container::-webkit-scrollbar {
+    display: none;
+  }
+  ::slotted(metro-hub-section) {
+    flex: 0 0 auto;
+    min-width: 250px;
   }
 `;
 

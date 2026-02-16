@@ -16,7 +16,7 @@ const baseStyles = css`
     height: 100%;
     background: var(--metro-accent, #0078d4);
   }
-  .cycle-content {
+  ::slotted([slot="cycle"]) {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -29,12 +29,13 @@ const baseStyles = css`
     align-items: center;
     justify-content: center;
     color: #ffffff;
+    box-sizing: border-box;
   }
-  .cycle-content.active {
+  ::slotted(.cycle-content.active) {
     opacity: 1;
     transform: translateY(0);
   }
-  .cycle-content.exiting {
+  ::slotted(.cycle-content.exiting) {
     opacity: 0;
     transform: translateY(-100%);
   }
@@ -91,6 +92,7 @@ export class MetroCycleTile extends LitElement {
   firstUpdated() {
     this.#items = Array.from(this.querySelectorAll('[slot="cycle"]'));
     if (this.#items.length > 0) {
+      this.#items.forEach(item => item.classList.add("cycle-content"));
       this.#items[0].classList.add("active");
       if (this.#items.length > 1) {
         this.#startCycle();

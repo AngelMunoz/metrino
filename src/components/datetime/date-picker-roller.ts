@@ -91,7 +91,7 @@ const baseStyles = css`
   }
 `;
 
-export class MetroDatePicker extends LitElement {
+export class MetroDatePickerRoller extends LitElement {
   static formAssociated = true;
 
   static properties = {
@@ -282,10 +282,10 @@ export class MetroDatePicker extends LitElement {
   }
 }
 
-customElements.define("metro-date-picker-roller", MetroDatePicker);
+customElements.define("metro-date-picker-roller", MetroDatePickerRoller);
 
 declare global {
   interface HTMLElementTagNameMap {
-    "metro-date-picker-roller": MetroDatePicker;
+    "metro-date-picker-roller": MetroDatePickerRoller;
   }
 }

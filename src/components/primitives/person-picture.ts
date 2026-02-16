@@ -46,7 +46,7 @@ const baseStyles = css`
 export class MetroPersonPicture extends LitElement {
   static properties = {
     src: { type: String, reflect: true },
-    displayName: { type: String, reflect: true },
+    displayName: { type: String, reflect: true, attribute: "display-name" },
     initials: { type: String, reflect: true },
     presence: { type: String, reflect: true },
     size: { type: String, reflect: true },
