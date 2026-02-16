@@ -11,15 +11,21 @@
     "test:watch": "web-test-runner \"src/**/*.test.ts\" --node-resolve --watch"
   },
   "devDependencies": {
+    "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.10",
     "@web/dev-server-esbuild": "^1.0.5",
     "@web/test-runner": "^0.20.2",
     "@web/test-runner-playwright": "^0.11.1",
+    "chai": "^6.2.2",
     "mocha": "^11.7.5",
     "typescript": "~5.9.3",
     "vite": "^8.0.0-beta.13"
   },
   "overrides": {
     "vite": "^8.0.0-beta.13"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.4.47",
+    "lit": "^3.3.2"
   }
 }

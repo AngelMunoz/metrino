@@ -1,11 +1,11 @@
 # Metrino - Metro UI Web Components Library
 
-A vanilla Web Component library implementing the Windows Phone / Windows 8 Metro design system with full fidelity and modern practices.
+A Lit-based Web Component library implementing the Windows Phone / Windows 8 Metro design system with full fidelity and modern practices.
 
 ## Project Overview
 
 - **Name**: Metrino
-- **Tech**: Vanilla Web Components (no framework dependencies)
+- **Tech**: Lit Web Components (minimal runtime, ~6KB)
 - **Font**: System font stack
 - **Theming**: Light/dark themes with customizable accent color
 - **RTL**: Architecture supports RTL (not priority for v1)
@@ -23,6 +23,7 @@ metrino/
 │   │   ├── tiles/           # FlipTile, CycleTile, IconicTile
 │   │   ├── input/           # TextBox, ToggleSwitch, etc.
 │   │   ├── buttons/         # Button, HyperlinkButton
+│   │   │   └── button.ts
 │   │   ├── selection/       # ListBox, LongListSelector
 │   │   ├── progress/        # ProgressBar, ProgressRing
 │   │   ├── datetime/        # DatePicker, TimePicker
@@ -31,14 +32,12 @@ metrino/
 │   │   └── dialogs/         # MessageDialog, Flyout
 │   ├── styles/
 │   │   ├── tokens.css       # CSS custom properties (theme, accent)
-│   │   └── animations.css   # Metro motion language
-│   ├── base/
-│   │   └── MetroElement.js  # Base component class
-│   └── index.js             # Component exports
-├── demo/
-│   └── index.html           # Single-file demo showcase
-├── design/
-│   └── PROJECT.md           # This file
+│   │   ├── animations.css   # Metro motion language
+│   │   └── shared.ts        # Reusable Lit css fragments
+│   ├── demo/
+│   │   └── index.html       # Single-file demo showcase
+│   └── design/
+│       └── PROJECT.md       # This file
 ├── package.json
 └── README.md
 ```
@@ -50,132 +49,132 @@ metrino/
 ### Navigation
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-pivot` | Tab-like navigation with sliding transition | pending |
-| `metro-pivot-item` | Individual pivot section | pending |
-| `metro-panorama` | Horizontal scrolling hub view | pending |
-| `metro-panorama-item` | Individual panorama section | pending |
-| `metro-hub` | Modern hub section container | pending |
-| `metro-hub-section` | Individual hub section | pending |
-| `metro-app-bar` | Bottom/top app bar | pending |
-| `metro-app-bar-button` | App bar button | pending |
+| `metro-pivot` | Tab-like navigation with sliding transition | [x] |
+| `metro-pivot-item` | Individual pivot section | [x] |
+| `metro-panorama` | Horizontal scrolling hub view | [x] |
+| `metro-panorama-item` | Individual panorama section | [x] |
+| `metro-hub` | Modern hub section container | [x] |
+| `metro-hub-section` | Individual hub section | [x] |
+| `metro-app-bar` | Bottom/top app bar | [x] |
+| `metro-app-bar-button` | App bar button | [x] |
 
 ### Tiles
 | Component | Sizes | Status |
 |-----------|-------|--------|
-| `metro-flip-tile` | small, medium, wide, large | pending |
-| `metro-cycle-tile` | medium, wide | pending |
-| `metro-iconic-tile` | small, medium, large | pending |
+| `metro-flip-tile` | small, medium, wide, large | [x] |
+| `metro-cycle-tile` | medium, wide | [x] |
+| `metro-iconic-tile` | small, medium, large | [x] |
 
 ### Buttons
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-button` | Standard button | pending |
-| `metro-hyperlink-button` | Hyperlink styled button | pending |
-| `metro-repeat-button` | Fires click repeatedly while pressed | pending |
+| `metro-button` | Standard button | [x] |
+| `metro-hyperlink-button` | Hyperlink styled button | [x] |
+| `metro-repeat-button` | Fires click repeatedly while pressed | [x] |
 
 ### Input
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-text-box` | Single-line text input | pending |
-| `metro-password-box` | Password input | pending |
-| `metro-check-box` | Checkbox control | pending |
-| `metro-radio-button` | Radio button | pending |
-| `metro-toggle-switch` | On/off toggle | pending |
-| `metro-slider` | Slider control | pending |
+| `metro-text-box` | Single-line text input | [x] |
+| `metro-password-box` | Password input | [x] |
+| `metro-check-box` | Checkbox control | [x] |
+| `metro-radio-button` | Radio button | [x] |
+| `metro-toggle-switch` | On/off toggle | [x] |
+| `metro-slider` | Slider control | [x] |
 
 ### Selection
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-list-box` | Simple list selection | pending |
-| `metro-long-list-selector` | Jump list with headers | pending |
-| `metro-semantic-zoom` | Zoomed in/out view toggle | pending |
+| `metro-list-box` | Simple list selection | [x] |
+| `metro-long-list-selector` | Jump list with headers | [x] |
+| `metro-semantic-zoom` | Zoomed in/out view toggle | [x] |
 
 ### Progress
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-progress-bar` | Determinate/indeterminate bar | pending |
-| `metro-progress-ring` | Spinning progress indicator | pending |
+| `metro-progress-bar` | Determinate/indeterminate bar | [x] |
+| `metro-progress-ring` | Spinning progress indicator | [x] |
 
 ### Date/Time
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-date-picker` | Native-styled date picker | pending |
-| `metro-time-picker` | Native-styled time picker | pending |
+| `metro-date-picker` | Native-styled date picker | [x] |
+| `metro-time-picker` | Native-styled time picker | [x] |
 
 ### Layout
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-grid` | Grid layout container | pending |
-| `metro-stack-panel` | Horizontal/vertical stack | pending |
-| `metro-wrap-panel` | Wrapping layout | pending |
-| `metro-scroll-viewer` | Scrollable container | pending |
+| `metro-grid` | Grid layout container | [x] |
+| `metro-stack-panel` | Horizontal/vertical stack | [x] |
+| `metro-wrap-panel` | Wrapping layout | [x] |
+| `metro-scroll-viewer` | Scrollable container | [x] |
 
 ### Dialogs
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-message-dialog` | Alert dialog | pending |
-| `metro-flyout` | Popup flyout | pending |
+| `metro-message-dialog` | Alert dialog | [x] |
+| `metro-flyout` | Popup flyout | [x] |
 
 ### Primitives
 | Component | Description | Status |
 |-----------|-------------|--------|
-| `metro-text-block` | Styled text container | pending |
+| `metro-text-block` | Styled text container | [x] |
 
 ---
 
 ## Implementation Phases
 
 ### Phase 1: Foundation
-- [ ] Create project scaffold
-- [ ] Implement CSS custom properties (theme tokens)
-- [ ] Create `MetroElement` base class
-- [ ] Set up demo/index.html structure
+- [x] Create project scaffold
+- [x] Implement CSS custom properties (theme tokens)
+- [x] Create shared interactive utilities (functional approach, no base class)
+- [x] Set up demo/index.html structure
 
 ### Phase 2: Layout Primitives
-- [ ] `metro-stack-panel`
-- [ ] `metro-grid`
-- [ ] `metro-scroll-viewer`
-- [ ] `metro-wrap-panel`
+- [x] `metro-stack-panel`
+- [x] `metro-grid`
+- [x] `metro-scroll-viewer`
+- [x] `metro-wrap-panel`
 
 ### Phase 3: Typography & Buttons
-- [ ] `metro-text-block`
-- [ ] `metro-button`
-- [ ] `metro-hyperlink-button`
-- [ ] `metro-repeat-button`
+- [x] `metro-text-block`
+- [x] `metro-button`
+- [x] `metro-hyperlink-button`
+- [x] `metro-repeat-button`
 
 ### Phase 4: Navigation
-- [ ] `metro-pivot` + `metro-pivot-item`
-- [ ] `metro-panorama` + `metro-panorama-item`
-- [ ] `metro-hub` + `metro-hub-section`
-- [ ] `metro-app-bar` + `metro-app-bar-button`
+- [x] `metro-pivot` + `metro-pivot-item`
+- [x] `metro-panorama` + `metro-panorama-item`
+- [x] `metro-hub` + `metro-hub-section`
+- [x] `metro-app-bar` + `metro-app-bar-button`
 
 ### Phase 5: Tiles
-- [ ] `metro-flip-tile` (all sizes)
-- [ ] `metro-cycle-tile` (medium, wide)
-- [ ] `metro-iconic-tile` (all sizes)
+- [x] `metro-flip-tile` (all sizes)
+- [x] `metro-cycle-tile` (medium, wide)
+- [x] `metro-iconic-tile` (all sizes)
 
 ### Phase 6: Input Controls
-- [ ] `metro-text-box`
-- [ ] `metro-password-box`
-- [ ] `metro-check-box`
-- [ ] `metro-radio-button`
-- [ ] `metro-toggle-switch`
-- [ ] `metro-slider`
+- [x] `metro-text-box`
+- [x] `metro-password-box`
+- [x] `metro-check-box`
+- [x] `metro-radio-button`
+- [x] `metro-toggle-switch`
+- [x] `metro-slider`
 
 ### Phase 7: Selection
-- [ ] `metro-list-box`
-- [ ] `metro-long-list-selector`
-- [ ] `metro-semantic-zoom`
+- [x] `metro-list-box`
+- [x] `metro-long-list-selector`
+- [x] `metro-semantic-zoom`
 
 ### Phase 8: Progress & DateTime
-- [ ] `metro-progress-bar`
-- [ ] `metro-progress-ring`
-- [ ] `metro-date-picker`
-- [ ] `metro-time-picker`
+- [x] `metro-progress-bar`
+- [x] `metro-progress-ring`
+- [x] `metro-date-picker`
+- [x] `metro-time-picker`
 
 ### Phase 9: Dialogs
-- [ ] `metro-message-dialog`
-- [ ] `metro-flyout`
+- [x] `metro-message-dialog`
+- [x] `metro-flyout`
 
 ### Phase 10: Polish
 - [ ] Complete demo site

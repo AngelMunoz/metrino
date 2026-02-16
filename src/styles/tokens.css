@@ -1,0 +1,167 @@
+:root {
+  --metro-accent: #0078d4;
+  --metro-accent-light: #429ce3;
+  --metro-accent-dark: #005a9e;
+
+  --metro-background: #1f1f1f;
+  --metro-foreground: #ffffff;
+  --metro-foreground-secondary: rgba(255, 255, 255, 0.7);
+  --metro-foreground-disabled: rgba(255, 255, 255, 0.4);
+  --metro-border: rgba(255, 255, 255, 0.2);
+  --metro-highlight: rgba(255, 255, 255, 0.1);
+  --metro-highlight-hover: rgba(255, 255, 255, 0.15);
+  --metro-highlight-active: rgba(255, 255, 255, 0.08);
+
+  --metro-font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --metro-font-size-small: 12px;
+  --metro-font-size-normal: 14px;
+  --metro-font-size-medium: 16px;
+  --metro-font-size-large: 20px;
+  --metro-font-size-xlarge: 28px;
+  --metro-font-size-xxlarge: 42px;
+
+  --metro-spacing-xs: 4px;
+  --metro-spacing-sm: 8px;
+  --metro-spacing-md: 12px;
+  --metro-spacing-lg: 16px;
+  --metro-spacing-xl: 24px;
+  --metro-spacing-xxl: 40px;
+
+  --metro-transition-fast: 167ms;
+  --metro-transition-normal: 250ms;
+  --metro-transition-slow: 333ms;
+  --metro-easing: cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+[data-theme="light"] {
+  --metro-background: #ffffff;
+  --metro-foreground: #1f1f1f;
+  --metro-foreground-secondary: rgba(0, 0, 0, 0.7);
+  --metro-foreground-disabled: rgba(0, 0, 0, 0.4);
+  --metro-border: rgba(0, 0, 0, 0.2);
+  --metro-highlight: rgba(0, 0, 0, 0.1);
+  --metro-highlight-hover: rgba(0, 0, 0, 0.08);
+  --metro-highlight-active: rgba(0, 0, 0, 0.15);
+}
+
+[accent="red"] {
+  --metro-accent: #e51400;
+  --metro-accent-light: #ff4438;
+  --metro-accent-dark: #b40000;
+}
+
+[accent="orange"] {
+  --metro-accent: #fa6800;
+  --metro-accent-light: #ff9a3c;
+  --metro-accent-dark: #c64900;
+}
+
+[accent="green"] {
+  --metro-accent: #00a300;
+  --metro-accent-light: #00d500;
+  --metro-accent-dark: #007200;
+}
+
+[accent="teal"] {
+  --metro-accent: #00aba9;
+  --metro-accent-light: #00ddda;
+  --metro-accent-dark: #007a78;
+}
+
+[accent="purple"] {
+  --metro-accent: #a200ff;
+  --metro-accent-light: #d04aff;
+  --metro-accent-dark: #7200ca;
+}
+
+[accent="magenta"] {
+  --metro-accent: #d80073;
+  --metro-accent-light: #ff2d9b;
+  --metro-accent-dark: #a60052;
+}
+
+[accent="lime"] {
+  --metro-accent: #a4c400;
+  --metro-accent-light: #d5f200;
+  --metro-accent-dark: #749200;
+}
+
+[accent="brown"] {
+  --metro-accent: #825a2c;
+  --metro-accent-light: #b1834f;
+  --metro-accent-dark: #533a1c;
+}
+
+[accent="pink"] {
+  --metro-accent: #f472d6;
+  --metro-accent-light: #fba0eb;
+  --metro-accent-dark: #cf4ab0;
+}
+
+[accent="mango"] {
+  --metro-accent: #f09609;
+  --metro-accent-light: #ffc04a;
+  --metro-accent-dark: #be7200;
+}
+
+[accent="cobalt"] {
+  --metro-accent: #0050ef;
+  --metro-accent-light: #4a8aff;
+  --metro-accent-dark: #0035a8;
+}
+
+[accent="indigo"] {
+  --metro-accent: #6a00ff;
+  --metro-accent-light: #9c4aff;
+  --metro-accent-dark: #4a00c8;
+}
+
+[accent="violet"] {
+  --metro-accent: #aa00ff;
+  --metro-accent-light: #c94aff;
+  --metro-accent-dark: #8200c8;
+}
+
+[accent="crimson"] {
+  --metro-accent: #a20025;
+  --metro-accent-light: #d44a4a;
+  --metro-accent-dark: #720018;
+}
+
+[accent="emerald"] {
+  --metro-accent: #008a00;
+  --metro-accent-light: #00c400;
+  --metro-accent-dark: #005a00;
+}
+
+[accent="mauve"] {
+  --metro-accent: #765f89;
+  --metro-accent-light: #a090b0;
+  --metro-accent-dark: #543f65;
+}
+
+[accent="sienna"] {
+  --metro-accent: #a0522d;
+  --metro-accent-light: #c8805c;
+  --metro-accent-dark: #783a1f;
+}
+
+[accent="olive"] {
+  --metro-accent: #6d8764;
+  --metro-accent-light: #96b08a;
+  --metro-accent-dark: #4d6344;
+}
+
+[accent="steel"] {
+  --metro-accent: #647687;
+  --metro-accent-light: #8a9dad;
+  --metro-accent-dark: #455a6b;
+}
+
+[accent="taupe"] {
+  --metro-accent: #87794e;
+  --metro-accent-light: #b0a070;
+  --metro-accent-dark: #5f5530;
+}

@@ -3,7 +3,15 @@ import { esbuildPlugin } from "@web/dev-server-esbuild";
 
 export default {
   files: ["src/**/*.test.ts"],
-  plugins: [esbuildPlugin({ ts: true })],
+  plugins: [
+    esbuildPlugin({
+      ts: true,
+      target: "es2022",
+      loaders: {
+        ".css": "empty",
+      },
+    }),
+  ],
   nodeResolve: true,
   browsers: [
     playwrightLauncher({ product: "chromium" }),
