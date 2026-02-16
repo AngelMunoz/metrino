@@ -182,12 +182,16 @@ export class MetroTimePickerRoller extends LitElement {
     this.#updateOffsetsFromValue();
     const hours = this.hourFormat === "12" ? HOURS_12 : HOURS_24;
 
+    const hourTransform = `translateY(calc(-50% + ${this.#hourOffset * 40}px))`;
+    const minuteTransform = `translateY(calc(-50% + ${this.#minuteOffset * 40}px))`;
+    const periodTransform = `translateY(calc(-50% + ${this.#periodOffset * 40}px))`;
+
     return html`
       ${this.label ? html`<label class="label">${this.label}</label>` : ""}
       <div class="picker-container">
         <div class="picker-column" @click=${this.#handleHourClick}>
           <div class="selection-indicator"></div>
-          <ul class="picker-list" style="transform: translateY(calc(-50% + ${this.#hourOffset * 40}px))">
+          <ul class="picker-list" style="transform: ${hourTransform}">
             ${hours.map((hour, i) => html`
               <li class="picker-item ${i === this.#hourOffset ? "selected" : ""}" data-index="${i}">
                 ${hour}
@@ -198,7 +202,7 @@ export class MetroTimePickerRoller extends LitElement {
         <span class="separator">:</span>
         <div class="picker-column" @click=${this.#handleMinuteClick}>
           <div class="selection-indicator"></div>
-          <ul class="picker-list" style="transform: translateY(calc(-50% + ${this.#minuteOffset * 40}px))">
+          <ul class="picker-list" style="transform: ${minuteTransform}">
             ${MINUTES.map((minute, i) => html`
               <li class="picker-item ${i === this.#minuteOffset ? "selected" : ""}" data-index="${i}">
                 ${minute}
@@ -210,7 +214,7 @@ export class MetroTimePickerRoller extends LitElement {
           ? html`
             <div class="picker-column" @click=${this.#handlePeriodClick}>
               <div class="selection-indicator"></div>
-              <ul class="picker-list" style="transform: translateY(calc(-50% + ${this.#periodOffset * 40}px))">
+              <ul class="picker-list" style="transform: ${periodTransform}">
                 ${PERIODS.map((period, i) => html`
                   <li class="picker-item ${i === this.#periodOffset ? "selected" : ""}" data-index="${i}">
                     ${period}

@@ -170,12 +170,16 @@ export class MetroDatePicker extends LitElement {
     this.#updateArrays();
     this.#updateOffsetsFromValue();
 
+    const dayTransform = `translateY(calc(-50% + ${this.#dayOffset * 40}px))`;
+    const monthTransform = `translateY(calc(-50% + ${this.#monthOffset * 40}px))`;
+    const yearTransform = `translateY(calc(-50% + ${this.#yearOffset * 40}px))`;
+
     return html`
       ${this.label ? html`<label class="label">${this.label}</label>` : ""}
       <div class="picker-container">
         <div class="picker-column" @click=${this.#handleDayClick}>
           <div class="selection-indicator"></div>
-          <ul class="picker-list" style="transform: translateY(calc(-50% + ${this.#dayOffset * 40}px))">
+          <ul class="picker-list" style="transform: ${dayTransform}">
             ${this.#days.map((day, i) => html`
               <li class="picker-item ${i === this.#dayOffset ? "selected" : ""}" data-index="${i}">
                 ${String(day).padStart(2, "0")}
@@ -185,7 +189,7 @@ export class MetroDatePicker extends LitElement {
         </div>
         <div class="picker-column" @click=${this.#handleMonthClick}>
           <div class="selection-indicator"></div>
-          <ul class="picker-list" style="transform: translateY(calc(-50% + ${this.#monthOffset * 40}px))">
+          <ul class="picker-list" style="transform: ${monthTransform}">
             ${MONTHS.map((month, i) => html`
               <li class="picker-item ${i === this.#monthOffset ? "selected" : ""}" data-index="${i}">
                 ${month}
@@ -195,7 +199,7 @@ export class MetroDatePicker extends LitElement {
         </div>
         <div class="picker-column" @click=${this.#handleYearClick}>
           <div class="selection-indicator"></div>
-          <ul class="picker-list" style="transform: translateY(calc(-50% + ${this.#yearOffset * 40}px))">
+          <ul class="picker-list" style="transform: ${yearTransform}">
             ${this.#years.map((year, i) => html`
               <li class="picker-item ${i === this.#yearOffset ? "selected" : ""}" data-index="${i}">
                 ${year}

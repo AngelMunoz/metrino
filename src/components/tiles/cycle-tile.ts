@@ -72,7 +72,6 @@ export class MetroCycleTile extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.#startCycle();
   }
 
   disconnectedCallback(): void {
@@ -93,6 +92,9 @@ export class MetroCycleTile extends LitElement {
     this.#items = Array.from(this.querySelectorAll('[slot="cycle"]'));
     if (this.#items.length > 0) {
       this.#items[0].classList.add("active");
+      if (this.#items.length > 1) {
+        this.#startCycle();
+      }
     }
   }
 

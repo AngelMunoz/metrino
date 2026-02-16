@@ -10,6 +10,7 @@ const baseStyles = css`
     display: block;
   }
   .flyout {
+    position: absolute;
     background: var(--metro-background, #1f1f1f);
     border: 1px solid var(--metro-border, rgba(255,255,255,0.2));
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -29,6 +30,7 @@ const baseStyles = css`
   .backdrop {
     position: fixed;
     inset: 0;
+    z-index: -1;
   }
 `;
 
@@ -53,7 +55,7 @@ export class MetroFlyout extends LitElement {
 
   render() {
     return html`
-      ${this.open ? html`<div class="backdrop" @click=${this.#close}></div>` : ""}
+      <div class="backdrop" @click=${this.#close}></div>
       <div class="flyout">
         <slot></slot>
       </div>
@@ -67,35 +69,45 @@ export class MetroFlyout extends LitElement {
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
   }
 
+  hide(): void {
+    this.open = false;
+    this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+  }
+
   #positionFlyout(): void {
     if (!this.#target) return;
     const rect = this.#target.getBoundingClientRect();
     const flyout = this.shadowRoot?.querySelector(".flyout") as HTMLElement;
     if (!flyout) return;
 
+    let top = 0;
+    let left = 0;
+
     switch (this.placement) {
       case "top":
-        flyout.style.top = `${rect.top - flyout.offsetHeight}px`;
-        flyout.style.left = `${rect.left}px`;
+        top = rect.top - flyout.offsetHeight;
+        left = rect.left;
         break;
       case "bottom":
-        flyout.style.top = `${rect.bottom}px`;
-        flyout.style.left = `${rect.left}px`;
+        top = rect.bottom;
+        left = rect.left;
         break;
       case "left":
-        flyout.style.top = `${rect.top}px`;
-        flyout.style.left = `${rect.left - flyout.offsetWidth}px`;
+        top = rect.top;
+        left = rect.left - flyout.offsetWidth;
         break;
       case "right":
-        flyout.style.top = `${rect.top}px`;
-        flyout.style.left = `${rect.right}px`;
+        top = rect.top;
+        left = rect.right;
         break;
     }
+
+    flyout.style.top = `${top}px`;
+    flyout.style.left = `${left}px`;
   }
 
   #close(): void {
-    this.open = false;
-    this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    this.hide();
   }
 }
 

@@ -4,10 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Metrino - Metro UI Components</title>
-    <link
-      rel="stylesheet"
-      href="//cdn.materialdesignicons.com/1.6.50-dev/css/materialdesignicons.min.css"
-    />
     <style>
       * {
         margin: 0;
@@ -16,17 +12,12 @@
       }
 
       body {
-        font-family:
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
         background: var(--metro-background, #1f1f1f);
         color: var(--metro-foreground, #ffffff);
         min-height: 100vh;
         padding: var(--metro-spacing-xl, 24px);
-        padding-bottom: 100px;
+        padding-bottom: 120px;
       }
 
       header {
@@ -35,7 +26,7 @@
 
       h1 {
         font-size: var(--metro-font-size-xxlarge, 42px);
-        font-weight: 300;
+        font-weight: 200;
         letter-spacing: -1px;
         margin-bottom: var(--metro-spacing-sm, 8px);
       }
@@ -52,11 +43,18 @@
 
       h2 {
         font-size: var(--metro-font-size-xlarge, 28px);
-        font-weight: 300;
+        font-weight: 200;
         margin-bottom: var(--metro-spacing-lg, 16px);
         padding-bottom: var(--metro-spacing-sm, 8px);
         border-bottom: 2px solid var(--metro-accent, #0078d4);
         display: inline-block;
+      }
+
+      h3 {
+        font-size: var(--metro-font-size-medium, 16px);
+        font-weight: 400;
+        margin-bottom: var(--metro-spacing-md, 12px);
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
       }
 
       .demo-grid {
@@ -67,16 +65,35 @@
 
       .demo-item {
         padding: var(--metro-spacing-lg, 16px);
-        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-        border-radius: 0;
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
       }
 
       .demo-label {
         font-size: var(--metro-font-size-small, 12px);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
         margin-bottom: var(--metro-spacing-sm, 8px);
         text-transform: uppercase;
         letter-spacing: 1px;
+      }
+
+      .demo-row {
+        display: flex;
+        gap: var(--metro-spacing-md, 12px);
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: var(--metro-spacing-md, 12px);
+      }
+
+      .wide-item {
+        grid-column: span 2;
+      }
+
+      .xwide-item {
+        grid-column: span 3;
+      }
+
+      .full-item {
+        grid-column: 1 / -1;
       }
 
       .theme-controls {
@@ -90,7 +107,7 @@
 
       .theme-btn {
         padding: var(--metro-spacing-sm, 8px) var(--metro-spacing-md, 12px);
-        border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+        border: 2px solid var(--metro-foreground, #fff);
         background: transparent;
         color: var(--metro-foreground, #fff);
         cursor: pointer;
@@ -99,7 +116,8 @@
       }
 
       .theme-btn:hover {
-        background: var(--metro-highlight-hover, rgba(255, 255, 255, 0.15));
+        background: var(--metro-foreground, #fff);
+        color: var(--metro-background, #1f1f1f);
       }
 
       .theme-btn.active {
@@ -125,23 +143,47 @@
         outline-offset: 2px;
       }
 
-      .placeholder {
-        padding: var(--metro-spacing-xl, 24px);
-        border: 2px dashed var(--metro-border, rgba(255, 255, 255, 0.2));
-        text-align: center;
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-      }
-
       .pivot-demo {
         max-width: 600px;
       }
 
       metro-panorama {
         max-width: 100%;
+        height: 300px;
       }
 
-      .wide-item {
-        grid-column: span 2;
+      .tile-row {
+        display: flex;
+        gap: var(--metro-spacing-sm, 8px);
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+
+      .icons-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: var(--metro-spacing-sm, 8px);
+      }
+
+      .icon-sample {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: var(--metro-spacing-sm, 8px);
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
+      }
+
+      .icon-sample span {
+        font-size: 10px;
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
+        margin-top: 4px;
+        text-align: center;
+      }
+
+      .interactive-demo {
+        padding: var(--metro-spacing-md, 12px);
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
+        margin-bottom: var(--metro-spacing-md, 12px);
       }
     </style>
   </head>
@@ -152,117 +194,65 @@
     </div>
 
     <header>
-      <h1 class="title">Metrino</h1>
-      <p class="subtitle">Metro UI Web Components</p>
+      <h1>Metrino</h1>
+      <p class="subtitle">Windows Phone 8 / Windows 8 Metro Design Components</p>
     </header>
 
+    <!-- THEME & ACCENTS -->
     <section>
       <h2>Accent Colors</h2>
+      <p style="margin-bottom: 12px; color: var(--metro-foreground-secondary);">Click to change the accent color for the page</p>
       <div class="accent-swatches">
-        <button
-          class="accent-swatch"
-          style="background: #0078d4"
-          data-accent="blue"
-          title="Blue (default)"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #e51400"
-          data-accent="red"
-          title="Red"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #fa6800"
-          data-accent="orange"
-          title="Orange"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #00a300"
-          data-accent="green"
-          title="Green"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #00aba9"
-          data-accent="teal"
-          title="Teal"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #a200ff"
-          data-accent="purple"
-          title="Purple"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #d80073"
-          data-accent="magenta"
-          title="Magenta"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #a4c400"
-          data-accent="lime"
-          title="Lime"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #825a2c"
-          data-accent="brown"
-          title="Brown"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #f472d6"
-          data-accent="pink"
-          title="Pink"
-        ></button>
-        <button
-          class="accent-swatch"
-          style="background: #f09609"
-          data-accent="mango"
-          title="Mango"
-        ></button>
+        <button class="accent-swatch" style="background: #0078d4" data-accent="blue" title="Blue"></button>
+        <button class="accent-swatch" style="background: #e51400" data-accent="red" title="Red"></button>
+        <button class="accent-swatch" style="background: #fa6800" data-accent="orange" title="Orange"></button>
+        <button class="accent-swatch" style="background: #00a300" data-accent="green" title="Green"></button>
+        <button class="accent-swatch" style="background: #00aba9" data-accent="teal" title="Teal"></button>
+        <button class="accent-swatch" style="background: #a200ff" data-accent="purple" title="Purple"></button>
+        <button class="accent-swatch" style="background: #d80073" data-accent="magenta" title="Magenta"></button>
+        <button class="accent-swatch" style="background: #a4c400" data-accent="lime" title="Lime"></button>
+        <button class="accent-swatch" style="background: #825a2c" data-accent="brown" title="Brown"></button>
+        <button class="accent-swatch" style="background: #f472d6" data-accent="pink" title="Pink"></button>
+        <button class="accent-swatch" style="background: #f09609" data-accent="mango" title="Mango"></button>
+        <button class="accent-swatch" style="background: #0050ef" data-accent="cobalt" title="Cobalt"></button>
+        <button class="accent-swatch" style="background: #6a00ff" data-accent="indigo" title="Indigo"></button>
+        <button class="accent-swatch" style="background: #aa00ff" data-accent="violet" title="Violet"></button>
+        <button class="accent-swatch" style="background: #a20025" data-accent="crimson" title="Crimson"></button>
+        <button class="accent-swatch" style="background: #008a00" data-accent="emerald" title="Emerald"></button>
+        <button class="accent-swatch" style="background: #765f89" data-accent="mauve" title="Mauve"></button>
+        <button class="accent-swatch" style="background: #a0522d" data-accent="sienna" title="Sienna"></button>
+        <button class="accent-swatch" style="background: #6d8764" data-accent="olive" title="Olive"></button>
+        <button class="accent-swatch" style="background: #647687" data-accent="steel" title="Steel"></button>
+        <button class="accent-swatch" style="background: #87794e" data-accent="taupe" title="Taupe"></button>
       </div>
     </section>
 
+    <!-- BUTTONS -->
     <section>
       <h2>Buttons</h2>
-      <div class="demo-grid">
-        <div class="demo-item">
-          <div class="demo-label">Default</div>
-          <metro-button>Click Me</metro-button>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Accent</div>
-          <metro-button accent>Accent Button</metro-button>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Disabled</div>
-          <metro-button disabled>Disabled</metro-button>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Hyperlink</div>
-          <metro-hyperlink-button>Click Me</metro-hyperlink-button>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Hyperlink (nav)</div>
-          <metro-hyperlink-button href="https://example.com" target="_blank"
-            >Navigate</metro-hyperlink-button
-          >
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Repeat</div>
-          <metro-repeat-button id="repeat-btn">Hold Me</metro-repeat-button>
-          <div class="repeat-count" style="margin-top: 8px; font-size: 12px">
-            Clicks: <span id="repeat-counter">0</span>
-          </div>
-        </div>
+      
+      <h3>Standard Button</h3>
+      <div class="demo-row">
+        <metro-button>Default</metro-button>
+        <metro-button accent>Accent</metro-button>
+        <metro-button disabled>Disabled</metro-button>
+      </div>
+      
+      <h3>Hyperlink Button</h3>
+      <div class="demo-row">
+        <metro-hyperlink-button>Plain Link</metro-hyperlink-button>
+        <metro-hyperlink-button href="https://example.com" target="_blank">External Link</metro-hyperlink-button>
+        <metro-hyperlink-button disabled>Disabled Link</metro-hyperlink-button>
+      </div>
+      
+      <h3>Repeat Button</h3>
+      <div class="demo-row">
+        <metro-repeat-button id="repeat-btn">Hold Me</metro-repeat-button>
+        <span style="margin-left: 12px; font-size: 14px;">Clicks: <span id="repeat-counter">0</span></span>
       </div>
     </section>
 
+    <!-- INPUT -->
     <section>
       <h2>Input</h2>
       <div class="demo-grid">
@@ -271,251 +261,604 @@
           <metro-text-box placeholder="Enter text..."></metro-text-box>
         </div>
         <div class="demo-item">
+          <div class="demo-label">With Label</div>
+          <metro-text-box label="Username" placeholder="Your name"></metro-text-box>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Disabled</div>
+          <metro-text-box value="Disabled" disabled></metro-text-box>
+        </div>
+        <div class="demo-item">
           <div class="demo-label">Password</div>
-          <metro-password-box></metro-password-box>
+          <metro-password-box label="Password" placeholder="Enter password"></metro-password-box>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Number Box</div>
+          <metro-number-box label="Quantity" value="1" min="0" max="100"></metro-number-box>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Combo Box</div>
+          <metro-combo-box id="combo-demo" placeholder="Select..."></metro-combo-box>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Auto Suggest</div>
+          <metro-auto-suggest-box id="suggest-demo" placeholder="Type to search..."></metro-auto-suggest-box>
         </div>
         <div class="demo-item">
           <div class="demo-label">Checkbox</div>
-          <metro-check-box>Check me</metro-check-box>
+          <metro-check-box>Unchecked</metro-check-box>
+          <metro-check-box checked>Checked</metro-check-box>
+          <metro-check-box disabled>Disabled</metro-check-box>
         </div>
         <div class="demo-item">
-          <div class="demo-label">Radio</div>
-          <div>
-            <metro-radio-button name="demo" value="1"
-              >Option 1</metro-radio-button
-            ><br />
-            <metro-radio-button name="demo" value="2"
-              >Option 2</metro-radio-button
-            >
-          </div>
+          <div class="demo-label">Radio Buttons</div>
+          <metro-radio-button name="radio-demo" value="1" checked>Option 1</metro-radio-button>
+          <metro-radio-button name="radio-demo" value="2">Option 2</metro-radio-button>
+          <metro-radio-button name="radio-demo" value="3">Option 3</metro-radio-button>
         </div>
         <div class="demo-item">
-          <div class="demo-label">Toggle</div>
-          <metro-toggle-switch>Enable</metro-toggle-switch>
+          <div class="demo-label">Toggle Switch</div>
+          <metro-toggle-switch>Off</metro-toggle-switch>
+          <metro-toggle-switch on style="margin-top: 8px;">On</metro-toggle-switch>
+          <metro-toggle-switch disabled style="margin-top: 8px;">Disabled</metro-toggle-switch>
         </div>
         <div class="demo-item">
           <div class="demo-label">Slider</div>
-          <metro-slider value="50"></metro-slider>
+          <metro-slider value="50" min="0" max="100"></metro-slider>
+          <metro-slider disabled value="30" style="margin-top: 8px;"></metro-slider>
         </div>
         <div class="demo-item">
-          <div class="demo-label">Date Picker</div>
-          <metro-date-picker></metro-date-picker>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Time Picker</div>
-          <metro-time-picker></metro-time-picker>
+          <div class="demo-label">Rating</div>
+          <metro-rating value="3" max="5"></metro-rating>
         </div>
       </div>
     </section>
 
+    <!-- DATE & TIME -->
+    <section>
+      <h2>Date & Time</h2>
+      <div class="demo-grid">
+        <div class="demo-item">
+          <div class="demo-label">Date Picker (Native)</div>
+          <metro-date-picker label="Select date"></metro-date-picker>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Time Picker (Native)</div>
+          <metro-time-picker label="Select time"></metro-time-picker>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Date Roller</div>
+          <metro-date-picker-roller label="Pick a date"></metro-date-picker-roller>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Time Roller (12h)</div>
+          <metro-time-picker-roller hour-format="12" label="Pick time"></metro-time-picker-roller>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Time Roller (24h)</div>
+          <metro-time-picker-roller hour-format="24" label="Pick time"></metro-time-picker-roller>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROGRESS -->
     <section>
       <h2>Progress</h2>
       <div class="demo-grid">
         <div class="demo-item wide-item">
-          <div class="demo-label">Progress Bar</div>
-          <metro-progress-bar value="65" showLabel></metro-progress-bar>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Progress Ring</div>
-          <metro-progress-ring></metro-progress-ring>
+          <div class="demo-label">Progress Bar (Determinate)</div>
+          <metro-progress-bar value="65" maximum="100" showLabel></metro-progress-bar>
         </div>
         <div class="demo-item wide-item">
-          <div class="demo-label">Indeterminate</div>
+          <div class="demo-label">Progress Bar (Indeterminate)</div>
           <metro-progress-bar indeterminate></metro-progress-bar>
         </div>
+        <div class="demo-item">
+          <div class="demo-label">Progress Ring (Small)</div>
+          <metro-progress-ring size="small"></metro-progress-ring>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Progress Ring (Normal)</div>
+          <metro-progress-ring size="normal"></metro-progress-ring>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Progress Ring (Large)</div>
+          <metro-progress-ring size="large"></metro-progress-ring>
+        </div>
       </div>
     </section>
 
+    <!-- TILES -->
     <section>
       <h2>Tiles</h2>
-      <div class="demo-grid">
-        <div class="demo-item">
-          <div class="demo-label">Flip Tile</div>
-          <metro-flip-tile size="medium">
-            <div slot="front">Front</div>
-            <div slot="back">Back</div>
-          </metro-flip-tile>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Iconic Tile</div>
-          <metro-iconic-tile
-            size="medium"
-            icon="mail"
-            title="Email"
-            count="5"
-          ></metro-iconic-tile>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Small Tile</div>
-          <metro-iconic-tile size="small" icon="mail"></metro-iconic-tile>
-        </div>
+      
+      <h3>Flip Tile (All Sizes)</h3>
+      <div class="tile-row">
+        <metro-flip-tile size="small">
+          <div slot="front" style="font-size: 10px;">S</div>
+          <div slot="back" style="font-size: 10px;">Back</div>
+        </metro-flip-tile>
+        <metro-flip-tile size="medium">
+          <div slot="front">Medium</div>
+          <div slot="back">Back Side</div>
+        </metro-flip-tile>
+        <metro-flip-tile size="wide">
+          <div slot="front">Wide Tile</div>
+          <div slot="back">Flipped Content</div>
+        </metro-flip-tile>
       </div>
+      <div class="tile-row" style="margin-top: 8px;">
+        <metro-flip-tile size="large">
+          <div slot="front">Large Tile</div>
+          <div slot="back">Back Content</div>
+        </metro-flip-tile>
+      </div>
+      
+      <h3 style="margin-top: 24px;">Iconic Tile</h3>
+      <div class="tile-row">
+        <metro-iconic-tile size="small" icon="mail"></metro-iconic-tile>
+        <metro-iconic-tile size="medium" icon="mail" title="Mail" count="12"></metro-iconic-tile>
+        <metro-iconic-tile size="medium" icon="message" title="Messages" badge="!"></metro-iconic-tile>
+        <metro-iconic-tile size="large" icon="calendar" title="Calendar" count="3"></metro-iconic-tile>
+      </div>
+      
+      <h3 style="margin-top: 24px;">Cycle Tile</h3>
+      <div class="tile-row">
+        <metro-cycle-tile size="medium" id="cycle-tile-demo">
+          <div slot="front">Front</div>
+          <div slot="cycle" style="padding: 8px;">Slide 1</div>
+          <div slot="cycle" style="padding: 8px;">Slide 2</div>
+          <div slot="cycle" style="padding: 8px;">Slide 3</div>
+        </metro-cycle-tile>
+        <metro-cycle-tile size="wide" id="cycle-tile-wide">
+          <div slot="front">Wide Cycle</div>
+          <div slot="cycle" style="padding: 8px;">Content A</div>
+          <div slot="cycle" style="padding: 8px;">Content B</div>
+        </metro-cycle-tile>
+      </div>
+      
+      <h3 style="margin-top: 24px;">Live Tile</h3>
+      <div class="tile-row">
+        <metro-live-tile id="live-tile-demo" size="medium" count="5">
+          <metro-icon slot="icon" icon="mail" size="large"></metro-icon>
+        </metro-live-tile>
+        <metro-live-tile id="live-tile-badge" size="medium" badge="!">
+          <metro-icon slot="icon" icon="warning" size="large"></metro-icon>
+        </metro-live-tile>
+        <metro-live-tile id="live-tile-wide" size="wide" count="42">
+          <metro-icon slot="icon" icon="message" size="large"></metro-icon>
+        </metro-live-tile>
+      </div>
+      
+      <h3 style="margin-top: 24px;">Tile Grid</h3>
+      <metro-tile-grid columns="4" id="tile-grid-demo">
+        <metro-flip-tile size="medium">
+          <div slot="front">Tile 1</div>
+          <div slot="back">Back</div>
+        </metro-flip-tile>
+        <metro-iconic-tile size="small" icon="mail"></metro-iconic-tile>
+        <metro-iconic-tile size="small" icon="calendar"></metro-iconic-tile>
+        <metro-flip-tile size="medium">
+          <div slot="front">Tile 2</div>
+          <div slot="back">Info</div>
+        </metro-flip-tile>
+        <metro-flip-tile size="wide">
+          <div slot="front">Wide in Grid</div>
+          <div slot="back">Details</div>
+        </metro-flip-tile>
+      </metro-tile-grid>
     </section>
 
+    <!-- LAYOUT -->
     <section>
       <h2>Layout</h2>
       <div class="demo-grid">
         <div class="demo-item">
-          <div class="demo-label">Stack Panel</div>
-          <metro-stack-panel style="--metro-gap: 8px" orientation="vertical">
+          <div class="demo-label">Stack Panel (Vertical)</div>
+          <metro-stack-panel orientation="vertical" style="--metro-gap: 8px;">
             <metro-button>Item 1</metro-button>
             <metro-button>Item 2</metro-button>
             <metro-button>Item 3</metro-button>
           </metro-stack-panel>
         </div>
         <div class="demo-item">
-          <div class="demo-label">Grid</div>
-          <metro-grid
-            style="--metro-gap: 8px"
-            columns="1fr 1fr"
-            rows="auto auto"
-          >
-            <metro-button>1</metro-button>
-            <metro-button>2</metro-button>
-            <metro-button>3</metro-button>
-            <metro-button>4</metro-button>
-          </metro-grid>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Text Block</div>
-          <metro-text-block bold>Bold Text</metro-text-block><br />
-          <metro-text-block italic>Italic Text</metro-text-block>
-        </div>
-        <div class="demo-item">
-          <div class="demo-label">Wrap Panel</div>
-          <metro-wrap-panel style="gap: 8px">
+          <div class="demo-label">Stack Panel (Horizontal)</div>
+          <metro-stack-panel orientation="horizontal" style="--metro-gap: 8px;">
             <metro-button>A</metro-button>
             <metro-button>B</metro-button>
             <metro-button>C</metro-button>
-            <metro-button>D</metro-button>
+          </metro-stack-panel>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Wrap Panel</div>
+          <metro-wrap-panel style="gap: 8px;">
+            <metro-button>One</metro-button>
+            <metro-button>Two</metro-button>
+            <metro-button>Three</metro-button>
+            <metro-button>Four</metro-button>
+            <metro-button>Five</metro-button>
           </metro-wrap-panel>
         </div>
+        <div class="demo-item wide-item">
+          <div class="demo-label">Grid (2x2)</div>
+          <metro-grid columns="1fr 1fr" rows="auto auto" style="--metro-gap: 8px;">
+            <metro-button>1,1</metro-button>
+            <metro-button>1,2</metro-button>
+            <metro-button>2,1</metro-button>
+            <metro-button>2,2</metro-button>
+          </metro-grid>
+        </div>
+        <div class="demo-item wide-item">
+          <div class="demo-label">Scroll Viewer</div>
+          <metro-scroll-viewer style="height: 100px; border: 1px solid var(--metro-border);">
+            <div style="padding: 16px;">
+              <p>Scrollable content area with vertical scrolling enabled.</p>
+              <p>Line 2 of content.</p>
+              <p>Line 3 of content.</p>
+              <p>Line 4 of content.</p>
+              <p>Line 5 of content.</p>
+              <p>Line 6 of content.</p>
+              <p>End of scrollable content.</p>
+            </div>
+          </metro-scroll-viewer>
+        </div>
       </div>
     </section>
 
+    <!-- NAVIGATION -->
     <section>
       <h2>Navigation</h2>
-      <div class="demo-grid">
-        <div class="demo-item wide-item">
-          <div class="demo-label">Pivot</div>
-          <div class="pivot-demo">
-            <metro-pivot>
-              <metro-pivot-item header="First">
-                <p>Content for the first pivot item.</p>
-              </metro-pivot-item>
-              <metro-pivot-item header="Second">
-                <p>Content for the second pivot item.</p>
-              </metro-pivot-item>
-              <metro-pivot-item header="Third">
-                <p>Content for the third pivot item.</p>
-              </metro-pivot-item>
-            </metro-pivot>
-          </div>
-        </div>
-        <div class="demo-item wide-item">
-          <div class="demo-label">Hub</div>
-          <metro-hub title="Hub Demo">
-            <metro-hub-section header="Section 1">
-              <metro-button>Action 1</metro-button>
-            </metro-hub-section>
-            <metro-hub-section header="Section 2">
-              <metro-button>Action 2</metro-button>
-            </metro-hub-section>
-          </metro-hub>
-        </div>
+      
+      <h3>Pivot</h3>
+      <div class="interactive-demo">
+        <metro-pivot>
+          <metro-pivot-item header="First">
+            <p style="padding: 16px;">Content for the first pivot item. Click the headers to switch views.</p>
+          </metro-pivot-item>
+          <metro-pivot-item header="Second">
+            <p style="padding: 16px;">Content for the second pivot item.</p>
+          </metro-pivot-item>
+          <metro-pivot-item header="Third">
+            <p style="padding: 16px;">Content for the third pivot item.</p>
+          </metro-pivot-item>
+        </metro-pivot>
       </div>
+      
+      <h3>Hub</h3>
+      <div class="interactive-demo">
+        <metro-hub title="Hub Demo">
+          <metro-hub-section header="Section One">
+            <metro-button>Action 1</metro-button>
+          </metro-hub-section>
+          <metro-hub-section header="Section Two">
+            <metro-button>Action 2</metro-button>
+          </metro-hub-section>
+          <metro-hub-section header="Section Three">
+            <metro-button>Action 3</metro-button>
+          </metro-hub-section>
+        </metro-hub>
+      </div>
+      
+      <h3>Split View</h3>
+      <div class="interactive-demo" style="height: 200px; position: relative;">
+        <metro-split-view id="split-view-demo">
+          <nav slot="pane" style="padding: 16px;">
+            <p style="margin-bottom: 8px;">Pane Content</p>
+            <metro-button id="split-view-toggle">Toggle</metro-button>
+          </nav>
+          <div style="padding: 16px;">
+            <p>Main content area. Click Toggle to show/hide the pane.</p>
+          </div>
+        </metro-split-view>
+      </div>
+      
+      <h3>Panorama</h3>
+      <metro-panorama title="Panorama Demo" background-image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23333' width='100' height='100'/%3E%3C/svg%3E">
+        <metro-panorama-item header="First">
+          <metro-button>Item 1</metro-button>
+        </metro-panorama-item>
+        <metro-panorama-item header="Second">
+          <metro-button>Item 2</metro-button>
+        </metro-panorama-item>
+        <metro-panorama-item header="Third">
+          <metro-button>Item 3</metro-button>
+        </metro-panorama-item>
+      </metro-panorama>
     </section>
 
+    <!-- SELECTION -->
     <section>
       <h2>Selection</h2>
       <div class="demo-grid">
         <div class="demo-item wide-item">
-          <div class="demo-label">List Box (Single Selection)</div>
-          <metro-list-box>
-            <div class="list-item">Item 1</div>
-            <div class="list-item">Item 2</div>
-            <div class="list-item">Item 3</div>
+          <div class="demo-label">List Box (Single)</div>
+          <metro-list-box style="max-height: 150px;">
+            <div class="list-item">Apple</div>
+            <div class="list-item">Banana</div>
+            <div class="list-item">Cherry</div>
+            <div class="list-item">Date</div>
           </metro-list-box>
         </div>
         <div class="demo-item wide-item">
-          <div class="demo-label">List Box (Multiple Selection)</div>
-          <metro-list-box selection-mode="multiple">
-            <div class="list-item">Item 1</div>
-            <div class="list-item">Item 2</div>
-            <div class="list-item">Item 3</div>
-            <div class="list-item">Item 4</div>
+          <div class="demo-label">List Box (Multiple)</div>
+          <metro-list-box selection-mode="multiple" style="max-height: 150px;">
+            <div class="list-item">Red</div>
+            <div class="list-item">Green</div>
+            <div class="list-item">Blue</div>
+            <div class="list-item">Yellow</div>
           </metro-list-box>
         </div>
       </div>
+      
+      <h3 style="margin-top: 24px;">Semantic Zoom</h3>
+      <p style="margin-bottom: 12px; color: var(--metro-foreground-secondary);">Use Ctrl+wheel or pinch gesture to zoom, or click the button.</p>
+      <metro-semantic-zoom id="semantic-zoom-demo" style="height: 200px; border: 1px solid var(--metro-border);">
+        <div slot="zoomed-in" style="padding: 16px;">
+          <h4>Zoomed In View</h4>
+          <p>Detailed content with individual items.</p>
+        </div>
+        <div slot="zoomed-out" style="padding: 16px;">
+          <h4>Zoomed Out View</h4>
+          <p>Grouped/overview content.</p>
+        </div>
+      </metro-semantic-zoom>
     </section>
 
+    <!-- PRIMITIVES -->
+    <section>
+      <h2>Primitives</h2>
+      
+      <h3>Text Block</h3>
+      <div class="demo-row">
+        <metro-text-block>Normal</metro-text-block>
+        <metro-text-block bold>Bold</metro-text-block>
+        <metro-text-block italic>Italic</metro-text-block>
+        <metro-text-block underline>Underline</metro-text-block>
+        <metro-text-block strikethrough>Strikethrough</metro-text-block>
+      </div>
+      
+      <h3>Icons (Sample)</h3>
+      <div class="icons-grid">
+        <div class="icon-sample"><metro-icon icon="home" size="medium"></metro-icon><span>home</span></div>
+        <div class="icon-sample"><metro-icon icon="settings" size="medium"></metro-icon><span>settings</span></div>
+        <div class="icon-sample"><metro-icon icon="search" size="medium"></metro-icon><span>search</span></div>
+        <div class="icon-sample"><metro-icon icon="mail" size="medium"></metro-icon><span>mail</span></div>
+        <div class="icon-sample"><metro-icon icon="user" size="medium"></metro-icon><span>user</span></div>
+        <div class="icon-sample"><metro-icon icon="calendar" size="medium"></metro-icon><span>calendar</span></div>
+        <div class="icon-sample"><metro-icon icon="clock" size="medium"></metro-icon><span>clock</span></div>
+        <div class="icon-sample"><metro-icon icon="star" size="medium"></metro-icon><span>star</span></div>
+        <div class="icon-sample"><metro-icon icon="heart" size="medium"></metro-icon><span>heart</span></div>
+        <div class="icon-sample"><metro-icon icon="lock" size="medium"></metro-icon><span>lock</span></div>
+        <div class="icon-sample"><metro-icon icon="play" size="medium"></metro-icon><span>play</span></div>
+        <div class="icon-sample"><metro-icon icon="pause" size="medium"></metro-icon><span>pause</span></div>
+      </div>
+      <p style="margin-top: 8px; font-size: 12px; color: var(--metro-foreground-secondary);">80+ icons available</p>
+      
+      <h3>Icon Sizes</h3>
+      <div class="demo-row">
+        <metro-icon icon="star" size="small"></metro-icon>
+        <metro-icon icon="star" size="normal"></metro-icon>
+        <metro-icon icon="star" size="medium"></metro-icon>
+        <metro-icon icon="star" size="large"></metro-icon>
+        <metro-icon icon="star" size="xlarge"></metro-icon>
+      </div>
+      <p style="font-size: 12px; color: var(--metro-foreground-secondary);">small, normal, medium, large, xlarge</p>
+      
+      <h3>Expander</h3>
+      <metro-expander title="Click to expand" style="margin-bottom: 8px;">
+        <p>Hidden content revealed when expanded.</p>
+      </metro-expander>
+      <metro-expander title="Already expanded" expanded>
+        <p>This content is visible by default.</p>
+      </metro-expander>
+      
+      <h3>Info Bar</h3>
+      <metro-info-bar severity="informational" style="margin-bottom: 8px;">
+        This is an informational message.
+      </metro-info-bar>
+      <metro-info-bar severity="success" style="margin-bottom: 8px;">
+        Operation completed successfully.
+      </metro-info-bar>
+      <metro-info-bar severity="warning" style="margin-bottom: 8px;">
+        Please review this warning.
+      </metro-info-bar>
+      <metro-info-bar severity="error">
+        An error has occurred.
+      </metro-info-bar>
+      
+      <h3>Person Picture</h3>
+      <div class="demo-row">
+        <metro-person-picture display-name="John Doe"></metro-person-picture>
+        <metro-person-picture initials="AB"></metro-person-picture>
+        <metro-person-picture display-name="Jane Smith" presence="available"></metro-person-picture>
+        <metro-person-picture display-name="Bob Wilson" presence="away"></metro-person-picture>
+        <metro-person-picture display-name="Alice Brown" presence="busy"></metro-person-picture>
+        <metro-person-picture display-name="Charlie Davis" presence="offline"></metro-person-picture>
+      </div>
+      
+      <h3>Tooltip</h3>
+      <div class="demo-row">
+        <metro-button id="tooltip-top-btn">Hover (Top)</metro-button>
+        <metro-button id="tooltip-bottom-btn">Hover (Bottom)</metro-button>
+        <metro-button id="tooltip-left-btn">Hover (Left)</metro-button>
+        <metro-button id="tooltip-right-btn">Hover (Right)</metro-button>
+      </div>
+      <metro-tooltip id="tooltip-demo" text="Tooltip text"></metro-tooltip>
+    </section>
+
+    <!-- DIALOGS -->
+    <section>
+      <h2>Dialogs</h2>
+      <div class="demo-row">
+        <metro-button id="show-dialog-btn">Show Content Dialog</metro-button>
+        <metro-button id="show-message-dialog-btn">Show Message Dialog</metro-button>
+        <metro-button id="show-flyout-btn">Show Flyout</metro-button>
+        <metro-button id="show-toast-btn">Show Toast</metro-button>
+      </div>
+      
+      <metro-content-dialog id="content-dialog" title="Dialog Title">
+        <p>This is the content of the dialog.</p>
+        <p>You can put any content here.</p>
+        <metro-button slot="buttons" id="close-dialog-btn">Close</metro-button>
+      </metro-content-dialog>
+      
+      <metro-message-dialog id="message-dialog" title="Message">
+        <p>This is a simple message dialog.</p>
+      </metro-message-dialog>
+      
+      <metro-flyout id="flyout-demo">
+        <div style="padding: 16px;">
+          <p>Flyout content</p>
+          <metro-button id="close-flyout-btn">Close</metro-button>
+        </div>
+      </metro-flyout>
+    </section>
+
+    <!-- ANIMATIONS -->
+    <section>
+      <h2>Animations</h2>
+      <p style="margin-bottom: 16px; color: var(--metro-foreground-secondary);">Click buttons to trigger animations</p>
+      
+      <div class="demo-grid">
+        <div class="demo-item">
+          <div class="demo-label">Fade In</div>
+          <metro-button id="anim-fade-btn" style="margin-bottom: 8px;">Play</metro-button>
+          <div id="anim-fade-target" style="padding: 16px; background: var(--metro-highlight); opacity: 0;">Faded in</div>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Slide Up</div>
+          <metro-button id="anim-slideup-btn" style="margin-bottom: 8px;">Play</metro-button>
+          <div id="anim-slideup-target" style="padding: 16px; background: var(--metro-highlight); opacity: 0;">Slid up</div>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Slide Left</div>
+          <metro-button id="anim-slideleft-btn" style="margin-bottom: 8px;">Play</metro-button>
+          <div id="anim-slideleft-target" style="padding: 16px; background: var(--metro-highlight); opacity: 0;">Slid left</div>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Turnstile</div>
+          <metro-button id="anim-turnstile-btn" style="margin-bottom: 8px;">Play</metro-button>
+          <div id="anim-turnstile-target" style="padding: 16px; background: var(--metro-highlight); opacity: 0;">Turnstile</div>
+        </div>
+      </div>
+      
+      <h3 style="margin-top: 24px;">Entrance Stagger</h3>
+      <metro-button id="anim-stagger-btn" style="margin-bottom: 8px;">Replay</metro-button>
+      <div id="anim-stagger-target" style="display: flex; gap: 8px;">
+        <metro-button>1</metro-button>
+        <metro-button>2</metro-button>
+        <metro-button>3</metro-button>
+        <metro-button>4</metro-button>
+        <metro-button>5</metro-button>
+      </div>
+      
+      <h3 style="margin-top: 24px;">Turnstile Feather</h3>
+      <metro-button id="anim-feather-btn" style="margin-bottom: 8px;">Replay</metro-button>
+      <div id="anim-feather-target" style="display: flex; flex-direction: column; gap: 8px;">
+        <metro-text-block>Item One</metro-text-block>
+        <metro-text-block>Item Two</metro-text-block>
+        <metro-text-block>Item Three</metro-text-block>
+        <metro-text-block>Item Four</metro-text-block>
+        <metro-text-block>Item Five</metro-text-block>
+      </div>
+    </section>
+
+    <!-- APP BAR -->
     <metro-app-bar placement="bottom">
-      <div slot="content" style="color: var(--metro-foreground-secondary)">
+      <div slot="content" style="color: var(--metro-foreground-secondary); font-size: 14px;">
         Metrino Demo
       </div>
-      <metro-app-bar-button icon="menu" label="Menu"></metro-app-bar-button>
-      <metro-app-bar-button
-        icon="settings"
-        label="Settings"
-      ></metro-app-bar-button>
+      <metro-app-bar-button icon="home" label="Home"></metro-app-bar-button>
+      <metro-app-bar-button icon="search" label="Search"></metro-app-bar-button>
+      <metro-app-bar-button icon="settings" label="Settings"></metro-app-bar-button>
+      <metro-app-bar-button icon="more" label="More" slot="menu"></metro-app-bar-button>
     </metro-app-bar>
 
     <script type="module">
       import "../src/styles/tokens.css";
       import "../src/styles/typography.css";
       import "../src/styles/animations.css";
+      
+      // Buttons
       import "../src/components/buttons/button.ts";
       import "../src/components/buttons/hyperlink-button.ts";
       import "../src/components/buttons/repeat-button.ts";
-      import "../src/components/primitives/text-block.ts";
-      import "../src/components/layout/stack-panel.ts";
-      import "../src/components/layout/grid.ts";
-      import "../src/components/layout/scroll-viewer.ts";
-      import "../src/components/layout/wrap-panel.ts";
+      
+      // Input
       import "../src/components/input/text-box.ts";
       import "../src/components/input/password-box.ts";
+      import "../src/components/input/number-box.ts";
       import "../src/components/input/check-box.ts";
       import "../src/components/input/radio-button.ts";
       import "../src/components/input/toggle-switch.ts";
       import "../src/components/input/slider.ts";
+      import "../src/components/input/rating.ts";
+      import "../src/components/input/combo-box.ts";
+      import "../src/components/input/auto-suggest-box.ts";
+      
+      // Date/Time
+      import "../src/components/datetime/date-picker.ts";
+      import "../src/components/datetime/time-picker.ts";
+      import "../src/components/datetime/date-picker-roller.ts";
+      import "../src/components/datetime/time-picker-roller.ts";
+      
+      // Progress
       import "../src/components/progress/progress-bar.ts";
       import "../src/components/progress/progress-ring.ts";
+      
+      // Tiles
       import "../src/components/tiles/flip-tile.ts";
       import "../src/components/tiles/cycle-tile.ts";
       import "../src/components/tiles/iconic-tile.ts";
+      import "../src/components/tiles/live-tile.ts";
+      
+      // Layout
+      import "../src/components/layout/stack-panel.ts";
+      import "../src/components/layout/grid.ts";
+      import "../src/components/layout/wrap-panel.ts";
+      import "../src/components/layout/scroll-viewer.ts";
+      import "../src/components/layout/tile-grid.ts";
+      
+      // Navigation
       import "../src/components/navigation/pivot.ts";
       import "../src/components/navigation/pivot-item.ts";
       import "../src/components/navigation/hub.ts";
       import "../src/components/navigation/hub-section.ts";
+      import "../src/components/navigation/split-view.ts";
+      import "../src/components/navigation/panorama.ts";
+      import "../src/components/navigation/panorama-item.ts";
       import "../src/components/navigation/app-bar.ts";
       import "../src/components/navigation/app-bar-button.ts";
+      
+      // Selection
       import "../src/components/selection/list-box.ts";
-      import "../src/components/datetime/date-picker.ts";
-      import "../src/components/datetime/time-picker.ts";
+      import "../src/components/selection/semantic-zoom.ts";
+      
+      // Primitives
+      import "../src/components/primitives/text-block.ts";
       import "../src/components/primitives/icon.ts";
-      import "../src/components/primitives/menu-flyout.ts";
-      import "../src/components/primitives/tooltip.ts";
       import "../src/components/primitives/expander.ts";
       import "../src/components/primitives/info-bar.ts";
       import "../src/components/primitives/person-picture.ts";
+      import "../src/components/primitives/tooltip.ts";
       import "../src/components/primitives/toast.ts";
-      import "../src/components/navigation/split-view.ts";
+      import "../src/components/primitives/menu-flyout.ts";
+      
+      // Dialogs
       import "../src/components/dialogs/content-dialog.ts";
-      import "../src/components/input/auto-suggest-box.ts";
-      import "../src/components/input/combo-box.ts";
-      import "../src/components/input/rating.ts";
-      import "../src/components/input/number-box.ts";
+      import "../src/components/dialogs/message-dialog.ts";
+      import "../src/components/dialogs/flyout.ts";
 
+      // Theme controls
       document.querySelectorAll("[data-theme-btn]").forEach((btn) => {
         btn.addEventListener("click", () => {
-          document
-            .querySelectorAll("[data-theme-btn]")
-            .forEach((b) => b.classList.remove("active"));
+          document.querySelectorAll("[data-theme-btn]").forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           document.body.dataset.theme = btn.dataset.themeBtn;
         });
       });
 
+      // Accent controls
       document.querySelectorAll("[data-accent]").forEach((btn) => {
         btn.addEventListener("click", () => {
           document.body.removeAttribute("accent");
@@ -525,12 +868,182 @@
         });
       });
 
+      // Repeat button counter
       let repeatCount = 0;
-      const repeatBtn = document.getElementById("repeat-btn");
-      const repeatCounter = document.getElementById("repeat-counter");
-      repeatBtn.addEventListener("click", () => {
+      document.getElementById("repeat-btn")?.addEventListener("click", () => {
         repeatCount++;
-        repeatCounter.textContent = repeatCount;
+        document.getElementById("repeat-counter").textContent = repeatCount;
+      });
+
+      // Combo box setup
+      setTimeout(() => {
+        const combo = document.getElementById("combo-demo");
+        if (combo && combo.setOptions) {
+          combo.setOptions(["Option 1", "Option 2", "Option 3", "Option 4"]);
+        }
+      }, 100);
+
+      // Auto suggest setup
+      setTimeout(() => {
+        const suggest = document.getElementById("suggest-demo");
+        if (suggest) {
+          suggest.addEventListener("textchanged", (e) => {
+            const query = e.detail.text.toLowerCase();
+            const allItems = ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape"];
+            const filtered = allItems.filter(item => item.toLowerCase().includes(query));
+            suggest.setSuggestions(filtered);
+          });
+        }
+      }, 100);
+
+      // Live tile setup
+      setTimeout(() => {
+        const liveTile = document.getElementById("live-tile-demo");
+        if (liveTile && liveTile.setItems) {
+          liveTile.setItems([
+            { title: "New Mail", message: "You have 5 unread messages" },
+            { title: "Meeting", message: "Team sync in 30 minutes" },
+            { title: "Reminder", message: "Submit report by 5pm" }
+          ]);
+        }
+        
+        const liveTileBadge = document.getElementById("live-tile-badge");
+        if (liveTileBadge && liveTileBadge.setItems) {
+          liveTileBadge.setItems([
+            { title: "Alert", message: "System update required" },
+            { title: "Warning", message: "Low disk space" }
+          ]);
+        }
+        
+        const liveTileWide = document.getElementById("live-tile-wide");
+        if (liveTileWide && liveTileWide.setItems) {
+          liveTileWide.setItems([
+            { title: "Messages", message: "42 new messages" },
+            { title: "Notifications", message: "12 pending notifications" }
+          ]);
+        }
+      }, 100);
+
+      // Split view toggle
+      document.getElementById("split-view-toggle")?.addEventListener("click", () => {
+        const splitView = document.getElementById("split-view-demo");
+        if (splitView) {
+          splitView.open = !splitView.open;
+        }
+      });
+
+      // Tooltip setup
+      const tooltip = document.getElementById("tooltip-demo");
+      const tooltipBtns = [
+        { id: "tooltip-top-btn", placement: "top" },
+        { id: "tooltip-bottom-btn", placement: "bottom" },
+        { id: "tooltip-left-btn", placement: "left" },
+        { id: "tooltip-right-btn", placement: "right" }
+      ];
+      
+      tooltipBtns.forEach(({ id, placement }) => {
+        const btn = document.getElementById(id);
+        if (btn && tooltip) {
+          tooltip.placement = placement;
+          btn.addEventListener("mouseenter", () => {
+            tooltip.placement = placement;
+            tooltip.show(btn);
+          });
+          btn.addEventListener("mouseleave", () => {
+            tooltip.hide();
+          });
+        }
+      });
+
+      // Dialog handlers
+      document.getElementById("show-dialog-btn")?.addEventListener("click", () => {
+        document.getElementById("content-dialog")?.show();
+      });
+      
+      document.getElementById("close-dialog-btn")?.addEventListener("click", () => {
+        const dialog = document.getElementById("content-dialog");
+        if (dialog) dialog.open = false;
+      });
+      
+      document.getElementById("show-message-dialog-btn")?.addEventListener("click", () => {
+        const dialog = document.getElementById("message-dialog");
+        if (dialog) dialog.open = true;
+      });
+      
+      document.getElementById("show-flyout-btn")?.addEventListener("click", (e) => {
+        const flyout = document.getElementById("flyout-demo");
+        if (flyout) {
+          flyout.show(e.target);
+        }
+      });
+      
+      document.getElementById("close-flyout-btn")?.addEventListener("click", () => {
+        const flyout = document.getElementById("flyout-demo");
+        if (flyout) flyout.open = false;
+      });
+
+      // Toast
+      import("../src/components/primitives/toast.ts").then(({ showToast }) => {
+        document.getElementById("show-toast-btn")?.addEventListener("click", () => {
+          showToast({
+            title: "Notification",
+            message: "This is a toast notification!",
+            severity: "informational",
+            duration: 3000
+          });
+        });
+      });
+
+      // Animation triggers
+      function playAnimation(targetId, animationClass) {
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        target.classList.remove(animationClass);
+        target.style.opacity = "0";
+        void target.offsetWidth;
+        target.classList.add(animationClass);
+      }
+
+      document.getElementById("anim-fade-btn")?.addEventListener("click", () => {
+        playAnimation("anim-fade-target", "metro-animate-fade-in");
+      });
+
+      document.getElementById("anim-slideup-btn")?.addEventListener("click", () => {
+        playAnimation("anim-slideup-target", "metro-animate-slide-up");
+      });
+
+      document.getElementById("anim-slideleft-btn")?.addEventListener("click", () => {
+        playAnimation("anim-slideleft-target", "metro-animate-slide-left");
+      });
+
+      document.getElementById("anim-turnstile-btn")?.addEventListener("click", () => {
+        playAnimation("anim-turnstile-target", "metro-animate-turnstile-in");
+      });
+
+      document.getElementById("anim-stagger-btn")?.addEventListener("click", () => {
+        const container = document.getElementById("anim-stagger-target");
+        if (!container) return;
+        container.classList.remove("metro-entrance-stagger");
+        const children = Array.from(container.children);
+        children.forEach(child => {
+          child.style.opacity = "0";
+          child.style.animation = "none";
+        });
+        void container.offsetWidth;
+        container.classList.add("metro-entrance-stagger");
+      });
+
+      document.getElementById("anim-feather-btn")?.addEventListener("click", () => {
+        const container = document.getElementById("anim-feather-target");
+        if (!container) return;
+        container.classList.remove("metro-turnstile-feather");
+        const children = Array.from(container.children);
+        children.forEach(child => {
+          child.style.opacity = "0";
+          child.style.animation = "none";
+        });
+        void container.offsetWidth;
+        container.classList.add("metro-turnstile-feather");
       });
     </script>
   </body>

@@ -1,14 +1,17 @@
 import { LitElement, html, css } from "lit";
 
 const baseStyles = css`
-  :host { display: flex; flex-direction: column; }
-  :host([orientation="horizontal"]) { flex-direction: row; }
-  ::slotted(*) { flex-shrink: 0; }
-`;
-
-const gapStyles = css`
-  :host([orientation="vertical"]) ::slotted(*) + ::slotted(*) { margin-top: var(--metro-gap, 0); }
-  :host([orientation="horizontal"]) ::slotted(*) + ::slotted(*) { margin-inline-start: var(--metro-gap, 0); }
+  :host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--metro-gap, 0);
+  }
+  :host([orientation="horizontal"]) {
+    flex-direction: row;
+  }
+  ::slotted(*) {
+    flex-shrink: 0;
+  }
 `;
 
 export type StackOrientation = "horizontal" | "vertical";
@@ -20,7 +23,7 @@ export class MetroStackPanel extends LitElement {
 
   declare orientation: StackOrientation;
 
-  static styles = [baseStyles, gapStyles];
+  static styles = baseStyles;
 
   constructor() {
     super();
