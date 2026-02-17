@@ -177,6 +177,57 @@ export const listItemBase = css`
   }
 `;
 
+export const focusRingItem = css`
+  .focus-ring-item:focus {
+    outline: 2px solid var(--metro-accent, #0078d4);
+    outline-offset: -2px;
+  }
+`;
+
+export const selectableItemBase = css`
+  .list-item {
+    display: flex;
+    align-items: center;
+    padding: var(--metro-spacing-md, 12px);
+    cursor: pointer;
+    color: var(--metro-foreground, #ffffff);
+    border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
+    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+    box-sizing: border-box;
+    user-select: none;
+  }
+  .list-item:hover {
+    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+  }
+  .list-item:focus {
+    outline: 2px solid var(--metro-accent, #0078d4);
+    outline-offset: -2px;
+  }
+  .list-item.selected {
+    background: var(--metro-accent, #0078d4);
+    color: #ffffff;
+  }
+  .list-item:active {
+    background: var(--metro-accent-dark, #005a9e);
+  }
+`;
+
+export const groupHeader = css`
+  .group-header {
+    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+    color: var(--metro-accent, #0078d4);
+    padding: var(--metro-spacing-sm, 8px) var(--metro-spacing-md, 12px);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: var(--metro-font-size-small, 12px);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    box-sizing: border-box;
+  }
+`;
+
 export const scrollbarVisible = css`
   ::-webkit-scrollbar {
     width: 8px;
@@ -405,3 +456,73 @@ export function applyTiltEffect(el: HTMLElement): () => void {
     el.removeEventListener("pointerleave", handlePointerUp);
   };
 }
+
+export const buttonBase = css`
+  :host {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--metro-font-size-normal, 14px);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    padding: 10px 22px;
+    min-width: 120px;
+    min-height: 40px;
+    border: 2px solid var(--metro-foreground, #fff);
+    background: transparent;
+    color: var(--metro-foreground, #fff);
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+    box-sizing: border-box;
+    transition:
+      background-color var(--metro-transition-fast, 167ms) ease-out,
+      border-color var(--metro-transition-fast, 167ms) ease-out;
+  }
+  :host(:hover) {
+    background: var(--metro-foreground, #fff);
+    color: var(--metro-background, #1f1f1f);
+  }
+  :host(.pressed) {
+    background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    color: var(--metro-background, #1f1f1f);
+  }
+`;
+
+export const menuItemStyles = css`
+  ::slotted(.menu-item) {
+    display: flex;
+    align-items: center;
+    gap: var(--metro-spacing-sm, 8px);
+    padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
+    cursor: pointer;
+    color: var(--metro-foreground, #ffffff);
+    font-size: var(--metro-font-size-normal, 14px);
+    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+  }
+  ::slotted(.menu-item:hover) {
+    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+  }
+  ::slotted(.menu-item:active) {
+    background: var(--metro-accent, #0078d4);
+  }
+  ::slotted(.menu-divider) {
+    height: 1px;
+    background: var(--metro-border, rgba(255, 255, 255, 0.2));
+    margin: var(--metro-spacing-xs, 4px) 0;
+  }
+`;
+
+export const menuEnterAnimation = css`
+  @keyframes menuEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+`;

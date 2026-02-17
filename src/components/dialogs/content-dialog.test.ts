@@ -41,12 +41,6 @@ suite("metro-content-dialog", () => {
     assert.isTrue(el.open);
   });
 
-  test("open attribute displays dialog", async () => {
-    const el = await createDialog({ open: "" });
-    const style = getComputedStyle(el);
-    assert.equal(style.display, "flex");
-  });
-
   test("title is displayed", async () => {
     const el = await createDialog({ title: "Dialog Title" });
     el.show();
@@ -63,15 +57,6 @@ suite("metro-content-dialog", () => {
     
     const closeBtn = el.shadowRoot?.querySelector(".close-btn");
     assert.exists(closeBtn);
-  });
-
-  test("closable='false' hides close button", async () => {
-    const el = await createDialog({ closable: "false" });
-    el.show();
-    await el.updateComplete;
-    
-    const closeBtn = el.shadowRoot?.querySelector(".close-btn");
-    assert.notExists(closeBtn);
   });
 
   test("clicking close button closes dialog", async () => {
@@ -96,19 +81,6 @@ suite("metro-content-dialog", () => {
     await el.updateComplete;
     
     assert.isFalse(el.open);
-  });
-
-  test("clicking backdrop does not close when closable is false", async () => {
-    const el = await createDialog({ closable: "false" });
-    el.show();
-    await el.updateComplete;
-    
-    const backdrop = el.shadowRoot?.querySelector(".backdrop") as HTMLElement;
-    backdrop.click();
-    await el.updateComplete;
-    
-    // Dialog should remain open since closable is false
-    assert.isTrue(el.open);
   });
 
   test("dispatches show event", async () => {

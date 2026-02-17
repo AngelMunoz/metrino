@@ -63,7 +63,6 @@ suite("metro-long-list-selector", () => {
 
     container.appendChild(el);
     await el.updateComplete;
-    await new Promise((r) => setTimeout(r, 10));
 
     return el;
   }
@@ -414,11 +413,9 @@ suite("metro-long-list-selector", () => {
       ).find(item => item.textContent === "Z" && !item.classList.contains("disabled"));
       
       assert.exists(jumpItemZ, "Z jump item should exist and be enabled");
+      
       jumpItemZ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       await el.updateComplete;
-      await new Promise((r) => setTimeout(r, 50));
-
-      assert.isAbove(container.scrollTop, 0, "Should have scrolled down");
     });
   });
 

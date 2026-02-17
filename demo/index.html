@@ -394,6 +394,15 @@
                     >Clicks: <span id="repeat-counter">0</span></span
                 >
             </div>
+
+            <h3>Dropdown Button</h3>
+            <div class="demo-row">
+                <metro-dropdown-button label="Select Option" id="dropdown-btn">
+                    <div class="menu-item" data-value="1" style="padding: 8px; cursor: pointer; white-space: nowrap;">Option 1</div>
+                    <div class="menu-item" data-value="2" style="padding: 8px; cursor: pointer; white-space: nowrap;">Option 2</div>
+                    <div class="menu-item" data-value="3" style="padding: 8px; cursor: pointer; white-space: nowrap;">Option 3</div>
+                </metro-dropdown-button>
+            </div>
         </section>
 
         <!-- INPUT -->
@@ -488,6 +497,10 @@
                     <div class="demo-label">Rating</div>
                     <metro-rating value="3" max="5"></metro-rating>
                 </div>
+                <div class="demo-item wide-item">
+                    <div class="demo-label">Rich Edit Box</div>
+                    <metro-rich-edit-box id="rich-edit-demo" placeholder="Enter formatted text..."></metro-rich-edit-box>
+                </div>
             </div>
         </section>
 
@@ -530,6 +543,14 @@
                         hour-format="24"
                         label="Pick time"
                     ></metro-time-picker-roller>
+                </div>
+                <div class="demo-item wide-item" style="overflow: visible">
+                    <div class="demo-label">Calendar</div>
+                    <metro-calendar id="calendar-demo"></metro-calendar>
+                </div>
+                <div class="demo-item" style="overflow: visible">
+                    <div class="demo-label">Calendar Date Picker</div>
+                    <metro-calendar-date-picker id="calendar-date-picker-demo"></metro-calendar-date-picker>
                 </div>
             </div>
         </section>
@@ -746,6 +767,32 @@
                             <p>End of scrollable content.</p>
                         </div>
                     </metro-scroll-viewer>
+                </div>
+                <div class="demo-item wide-item">
+                    <div class="demo-label">Viewbox</div>
+                    <metro-viewbox style="width: 200px; height: 100px; border: 1px solid var(--metro-border);">
+                        <div style="width: 400px; height: 200px; display: flex; align-items: center; justify-content: center; background: var(--metro-accent);">
+                            <span style="font-size: 24px; color: white;">Scaled Content</span>
+                        </div>
+                    </metro-viewbox>
+                </div>
+                <div class="demo-item wide-item">
+                    <div class="demo-label">Canvas (Absolute Positioning)</div>
+                    <metro-canvas style="width: 100%; height: 100px; border: 1px solid var(--metro-border); background: var(--metro-highlight);">
+                        <div style="position: absolute; top: 10px; left: 10px; padding: 8px; background: var(--metro-accent);">Top Left</div>
+                        <div style="position: absolute; bottom: 10px; right: 10px; padding: 8px; background: var(--metro-accent);">Bottom Right</div>
+                    </metro-canvas>
+                </div>
+                <div class="demo-item wide-item">
+                    <div class="demo-label">Variable Sized Wrap Grid</div>
+                    <metro-variable-sized-wrap-grid item-width="60" item-height="40" style="width: 100%; height: 120px; border: 1px solid var(--metro-border);">
+                        <div style="background: var(--metro-accent); padding: 8px;">1x1</div>
+                        <div style="background: var(--metro-accent); padding: 8px;" data-col-span="2">2x1</div>
+                        <div style="background: var(--metro-accent); padding: 8px;">1x1</div>
+                        <div style="background: var(--metro-accent); padding: 8px;" data-row-span="2">1x2</div>
+                        <div style="background: var(--metro-accent); padding: 8px;">1x1</div>
+                        <div style="background: var(--metro-accent); padding: 8px;">1x1</div>
+                    </metro-variable-sized-wrap-grid>
                 </div>
             </div>
         </section>
@@ -1221,6 +1268,58 @@
                     <p>Grouped/overview content.</p>
                 </div>
             </metro-semantic-zoom>
+
+            <h3 style="margin-top: 24px">Flip View</h3>
+            <p
+                style="
+                    margin-bottom: 12px;
+                    color: var(--metro-foreground-secondary);
+                "
+            >
+                Swipe or use arrows to navigate between items.
+            </p>
+            <metro-flip-view id="flip-view-demo" style="height: 200px; border: 1px solid var(--metro-border);">
+                <div style="padding: 24px; background: var(--metro-accent); height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <h3 style="color: white;">Slide 1</h3>
+                </div>
+                <div style="padding: 24px; background: #e51400; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <h3 style="color: white;">Slide 2</h3>
+                </div>
+                <div style="padding: 24px; background: #00a300; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <h3 style="color: white;">Slide 3</h3>
+                </div>
+            </metro-flip-view>
+
+            <h3 style="margin-top: 24px">Grid View (Virtualized)</h3>
+            <p
+                style="
+                    margin-bottom: 12px;
+                    color: var(--metro-foreground-secondary);
+                "
+            >
+                Virtualized grid with 500 items. Only visible items are rendered.
+            </p>
+            <metro-grid-view id="grid-view-demo" item-width="100" item-height="100" display-member="name" style="height: 250px; border: 1px solid var(--metro-border);"></metro-grid-view>
+
+            <h3 style="margin-top: 24px">List View (Virtualized)</h3>
+            <p
+                style="
+                    margin-bottom: 12px;
+                    color: var(--metro-foreground-secondary);
+                "
+            >
+                Virtualized list with 1000 items. Only visible items are rendered.
+            </p>
+            <metro-list-view id="list-view-demo" display-member="name" style="height: 200px; border: 1px solid var(--metro-border);"></metro-list-view>
+
+            <h3 style="margin-top: 24px">Tree View</h3>
+            <metro-tree-view id="tree-view-demo" selection-mode="single" style="border: 1px solid var(--metro-border); padding: 8px;"></metro-tree-view>
+
+            <h3 style="margin-top: 24px">List Picker</h3>
+            <div class="demo-row">
+                <metro-button id="show-list-picker-btn">Open Picker</metro-button>
+            </div>
+            <metro-list-picker id="list-picker-demo" title="Choose an option"></metro-list-picker>
         </section>
 
         <!-- PRIMITIVES -->
@@ -1375,6 +1474,63 @@
                 id="tooltip-demo"
                 text="Tooltip text"
             ></metro-tooltip>
+
+            <h3>Border</h3>
+            <div class="demo-row">
+                <metro-border border-thickness="2" border-color="var(--metro-accent)" corner-radius="0" padding="16">
+                    <span>Simple Border</span>
+                </metro-border>
+                <metro-border border-thickness="1" background="var(--metro-highlight)" corner-radius="8" padding="16">
+                    <span>Rounded Background</span>
+                </metro-border>
+            </div>
+
+            <h3>Image</h3>
+            <div class="demo-row">
+                <metro-image
+                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%230078d4' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='white' font-size='14'%3EImage%3C/text%3E%3C/svg%3E"
+                    alt="Sample image"
+                    stretch="uniform"
+                    style="width: 100px; height: 100px;"
+                ></metro-image>
+                <metro-image
+                    src="invalid-url"
+                    fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23e51400' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='white' font-size='12'%3EFallback%3C/text%3E%3C/svg%3E"
+                    alt="Image with fallback"
+                    stretch="fill"
+                    style="width: 100px; height: 100px;"
+                ></metro-image>
+            </div>
+
+            <h3>Rich Text Block</h3>
+            <metro-rich-text-block content="&lt;strong&gt;Bold text&lt;/strong&gt;, &lt;em&gt;italic&lt;/em&gt;, and &lt;u&gt;underlined&lt;/u&gt; content."></metro-rich-text-block>
+            <metro-rich-text-block content="&lt;p&gt;This is a long text block that should be trimmed with ellipsis when it exceeds the maximum number of lines. The quick brown fox jumps over the lazy dog.&lt;/p&gt;" max-lines="2" text-trimming="ellipsis" style="margin-top: 8px;"></metro-rich-text-block>
+
+            <h3>Media Element (Audio/Video)</h3>
+            <metro-media-element
+                type="video"
+                controls
+                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180'%3E%3Crect fill='%23333' width='320' height='180'/%3E%3Ctext x='160' y='95' text-anchor='middle' fill='white' font-size='16'%3EVideo Player%3C/text%3E%3C/svg%3E"
+                style="max-width: 320px; border: 1px solid var(--metro-border);"
+            ></metro-media-element>
+
+            <h3>Context Menu</h3>
+            <p
+                style="
+                    margin-bottom: 12px;
+                    color: var(--metro-foreground-secondary);
+                "
+            >
+                Long-press (or right-click) the box below to show context menu.
+            </p>
+            <div id="context-menu-target" style="padding: 24px; background: var(--metro-highlight); display: inline-block; cursor: pointer;">
+                Long-press me
+            </div>
+            <metro-context-menu id="context-menu-demo" target="#context-menu-target">
+                <div slot="item" data-action="edit">Edit</div>
+                <div slot="item" data-action="copy">Copy</div>
+                <div slot="item" data-action="delete">Delete</div>
+            </metro-context-menu>
         </section>
 
         <!-- DIALOGS -->
@@ -1409,6 +1565,22 @@
                     <metro-button id="close-flyout-btn">Close</metro-button>
                 </div>
             </metro-flyout>
+
+            <h3>Settings Flyout</h3>
+            <div class="demo-row">
+                <metro-button id="show-settings-flyout-btn">Open Settings</metro-button>
+            </div>
+
+            <metro-settings-flyout id="settings-flyout-demo" title="Settings" width="narrow">
+                <div style="padding: 16px;">
+                    <p style="margin-bottom: 12px;">Setting Option 1</p>
+                    <metro-toggle-switch on>Enabled</metro-toggle-switch>
+                    <p style="margin: 12px 0;">Setting Option 2</p>
+                    <metro-slider value="50" min="0" max="100"></metro-slider>
+                    <p style="margin: 12px 0;">Setting Option 3</p>
+                    <metro-combo-box id="settings-combo"></metro-combo-box>
+                </div>
+            </metro-settings-flyout>
         </section>
 
         <!-- ANIMATIONS -->
@@ -1525,6 +1697,20 @@
         </section>
 
         <!-- APP BAR -->
+        <section>
+            <h2>AppBar Components</h2>
+            <h3>AppBar Button & Toggle</h3>
+            <div class="demo-row" style="background: var(--metro-background); padding: 16px;">
+                <metro-app-bar-button icon="home" label="Home"></metro-app-bar-button>
+                <metro-app-bar-separator></metro-app-bar-separator>
+                <metro-app-bar-button icon="search" label="Search"></metro-app-bar-button>
+                <metro-app-bar-toggle-button icon="favorite" label="Favorite" id="app-bar-toggle-demo"></metro-app-bar-toggle-button>
+                <metro-app-bar-toggle-button icon="pin" label="Pin" checked></metro-app-bar-toggle-button>
+                <metro-app-bar-separator></metro-app-bar-separator>
+                <metro-app-bar-button icon="settings" label="Settings"></metro-app-bar-button>
+            </div>
+        </section>
+
         <metro-app-bar placement="bottom">
             <div
                 slot="content"
@@ -1563,6 +1749,7 @@
             import "../src/components/buttons/button.ts";
             import "../src/components/buttons/hyperlink-button.ts";
             import "../src/components/buttons/repeat-button.ts";
+            import "../src/components/buttons/dropdown-button.ts";
 
             // Input
             import "../src/components/input/text-box.ts";
@@ -1575,12 +1762,15 @@
             import "../src/components/input/rating.ts";
             import "../src/components/input/combo-box.ts";
             import "../src/components/input/auto-suggest-box.ts";
+            import "../src/components/input/rich-edit-box.ts";
 
             // Date/Time
             import "../src/components/datetime/date-picker.ts";
             import "../src/components/datetime/time-picker.ts";
             import "../src/components/datetime/date-picker-roller.ts";
             import "../src/components/datetime/time-picker-roller.ts";
+            import "../src/components/datetime/calendar.ts";
+            import "../src/components/datetime/calendar-date-picker.ts";
 
             // Progress
             import "../src/components/progress/progress-bar.ts";
@@ -1598,6 +1788,9 @@
             import "../src/components/layout/wrap-panel.ts";
             import "../src/components/layout/scroll-viewer.ts";
             import "../src/components/layout/tile-grid.ts";
+            import "../src/components/layout/viewbox.ts";
+            import "../src/components/layout/canvas.ts";
+            import "../src/components/layout/variable-sized-wrap-grid.ts";
 
             // Navigation
             import "../src/components/navigation/pivot.ts";
@@ -1609,11 +1802,18 @@
             import "../src/components/navigation/panorama-item.ts";
             import "../src/components/navigation/app-bar.ts";
             import "../src/components/navigation/app-bar-button.ts";
+            import "../src/components/navigation/app-bar-separator.ts";
+            import "../src/components/navigation/app-bar-toggle-button.ts";
 
             // Selection
             import "../src/components/selection/list-box.ts";
             import "../src/components/selection/semantic-zoom.ts";
             import "../src/components/selection/long-list-selector.ts";
+            import "../src/components/selection/flip-view.ts";
+            import "../src/components/selection/grid-view.ts";
+            import "../src/components/selection/list-view.ts";
+            import "../src/components/selection/tree-view.ts";
+            import "../src/components/selection/list-picker.ts";
 
             // Primitives
             import "../src/components/primitives/text-block.ts";
@@ -1624,11 +1824,17 @@
             import "../src/components/primitives/tooltip.ts";
             import "../src/components/primitives/toast.ts";
             import "../src/components/primitives/menu-flyout.ts";
+            import "../src/components/primitives/border.ts";
+            import "../src/components/primitives/image.ts";
+            import "../src/components/primitives/rich-text-block.ts";
+            import "../src/components/primitives/media-element.ts";
+            import "../src/components/primitives/context-menu.ts";
 
             // Dialogs
             import "../src/components/dialogs/content-dialog.ts";
             import "../src/components/dialogs/message-dialog.ts";
             import "../src/components/dialogs/flyout.ts";
+            import "../src/components/dialogs/settings-flyout.ts";
 
             // Theme controls
             document.querySelectorAll("[data-theme-btn]").forEach((btn) => {
@@ -2185,6 +2391,119 @@
                 ?.addEventListener("click", () => {
                     animateFeatherChildren("anim-feather-target");
                 });
+
+            // FlipView setup
+            const flipView = document.getElementById("flip-view-demo");
+            if (flipView) {
+                flipView.addEventListener("change", (e) => {
+                    console.log("FlipView index:", e.detail.index);
+                });
+            }
+
+            // GridView setup with virtualized items
+            const gridView = document.getElementById("grid-view-demo");
+            if (gridView) {
+                const gridItems = [];
+                for (let i = 0; i < 500; i++) {
+                    gridItems.push({ id: i, name: `Item ${i + 1}` });
+                }
+                gridView.items = gridItems;
+                gridView.addEventListener("itemclick", (e) => {
+                    console.log("Grid item clicked:", e.detail.item);
+                });
+            }
+
+            // ListView setup with virtualized items
+            const listView = document.getElementById("list-view-demo");
+            if (listView) {
+                const listItems = [];
+                for (let i = 0; i < 1000; i++) {
+                    listItems.push({ id: i, name: `List Item ${i + 1}` });
+                }
+                listView.items = listItems;
+                listView.addEventListener("itemclick", (e) => {
+                    console.log("List item clicked:", e.detail.item);
+                });
+            }
+
+            // TreeView setup
+            const treeView = document.getElementById("tree-view-demo");
+            if (treeView) {
+                treeView.items = [
+                    {
+                        id: "1",
+                        label: "Root Item 1",
+                        expanded: true,
+                        children: [
+                            { id: "1-1", label: "Child 1.1" },
+                            { id: "1-2", label: "Child 1.2", children: [
+                                { id: "1-2-1", label: "Grandchild 1.2.1" },
+                            ]},
+                        ],
+                    },
+                    {
+                        id: "2",
+                        label: "Root Item 2",
+                        children: [
+                            { id: "2-1", label: "Child 2.1" },
+                            { id: "2-2", label: "Child 2.2" },
+                        ],
+                    },
+                    { id: "3", label: "Root Item 3" },
+                ];
+                treeView.addEventListener("selectionchange", (e) => {
+                    console.log("Tree selection:", e.detail.itemId);
+                });
+            }
+
+            // ListPicker setup
+            const listPicker = document.getElementById("list-picker-demo");
+            if (listPicker) {
+                listPicker.items = [
+                    { label: "Option A", value: "a" },
+                    { label: "Option B", value: "b" },
+                    { label: "Option C", value: "c" },
+                    { label: "Option D", value: "d" },
+                    { label: "Option E", value: "e" }
+                ];
+                document.getElementById("show-list-picker-btn")?.addEventListener("click", () => {
+                    listPicker.open = true;
+                });
+                listPicker.addEventListener("change", (e) => {
+                    console.log("Picker selected:", e.detail.item, "at index", e.detail.index);
+                });
+            }
+
+            // SettingsFlyout setup
+            const settingsFlyout = document.getElementById("settings-flyout-demo");
+            if (settingsFlyout) {
+                document.getElementById("show-settings-flyout-btn")?.addEventListener("click", () => {
+                    settingsFlyout.show();
+                });
+                // Settings combo setup
+                setTimeout(() => {
+                    const settingsCombo = document.getElementById("settings-combo");
+                    if (settingsCombo && settingsCombo.setOptions) {
+                        settingsCombo.setOptions(["Choice 1", "Choice 2", "Choice 3"]);
+                    }
+                }, 200);
+            }
+
+            // ContextMenu setup
+            const contextMenu = document.getElementById("context-menu-demo");
+            if (contextMenu) {
+                contextMenu.addEventListener("itemclick", (e) => {
+                    console.log("Context menu action:", e.detail.action);
+                });
+            }
+
+            // AppBarToggleButton demo
+            const appBarToggle = document.getElementById("app-bar-toggle-demo");
+            if (appBarToggle) {
+                appBarToggle.addEventListener("change", (e) => {
+                    console.log("AppBar toggle:", e.detail.checked);
+                });
+            }
         </script>
     </body>
 </html>

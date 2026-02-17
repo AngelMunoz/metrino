@@ -401,7 +401,13 @@ export class MetroLongListSelector extends LitElement {
   }
 
   #getValue(item: LongListSelectorItem): unknown {
-    return this.valueMember ? item[this.valueMember] : item;
+    if (this.valueMember) {
+      return item[this.valueMember];
+    }
+    if (this.displayMember) {
+      return item[this.displayMember];
+    }
+    return item;
   }
 
   #dispatchSelectionChange(): void {

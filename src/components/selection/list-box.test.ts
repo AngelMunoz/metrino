@@ -18,7 +18,6 @@ suite("metro-list-box", () => {
     container.innerHTML = html;
     const el = container.querySelector("metro-list-box") as MetroListBox;
     await el.updateComplete;
-    await new Promise(r => setTimeout(r, 50));
     return el;
   }
 
