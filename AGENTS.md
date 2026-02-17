@@ -4,7 +4,7 @@ Coding agent guidelines for the Metrino project.
 
 ## Project Overview
 
-Metrino is a vanilla Web Component library implementing the Windows Phone / Windows 8 Metro design system. Built with TypeScript and Vite, no framework dependencies.
+Metrino is a lit Web Component library implementing the Windows Phone / Windows 8 Metro design system. Built with TypeScript and Vite.
 
 ## Build/Lint/Test Commands
 
@@ -48,7 +48,7 @@ Tests use **@web/test-runner** which runs tests in real browsers via Playwright.
 ### Architecture
 
 - **Functional-first:** Modules export functions; classes are thin wrappers over those functions
-- **Minimal OOP:** Extend `HTMLElement` directly (no base `MetroElement` class needed)
+- **Minimal OOP:** Extend `LitElement` directly (no base `MetroElement` class needed)
 - **Performance:** First-class citizen - avoid unnecessary allocations, use efficient data structures
 
 ### TypeScript
@@ -65,13 +65,13 @@ Tests use **@web/test-runner** which runs tests in real browsers via Playwright.
 
 ```typescript
 // Type-only imports use 'type' keyword
-import type { SomeType } from './types'
+import type { SomeType } from "./types";
 
 // Regular imports for values
-import { createElement } from './utils'
+import { createElement } from "./utils";
 
 // CSS imports in TypeScript
-import './styles.css'
+import "./styles.css";
 
 // Keep imports organized: external → internal → types
 ```
@@ -85,44 +85,22 @@ import './styles.css'
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Components | `metro-<name>` (kebab-case) | `metro-button`, `metro-pivot` |
-| Classes | PascalCase | `MetroElement`, `FlipTile` |
-| Functions | camelCase | `setupCounter`, `createElement` |
-| Constants | SCREAMING_SNAKE_CASE | `MAX_TILE_SIZE` |
-| CSS custom properties | `--metro-<name>` | `--metro-accent`, `--metro-background` |
-| Private methods | Prefix with `#` | `#handleClick()` |
-| Event handlers | `handle<Event>` | `handleClick`, `handleKeyDown` |
+| Type                  | Convention                  | Example                                |
+| --------------------- | --------------------------- | -------------------------------------- |
+| Components            | `metro-<name>` (kebab-case) | `metro-button`, `metro-pivot`          |
+| Classes               | PascalCase                  | `MetroElement`, `FlipTile`             |
+| Functions             | camelCase                   | `setupCounter`, `createElement`        |
+| Constants             | SCREAMING_SNAKE_CASE        | `MAX_TILE_SIZE`                        |
+| CSS custom properties | `--metro-<name>`            | `--metro-accent`, `--metro-background` |
+| Private methods       | Prefix with `#`             | `#handleClick()`                       |
+| Event handlers        | `handle<Event>`             | `handleClick`, `handleKeyDown`         |
 
 ### Web Components
 
-- Extend `HTMLElement` directly; behavior is modeled with functions, not inheritance
-- Use custom elements registry: `customElements.define('metro-name', Class)`
+- Extend `LitElement` directly; behavior is modeled with functions, not inheritance
+- Use custom elements registry: `customElements.define('metro-name', Class)`s
 - Shadow DOM for style encapsulation
-- Use `observedAttributes` for reactive attribute changes
 - Dispatch custom events for component communication
-
-```typescript
-class MetroButton extends HTMLElement {
-  static observedAttributes = ['disabled', 'accent']
-  
-  constructor() {
-    super()
-    this.attachShadow({ mode: 'open' })
-  }
-  
-  attributeChangedCallback(name: string, oldVal: string | null, newVal: string | null) {
-    updateAttribute(this, name, oldVal, newVal)
-  }
-}
-
-// Logic lives in functions, not methods
-function updateAttribute(el: MetroButton, name: string, old: string | null, val: string | null) {
-  if (old === val) return
-  // Handle changes
-}
-```
 
 ### Error Handling
 
@@ -134,11 +112,18 @@ function updateAttribute(el: MetroButton, name: string, old: string | null, val:
 
 ```typescript
 // Use Set for O(1) lookups, not arrays
-const VALID_SIZES = new Set(['small', 'medium', 'large'])
+const VALID_SIZES = new Set(["small", "medium", "large"]);
 
-function updateAttribute(el: MetroButton, name: string, _old: string | null, val: string | null) {
-  if (name === 'size' && val !== null && !VALID_SIZES.has(val)) {
-    throw new TypeError(`Invalid size "${val}". Expected: small, medium, large`)
+function updateAttribute(
+  el: MetroButton,
+  name: string,
+  _old: string | null,
+  val: string | null,
+) {
+  if (name === "size" && val !== null && !VALID_SIZES.has(val)) {
+    throw new TypeError(
+      `Invalid size "${val}". Expected: small, medium, large`,
+    );
   }
 }
 ```
@@ -152,6 +137,7 @@ function updateAttribute(el: MetroButton, name: string, _old: string | null, val
 - Metro animation timing: fast (167ms), normal (250ms), slow (333ms)
 
 Key design tokens:
+
 ```css
 --metro-accent: #0078d4;
 --metro-background: #1f1f1f;

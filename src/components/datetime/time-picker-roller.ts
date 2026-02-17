@@ -5,24 +5,79 @@ const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0")
 const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
 const PERIODS = ["AM", "PM"];
 
+const ITEM_HEIGHT = 40;
+
+function parseTimeValue(value: string, hourFormat: "12" | "24"): { hour: number; minute: number; period: number } {
+  const now = new Date();
+  const defaultResult = {
+    hour: hourFormat === "12" ? now.getHours() % 12 || 12 : now.getHours(),
+    minute: now.getMinutes(),
+    period: now.getHours() >= 12 ? 1 : 0,
+  };
+
+  if (!value) return defaultResult;
+
+  try {
+    const [time, period] = value.split(" ");
+    const [hourStr, minuteStr] = time.split(":");
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    if (hourFormat === "12" && period) {
+      return {
+        hour: hour % 12 || 12,
+        minute,
+        period: period.toUpperCase() === "PM" ? 1 : 0,
+      };
+    }
+
+    return {
+      hour: hourFormat === "12" ? hour % 12 || 12 : hour,
+      minute,
+      period: 0,
+    };
+  } catch {
+    return defaultResult;
+  }
+}
+
 const baseStyles = css`
   :host {
-    display: block;
+    display: inline-block;
     font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
+    min-width: max-content;
+  }
+  .label {
+    display: block;
+    margin-bottom: var(--metro-spacing-xs, 4px);
+    font-size: var(--metro-font-size-small, 12px);
+    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
   }
   .picker-container {
     display: flex;
-    gap: 2px;
+    gap: 4px;
     background: var(--metro-background, #1f1f1f);
     border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
     padding: var(--metro-spacing-md, 12px);
     user-select: none;
+    touch-action: none;
   }
   .picker-column {
-    flex: 1;
     position: relative;
     height: 180px;
+    min-height: 180px;
+    flex-shrink: 0;
     overflow: hidden;
+    touch-action: none;
+  }
+  .picker-column--hour {
+    width: 50px;
+  }
+  .picker-column--minute {
+    width: 50px;
+  }
+  .picker-column--period {
+    width: 50px;
   }
   .picker-column::before,
   .picker-column::after {
@@ -48,21 +103,22 @@ const baseStyles = css`
     padding: 0;
     position: absolute;
     width: 100%;
-    top: 50%;
-    transform: translateY(-50%);
+    top: calc(50% - 20px);
     transition: transform var(--metro-transition-fast, 167ms) ease-out;
+    will-change: transform;
+  }
+  .picker-list.dragging {
+    transition: none;
   }
   .picker-item {
-    height: 40px;
+    height: ${ITEM_HEIGHT}px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: var(--metro-font-size-normal, 14px);
     color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
     cursor: pointer;
-    transition:
-      color var(--metro-transition-fast, 167ms) ease-out,
-      transform var(--metro-transition-fast, 167ms) ease-out;
+    transition: color var(--metro-transition-fast, 167ms) ease-out;
   }
   .picker-item.selected {
     color: var(--metro-foreground, #ffffff);
@@ -77,7 +133,7 @@ const baseStyles = css`
     top: 50%;
     left: 0;
     right: 0;
-    height: 40px;
+    height: ${ITEM_HEIGHT}px;
     transform: translateY(-50%);
     border-top: 2px solid var(--metro-accent, #0078d4);
     border-bottom: 2px solid var(--metro-accent, #0078d4);
@@ -89,12 +145,7 @@ const baseStyles = css`
     font-size: var(--metro-font-size-medium, 16px);
     color: var(--metro-foreground, #ffffff);
     font-weight: 600;
-  }
-  .label {
-    display: block;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    padding: 0 2px;
   }
 `;
 
@@ -124,6 +175,13 @@ export class MetroTimePickerRoller extends LitElement {
   #minuteOffset = 0;
   #periodOffset = 0;
 
+  #dragState: {
+    column: "hour" | "minute" | "period" | null;
+    startY: number;
+    startOffset: number;
+    currentOffset: number;
+  } = { column: null, startY: 0, startOffset: 0, currentOffset: 0 };
+
   constructor() {
     super();
     this.value = "";
@@ -135,61 +193,179 @@ export class MetroTimePickerRoller extends LitElement {
     this.#internals = this.attachInternals();
   }
 
-  #parseValue(): { hour: number; minute: number; period: number } {
-    const now = new Date();
-    const defaultResult = {
-      hour: this.hourFormat === "12" ? now.getHours() % 12 || 12 : now.getHours(),
-      minute: now.getMinutes(),
-      period: now.getHours() >= 12 ? 1 : 0,
-    };
-
-    if (!this.value) return defaultResult;
-
-    try {
-      const [time, period] = this.value.split(" ");
-      const [hourStr, minuteStr] = time.split(":");
-      let hour = parseInt(hourStr, 10);
-      const minute = parseInt(minuteStr, 10);
-
-      if (this.hourFormat === "12" && period) {
-        return {
-          hour: hour % 12 || 12,
-          minute,
-          period: period.toUpperCase() === "PM" ? 1 : 0,
-        };
-      }
-
-      return {
-        hour: this.hourFormat === "12" ? hour % 12 || 12 : hour,
-        minute,
-        period: 0,
-      };
-    } catch {
-      return defaultResult;
-    }
+  #getHours(): string[] {
+    return this.hourFormat === "12" ? HOURS_12 : HOURS_24;
   }
 
   #updateOffsetsFromValue(): void {
-    const { hour, minute, period } = this.#parseValue();
-    const hours = this.hourFormat === "12" ? HOURS_12 : HOURS_24;
+    const { hour, minute, period } = parseTimeValue(this.value, this.hourFormat);
+    const hours = this.#getHours();
     this.#hourOffset = hours.indexOf(String(this.hourFormat === "12" ? hour : String(hour).padStart(2, "0")));
     if (this.#hourOffset < 0) this.#hourOffset = 0;
     this.#minuteOffset = minute;
     this.#periodOffset = period;
   }
 
+  #handlePointerDown(column: "hour" | "minute" | "period", e: PointerEvent): void {
+    if (this.disabled) return;
+    const target = e.target as HTMLElement;
+    const columnEl = target.closest(".picker-column") as HTMLElement;
+    if (!columnEl) return;
+
+    const list = columnEl.querySelector(".picker-list") as HTMLElement;
+    list.classList.add("dragging");
+
+    const offset = column === "hour" ? this.#hourOffset :
+                   column === "minute" ? this.#minuteOffset :
+                   this.#periodOffset;
+
+    this.#dragState = {
+      column,
+      startY: e.clientY,
+      startOffset: offset,
+      currentOffset: offset,
+    };
+
+    columnEl.setPointerCapture(e.pointerId);
+  }
+
+  #handlePointerMove(e: PointerEvent): void {
+    if (!this.#dragState.column || this.disabled) return;
+
+    const delta = e.clientY - this.#dragState.startY;
+    const offsetDelta = Math.round(delta / ITEM_HEIGHT);
+    let newOffset = this.#dragState.startOffset - offsetDelta;
+
+    const maxOffset = this.#dragState.column === "hour" ? this.#getHours().length - 1 :
+                      this.#dragState.column === "minute" ? 59 : 1;
+
+    newOffset = Math.max(0, Math.min(maxOffset, newOffset));
+    this.#dragState.currentOffset = newOffset;
+
+    this.#updateDragTransform();
+  }
+
+  #handlePointerUp(e: PointerEvent): void {
+    if (!this.#dragState.column || this.disabled) return;
+
+    const columnEl = (e.target as HTMLElement).closest(".picker-column") as HTMLElement;
+    if (columnEl) {
+      const list = columnEl.querySelector(".picker-list") as HTMLElement;
+      list.classList.remove("dragging");
+    }
+
+    if (this.#dragState.column === "hour") {
+      this.#hourOffset = this.#dragState.currentOffset;
+    } else if (this.#dragState.column === "minute") {
+      this.#minuteOffset = this.#dragState.currentOffset;
+    } else {
+      this.#periodOffset = this.#dragState.currentOffset;
+    }
+
+    this.#updateValue();
+    this.#dragState = { column: null, startY: 0, startOffset: 0, currentOffset: 0 };
+  }
+
+  #handleWheel(column: "hour" | "minute" | "period", e: WheelEvent): void {
+    if (this.disabled) return;
+    e.preventDefault();
+
+    const delta = e.deltaY > 0 ? 1 : -1;
+    const maxOffset = column === "hour" ? this.#getHours().length - 1 :
+                      column === "minute" ? 59 : 1;
+
+    if (column === "hour") {
+      this.#hourOffset = Math.max(0, Math.min(maxOffset, this.#hourOffset + delta));
+    } else if (column === "minute") {
+      this.#minuteOffset = Math.max(0, Math.min(maxOffset, this.#minuteOffset + delta));
+    } else {
+      this.#periodOffset = Math.max(0, Math.min(maxOffset, this.#periodOffset + delta));
+    }
+
+    this.#updateValue();
+  }
+
+  #updateDragTransform(): void {
+    if (!this.#dragState.column) return;
+
+    const columnClass = this.#dragState.column === "hour" ? "picker-column--hour" :
+                        this.#dragState.column === "minute" ? "picker-column--minute" :
+                        "picker-column--period";
+
+    const columnEl = this.shadowRoot?.querySelector(`.${columnClass}`) as HTMLElement;
+    const list = columnEl?.querySelector(".picker-list") as HTMLElement;
+    if (list) {
+      list.style.transform = `translateY(-${this.#dragState.currentOffset * ITEM_HEIGHT}px)`;
+    }
+  }
+
+  #handleClick(column: "hour" | "minute" | "period", e: MouseEvent): void {
+    if (this.disabled || this.#dragState.column) return;
+
+    const target = e.target as HTMLElement;
+    if (!target.classList.contains("picker-item")) return;
+
+    const index = parseInt(target.dataset.index || "0", 10);
+    const maxOffset = column === "hour" ? this.#getHours().length - 1 :
+                      column === "minute" ? 59 : 1;
+    const clampedIndex = Math.max(0, Math.min(maxOffset, index));
+
+    if (column === "hour") {
+      this.#hourOffset = clampedIndex;
+    } else if (column === "minute") {
+      this.#minuteOffset = clampedIndex;
+    } else {
+      this.#periodOffset = clampedIndex;
+    }
+
+    this.#updateValue();
+  }
+
+  #updateValue(): void {
+    const hours = this.#getHours();
+    const hour = hours[this.#hourOffset];
+    const minute = MINUTES[this.#minuteOffset];
+
+    if (this.hourFormat === "12") {
+      const period = PERIODS[this.#periodOffset];
+      this.value = `${hour}:${minute} ${period}`;
+    } else {
+      this.value = `${hour}:${minute}`;
+    }
+
+    this.#internals.setFormValue(this.value);
+
+    this.dispatchEvent(
+      new CustomEvent("change", {
+        detail: { value: this.value },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+
+    this.requestUpdate();
+  }
+
   render() {
     this.#updateOffsetsFromValue();
-    const hours = this.hourFormat === "12" ? HOURS_12 : HOURS_24;
+    const hours = this.#getHours();
 
-    const hourTransform = `translateY(calc(-50% + ${this.#hourOffset * 40}px))`;
-    const minuteTransform = `translateY(calc(-50% + ${this.#minuteOffset * 40}px))`;
-    const periodTransform = `translateY(calc(-50% + ${this.#periodOffset * 40}px))`;
+    const hourTransform = `translateY(-${this.#hourOffset * ITEM_HEIGHT}px)`;
+    const minuteTransform = `translateY(-${this.#minuteOffset * ITEM_HEIGHT}px)`;
+    const periodTransform = `translateY(-${this.#periodOffset * ITEM_HEIGHT}px)`;
 
     return html`
       ${this.label ? html`<label class="label">${this.label}</label>` : ""}
       <div class="picker-container">
-        <div class="picker-column" @click=${this.#handleHourClick}>
+        <div
+          class="picker-column picker-column--hour"
+          @click=${(e: MouseEvent) => this.#handleClick("hour", e)}
+          @pointerdown=${(e: PointerEvent) => this.#handlePointerDown("hour", e)}
+          @pointermove=${this.#handlePointerMove}
+          @pointerup=${this.#handlePointerUp}
+          @pointercancel=${this.#handlePointerUp}
+          @wheel=${(e: WheelEvent) => this.#handleWheel("hour", e)}
+        >
           <div class="selection-indicator"></div>
           <ul class="picker-list" style="transform: ${hourTransform}">
             ${hours.map((hour, i) => html`
@@ -200,7 +376,15 @@ export class MetroTimePickerRoller extends LitElement {
           </ul>
         </div>
         <span class="separator">:</span>
-        <div class="picker-column" @click=${this.#handleMinuteClick}>
+        <div
+          class="picker-column picker-column--minute"
+          @click=${(e: MouseEvent) => this.#handleClick("minute", e)}
+          @pointerdown=${(e: PointerEvent) => this.#handlePointerDown("minute", e)}
+          @pointermove=${this.#handlePointerMove}
+          @pointerup=${this.#handlePointerUp}
+          @pointercancel=${this.#handlePointerUp}
+          @wheel=${(e: WheelEvent) => this.#handleWheel("minute", e)}
+        >
           <div class="selection-indicator"></div>
           <ul class="picker-list" style="transform: ${minuteTransform}">
             ${MINUTES.map((minute, i) => html`
@@ -212,7 +396,15 @@ export class MetroTimePickerRoller extends LitElement {
         </div>
         ${this.hourFormat === "12"
           ? html`
-            <div class="picker-column" @click=${this.#handlePeriodClick}>
+            <div
+              class="picker-column picker-column--period"
+              @click=${(e: MouseEvent) => this.#handleClick("period", e)}
+              @pointerdown=${(e: PointerEvent) => this.#handlePointerDown("period", e)}
+              @pointermove=${this.#handlePointerMove}
+              @pointerup=${this.#handlePointerUp}
+              @pointercancel=${this.#handlePointerUp}
+              @wheel=${(e: WheelEvent) => this.#handleWheel("period", e)}
+            >
               <div class="selection-indicator"></div>
               <ul class="picker-list" style="transform: ${periodTransform}">
                 ${PERIODS.map((period, i) => html`
@@ -226,58 +418,6 @@ export class MetroTimePickerRoller extends LitElement {
           : ""}
       </div>
     `;
-  }
-
-  #handleHourClick(e: MouseEvent): void {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains("picker-item")) {
-      const index = parseInt(target.dataset.index || "0", 10);
-      this.#hourOffset = index;
-      this.#updateValue();
-    }
-  }
-
-  #handleMinuteClick(e: MouseEvent): void {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains("picker-item")) {
-      const index = parseInt(target.dataset.index || "0", 10);
-      this.#minuteOffset = index;
-      this.#updateValue();
-    }
-  }
-
-  #handlePeriodClick(e: MouseEvent): void {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains("picker-item")) {
-      const index = parseInt(target.dataset.index || "0", 10);
-      this.#periodOffset = index;
-      this.#updateValue();
-    }
-  }
-
-  #updateValue(): void {
-    const hours = this.hourFormat === "12" ? HOURS_12 : HOURS_24;
-    const hour = hours[this.#hourOffset];
-    const minute = MINUTES[this.#minuteOffset];
-    
-    if (this.hourFormat === "12") {
-      const period = PERIODS[this.#periodOffset];
-      this.value = `${hour}:${minute} ${period}`;
-    } else {
-      this.value = `${hour}:${minute}`;
-    }
-    
-    this.#internals.setFormValue(this.value);
-    
-    this.dispatchEvent(
-      new CustomEvent("change", {
-        detail: { value: this.value },
-        bubbles: true,
-        composed: true,
-      }),
-    );
-    
-    this.requestUpdate();
   }
 
   firstUpdated(): void {
@@ -300,13 +440,13 @@ export class MetroTimePickerRoller extends LitElement {
 
   formResetCallback(): void {
     const now = new Date();
-    const hour = this.hourFormat === "12" 
+    const hour = this.hourFormat === "12"
       ? String(now.getHours() % 12 || 12)
       : String(now.getHours()).padStart(2, "0");
     const minute = String(now.getMinutes()).padStart(2, "0");
     const period = now.getHours() >= 12 ? "PM" : "AM";
-    
-    this.value = this.hourFormat === "12" 
+
+    this.value = this.hourFormat === "12"
       ? `${hour}:${minute} ${period}`
       : `${hour}:${minute}`;
     this.#updateFormValue();
