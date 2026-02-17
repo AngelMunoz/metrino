@@ -57,6 +57,7 @@ metrino/
 | `metro-hub-section` | Individual hub section | [x] |
 | `metro-app-bar` | Bottom/top app bar | [x] |
 | `metro-app-bar-button` | App bar button | [x] |
+| `metro-split-view` | Split-pane navigation container | [x] |
 
 ### Tiles
 | Component | Sizes | Status |
@@ -64,6 +65,7 @@ metrino/
 | `metro-flip-tile` | small, medium, wide, large | [x] |
 | `metro-cycle-tile` | medium, wide | [x] |
 | `metro-iconic-tile` | small, medium, large | [x] |
+| `metro-live-tile` | small, medium, wide, large | [x] |
 
 ### Buttons
 | Component | Description | Status |
@@ -81,6 +83,10 @@ metrino/
 | `metro-radio-button` | Radio button | [x] |
 | `metro-toggle-switch` | On/off toggle | [x] |
 | `metro-slider` | Slider control | [x] |
+| `metro-auto-suggest-box` | Text input with suggestions | [x] |
+| `metro-combo-box` | Dropdown with text input | [x] |
+| `metro-number-box` | Numeric input with spin buttons | [x] |
+| `metro-rating` | Star rating control | [x] |
 
 ### Selection
 | Component | Description | Status |
@@ -108,17 +114,26 @@ metrino/
 | `metro-stack-panel` | Horizontal/vertical stack | [x] |
 | `metro-wrap-panel` | Wrapping layout | [x] |
 | `metro-scroll-viewer` | Scrollable container | [x] |
+| `metro-tile-grid` | Grid optimized for tiles | [x] |
 
 ### Dialogs
 | Component | Description | Status |
 |-----------|-------------|--------|
 | `metro-message-dialog` | Alert dialog | [x] |
 | `metro-flyout` | Popup flyout | [x] |
+| `metro-content-dialog` | Custom content dialog | [x] |
 
 ### Primitives
 | Component | Description | Status |
 |-----------|-------------|--------|
 | `metro-text-block` | Styled text container | [x] |
+| `metro-icon` | Symbol icon element | [x] |
+| `metro-expander` | Expandable/collapsible section | [x] |
+| `metro-info-bar` | Informational message bar | [x] |
+| `metro-menu-flyout` | Dropdown menu | [x] |
+| `metro-person-picture` | User avatar display | [x] |
+| `metro-toast` | Temporary notification | [x] |
+| `metro-tooltip` | Hover information tooltip | [x] |
 
 ---
 

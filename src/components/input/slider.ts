@@ -29,15 +29,13 @@ const baseStyles = css`
     top: 0;
   }
   .thumb {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     background: #ffffff;
-    border-radius: 50%;
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
   input[type="range"] {
     position: absolute;

@@ -54,13 +54,11 @@ export class MetroHyperlinkButton extends LitElement {
       }
 
       :host(:hover) {
-        background: var(--metro-accent, #0078d4);
-        color: #fff;
+        text-decoration: underline;
       }
 
       :host(.pressed) {
-        background: var(--metro-accent-dark, #005a9e);
-        color: #fff;
+        opacity: 0.7;
       }
     `,
   ];

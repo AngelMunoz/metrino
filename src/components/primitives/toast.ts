@@ -17,7 +17,6 @@ const baseStyles = css`
   }
   .toast {
     background: var(--metro-background, #1f1f1f);
-    border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
     border-top: 4px solid var(--metro-accent, #0078d4);
     padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
     min-width: 300px;

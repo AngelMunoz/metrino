@@ -623,6 +623,67 @@
         </div>
       </div>
       
+      <h3 style="margin-top: 24px;">Long List Selector</h3>
+      <p style="margin-bottom: 12px; color: var(--metro-foreground-secondary);">High-performance list for large datasets with grouping, jump list navigation, and multiple selection modes.</p>
+      
+      <div class="demo-grid" style="margin-bottom: 16px;">
+        <div class="demo-item wide-item">
+          <div class="demo-label">Selection Mode: None (Click Events)</div>
+          <metro-long-list-selector id="lls-none" display-member="name" selection-mode="none" max-height="150px"></metro-long-list-selector>
+          <p id="lls-none-output" style="font-size: 12px; color: var(--metro-foreground-secondary); margin-top: 8px;">Click an item...</p>
+        </div>
+        <div class="demo-item wide-item">
+          <div class="demo-label">Selection Mode: Single</div>
+          <metro-long-list-selector id="lls-single" display-member="name" selection-mode="single" max-height="150px"></metro-long-list-selector>
+          <p id="lls-single-output" style="font-size: 12px; color: var(--metro-foreground-secondary); margin-top: 8px;">No selection</p>
+        </div>
+      </div>
+      
+      <div class="demo-grid" style="margin-bottom: 16px;">
+        <div class="demo-item wide-item">
+          <div class="demo-label">Selection Mode: Multiple</div>
+          <metro-long-list-selector id="lls-multiple" display-member="name" selection-mode="multiple" max-height="150px"></metro-long-list-selector>
+          <p id="lls-multiple-output" style="font-size: 12px; color: var(--metro-foreground-secondary); margin-top: 8px;">No selection</p>
+        </div>
+        <div class="demo-item wide-item">
+          <div class="demo-label">With Grouping + Jump List</div>
+          <metro-long-list-selector id="lls-grouped" group-key="category" display-member="name" selection-mode="single" max-height="200px"></metro-long-list-selector>
+          <p id="lls-grouped-output" style="font-size: 12px; color: var(--metro-foreground-secondary); margin-top: 8px;">Click letter to jump</p>
+        </div>
+      </div>
+      
+      <div class="demo-grid" style="margin-bottom: 16px;">
+        <div class="demo-item">
+          <div class="demo-label">Grouped (No Jump List)</div>
+          <metro-long-list-selector id="lls-no-jump" group-key="category" display-member="name" show-jump-list="false" max-height="150px"></metro-long-list-selector>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Programmatic Selection</div>
+          <metro-long-list-selector id="lls-programmatic" display-member="name" selection-mode="single" max-height="150px"></metro-long-list-selector>
+          <div style="margin-top: 8px; display: flex; gap: 8px;">
+            <metro-button id="lls-select-btn">Select Item 3</metro-button>
+            <metro-button id="lls-clear-btn">Clear Selection</metro-button>
+          </div>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Empty State</div>
+          <metro-long-list-selector id="lls-empty" max-height="150px"></metro-long-list-selector>
+        </div>
+        <div class="demo-item">
+          <div class="demo-label">Keyboard Navigation</div>
+          <metro-long-list-selector id="lls-keyboard" display-member="name" selection-mode="multiple" max-height="150px"></metro-long-list-selector>
+          <p style="font-size: 10px; color: var(--metro-foreground-secondary); margin-top: 4px;">Use Arrow keys + Space/Enter</p>
+        </div>
+      </div>
+      
+      <div class="demo-grid">
+        <div class="demo-item full-item">
+          <div class="demo-label">Large Dataset (1000 items with groups)</div>
+          <metro-long-list-selector id="lls-large" group-key="letter" display-member="name" selection-mode="multiple" max-height="250px"></metro-long-list-selector>
+          <p id="lls-large-output" style="font-size: 12px; color: var(--metro-foreground-secondary); margin-top: 8px;">Loading...</p>
+        </div>
+      </div>
+      
       <h3 style="margin-top: 24px;">Semantic Zoom</h3>
       <p style="margin-bottom: 12px; color: var(--metro-foreground-secondary);">Use Ctrl+wheel or pinch gesture to zoom, or click the button.</p>
       <metro-semantic-zoom id="semantic-zoom-demo" style="height: 200px; border: 1px solid var(--metro-border);">
@@ -866,6 +927,7 @@
       // Selection
       import "../src/components/selection/list-box.ts";
       import "../src/components/selection/semantic-zoom.ts";
+      import "../src/components/selection/long-list-selector.ts";
       
       // Primitives
       import "../src/components/primitives/text-block.ts";
@@ -972,6 +1034,164 @@
         const splitView = document.getElementById("split-view-compact");
         if (splitView) splitView.toggle();
       });
+
+      // Long List Selector setup
+      const llsSimpleItems = [
+        { name: "Apple" }, { name: "Banana" }, { name: "Cherry" },
+        { name: "Date" }, { name: "Elderberry" }, { name: "Fig" }
+      ];
+      
+      const llsGroupedItems = [
+        { name: "Acura", category: "A" },
+        { name: "Alfa Romeo", category: "A" },
+        { name: "Aston Martin", category: "A" },
+        { name: "Audi", category: "A" },
+        { name: "Bentley", category: "B" },
+        { name: "BMW", category: "B" },
+        { name: "Bugatti", category: "B" },
+        { name: "Buick", category: "B" },
+        { name: "Cadillac", category: "C" },
+        { name: "Chevrolet", category: "C" },
+        { name: "Chrysler", category: "C" },
+        { name: "Dodge", category: "D" },
+        { name: "Ferrari", category: "F" },
+        { name: "Ford", category: "F" },
+        { name: "Honda", category: "H" },
+        { name: "Hyundai", category: "H" },
+        { name: "Infiniti", category: "I" },
+        { name: "Jaguar", category: "J" },
+        { name: "Jeep", category: "J" },
+        { name: "Kia", category: "K" },
+        { name: "Lamborghini", category: "L" },
+        { name: "Lexus", category: "L" },
+        { name: "Lincoln", category: "L" },
+        { name: "Maserati", category: "M" },
+        { name: "Mazda", category: "M" },
+        { name: "Mercedes-Benz", category: "M" },
+        { name: "Nissan", category: "N" },
+        { name: "Porsche", category: "P" },
+        { name: "Rolls-Royce", category: "R" },
+        { name: "Subaru", category: "S" },
+        { name: "Tesla", category: "T" },
+        { name: "Toyota", category: "T" },
+        { name: "Volkswagen", category: "V" },
+        { name: "Volvo", category: "V" }
+      ];
+
+      setTimeout(() => {
+        // Selection mode: none
+        const llsNone = document.getElementById("lls-none");
+        const llsNoneOutput = document.getElementById("lls-none-output");
+        if (llsNone) {
+          llsNone.items = llsSimpleItems;
+          llsNone.addEventListener("itemclick", (e) => {
+            if (llsNoneOutput) {
+              llsNoneOutput.textContent = `Clicked: ${e.detail.item.name} (index ${e.detail.index})`;
+            }
+          });
+        }
+
+        // Selection mode: single
+        const llsSingle = document.getElementById("lls-single");
+        const llsSingleOutput = document.getElementById("lls-single-output");
+        if (llsSingle) {
+          llsSingle.items = llsSimpleItems;
+          llsSingle.addEventListener("selectionchange", (e) => {
+            const selected = e.detail.selectedItems[0];
+            if (llsSingleOutput) {
+              llsSingleOutput.textContent = selected ? `Selected: ${selected.name}` : "No selection";
+            }
+          });
+        }
+
+        // Selection mode: multiple
+        const llsMultiple = document.getElementById("lls-multiple");
+        const llsMultipleOutput = document.getElementById("lls-multiple-output");
+        if (llsMultiple) {
+          llsMultiple.items = llsSimpleItems;
+          llsMultiple.addEventListener("selectionchange", (e) => {
+            const count = e.detail.selectedItems.length;
+            if (llsMultipleOutput) {
+              llsMultipleOutput.textContent = count > 0 
+                ? `${count} selected: ${e.detail.selectedItems.map(i => i.name).join(", ")}` 
+                : "No selection";
+            }
+          });
+        }
+
+        // Grouped with jump list
+        const llsGrouped = document.getElementById("lls-grouped");
+        const llsGroupedOutput = document.getElementById("lls-grouped-output");
+        if (llsGrouped) {
+          llsGrouped.items = llsGroupedItems;
+          llsGrouped.addEventListener("selectionchange", (e) => {
+            const selected = e.detail.selectedItems[0];
+            if (llsGroupedOutput) {
+              llsGroupedOutput.textContent = selected ? `Selected: ${selected.name}` : "Click letter to jump";
+            }
+          });
+        }
+
+        // Grouped without jump list
+        const llsNoJump = document.getElementById("lls-no-jump");
+        if (llsNoJump) {
+          llsNoJump.items = llsGroupedItems;
+        }
+
+        // Programmatic selection
+        const llsProgrammatic = document.getElementById("lls-programmatic");
+        if (llsProgrammatic) {
+          llsProgrammatic.items = llsSimpleItems;
+        }
+        
+        document.getElementById("lls-select-btn")?.addEventListener("click", () => {
+          if (llsProgrammatic) {
+            llsProgrammatic.selectedValue = llsSimpleItems[2].name;
+          }
+        });
+        
+        document.getElementById("lls-clear-btn")?.addEventListener("click", () => {
+          if (llsProgrammatic) {
+            llsProgrammatic.clearSelection();
+          }
+        });
+
+        // Empty state
+        const llsEmpty = document.getElementById("lls-empty");
+        if (llsEmpty) {
+          llsEmpty.items = [];
+        }
+
+        // Keyboard navigation demo
+        const llsKeyboard = document.getElementById("lls-keyboard");
+        if (llsKeyboard) {
+          llsKeyboard.items = llsSimpleItems;
+        }
+
+        // Large dataset
+        const llsLarge = document.getElementById("lls-large");
+        const llsLargeOutput = document.getElementById("lls-large-output");
+        if (llsLarge) {
+          const largeItems = [];
+          for (let i = 0; i < 1000; i++) {
+            const letter = String.fromCharCode(65 + (i % 26));
+            largeItems.push({
+              name: `Item ${i + 1}`,
+              letter: letter
+            });
+          }
+          llsLarge.items = largeItems;
+          if (llsLargeOutput) {
+            llsLargeOutput.textContent = `Loaded ${largeItems.length} items across 26 groups`;
+          }
+          llsLarge.addEventListener("selectionchange", (e) => {
+            const count = e.detail.selectedItems.length;
+            if (llsLargeOutput) {
+              llsLargeOutput.textContent = `${count} items selected`;
+            }
+          });
+        }
+      }, 100);
 
       // Tooltip setup
       const tooltip = document.getElementById("tooltip-demo");

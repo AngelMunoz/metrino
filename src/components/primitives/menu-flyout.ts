@@ -11,9 +11,7 @@ const baseStyles = css`
   }
   .menu-flyout {
     background: var(--metro-background, #1f1f1f);
-    border: 1px solid var(--metro-border, rgba(255,255,255,0.2));
     min-width: 160px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     animation: menuEnter var(--metro-transition-fast, 167ms) ease-out;
   }
   @keyframes menuEnter {

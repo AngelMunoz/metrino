@@ -12,8 +12,6 @@ const baseStyles = css`
   .flyout {
     position: fixed;
     background: var(--metro-background, #1f1f1f);
-    border: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     min-width: 160px;
     opacity: 0;
     transform: translateY(-8px);

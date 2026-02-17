@@ -5,7 +5,6 @@ const baseStyles = css`
   :host {
     display: block;
     font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
     background: var(--metro-background, #1f1f1f);
   }
   .expander-header {

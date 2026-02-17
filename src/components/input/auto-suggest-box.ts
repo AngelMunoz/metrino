@@ -43,8 +43,6 @@ const baseStyles = css`
     left: 0;
     right: 0;
     background: var(--metro-background, #1f1f1f);
-    border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-    border-top: none;
     max-height: 200px;
     overflow-y: auto;
     z-index: 100;

@@ -21,7 +21,6 @@ const baseStyles = css`
   .dialog {
     position: relative;
     background: var(--metro-background, #1f1f1f);
-    border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
     min-width: 320px;
     max-width: 500px;
     max-height: 80vh;
