@@ -47,8 +47,8 @@ export class MetroPanorama extends LitElement {
         margin-right: var(--metro-spacing-lg, 16px);
       }
       .panorama-title {
-        font-size: var(--metro-font-size-xlarge, 28px);
-        font-weight: 300;
+        font-size: var(--metro-font-size-xxlarge, 42px);
+        font-weight: 200;
         color: var(--metro-foreground, #ffffff);
         padding: var(--metro-spacing-lg, 16px);
         margin: 0;
