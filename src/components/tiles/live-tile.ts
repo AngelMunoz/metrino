@@ -1,92 +1,7 @@
 import { LitElement, html, css } from "lit";
+import { tileBase, tileSizes, tileBadge } from "../../styles/shared.ts";
 
 type TileSize = "small" | "medium" | "wide" | "large";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-  }
-  .live-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: var(--metro-accent, #0078d4);
-    color: #ffffff;
-  }
-  .live-content {
-    position: absolute;
-    inset: 0;
-    padding: var(--metro-spacing-sm, 8px);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    opacity: 0;
-    transform: translateY(100%);
-    transition:
-      opacity var(--metro-transition-slow, 333ms) ease-out,
-      transform var(--metro-transition-slow, 333ms) ease-out;
-    box-sizing: border-box;
-  }
-  .live-content.active {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .live-content.exiting {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  .live-title {
-    font-size: var(--metro-font-size-normal, 14px);
-    font-weight: 600;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-  }
-  .live-message {
-    font-size: var(--metro-font-size-small, 12px);
-    opacity: 0.8;
-  }
-  .live-count {
-    position: absolute;
-    top: var(--metro-spacing-sm, 8px);
-    right: var(--metro-spacing-sm, 8px);
-    font-size: var(--metro-font-size-medium, 16px);
-    font-weight: 600;
-  }
-  .live-badge {
-    position: absolute;
-    top: var(--metro-spacing-xs, 4px);
-    right: var(--metro-spacing-xs, 4px);
-    min-width: 18px;
-    height: 18px;
-    background: var(--metro-accent, #0078d4);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 0 4px;
-  }
-  :host([size="small"]) {
-    width: 70px;
-    height: 70px;
-  }
-  :host([size="medium"]) {
-    width: 150px;
-    height: 150px;
-  }
-  :host([size="wide"]) {
-    width: 310px;
-    height: 150px;
-  }
-  :host([size="large"]) {
-    width: 310px;
-    height: 310px;
-  }
-`;
 
 interface LiveTileItem {
   title?: string;
@@ -106,7 +21,58 @@ export class MetroLiveTile extends LitElement {
   declare count: number | undefined;
   declare badge: string | undefined;
 
-  static styles = baseStyles;
+  static styles = [
+    tileBase,
+    tileSizes,
+    tileBadge,
+    css`
+      .live-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: var(--metro-accent, #0078d4);
+        color: #ffffff;
+      }
+      .live-content {
+        position: absolute;
+        inset: 0;
+        padding: var(--metro-spacing-sm, 8px);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        opacity: 0;
+        transform: translateY(100%);
+        transition:
+          opacity var(--metro-transition-slow, 333ms) ease-out,
+          transform var(--metro-transition-slow, 333ms) ease-out;
+        box-sizing: border-box;
+      }
+      .live-content.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .live-content.exiting {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      .live-title {
+        font-size: var(--metro-font-size-normal, 14px);
+        font-weight: 600;
+        margin-bottom: var(--metro-spacing-xs, 4px);
+      }
+      .live-message {
+        font-size: var(--metro-font-size-small, 12px);
+        opacity: 0.8;
+      }
+      .live-count {
+        position: absolute;
+        top: var(--metro-spacing-sm, 8px);
+        right: var(--metro-spacing-sm, 8px);
+        font-size: var(--metro-font-size-medium, 16px);
+        font-weight: 600;
+      }
+    `,
+  ];
 
   #timer: number | null = null;
   #currentIndex = 0;
@@ -126,7 +92,7 @@ export class MetroLiveTile extends LitElement {
           ? html`<div class="live-count">${this.count}</div>`
           : ""}
         ${this.badge
-          ? html`<div class="live-badge">${this.badge}</div>`
+          ? html`<div class="tile-badge">${this.badge}</div>`
           : ""}
         <slot></slot>
       </div>

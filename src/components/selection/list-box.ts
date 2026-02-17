@@ -1,90 +1,90 @@
 import { LitElement, html, css } from "lit";
+import { baseTypography, disabledState, scrollbarVisible } from "../../styles/shared.ts";
 
 type SelectionMode = "single" | "multiple" | "extended";
 
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, system-ui, -apple-system, sans-serif);
-    border: 2px solid var(--metro-border, rgba(255,255,255,0.2));
-    background: var(--metro-background, #1f1f1f);
-  }
-  :host([disabled]) {
-    opacity: 0.4;
-  }
-  .list-container {
-    max-height: 200px;
-    overflow-y: auto;
-  }
-  ::slotted(.list-item) {
-    display: flex;
-    align-items: center;
-    gap: var(--metro-spacing-sm, 8px);
-    padding: var(--metro-spacing-md, 12px);
-    cursor: pointer;
-    color: var(--metro-foreground, #ffffff);
-    border-bottom: 1px solid var(--metro-border, rgba(255,255,255,0.1));
-    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
-    user-select: none;
-  }
-  ::slotted(.list-item:hover) {
-    background: var(--metro-highlight, rgba(255,255,255,0.1));
-  }
-  ::slotted(.list-item[selected]) {
-    background: var(--metro-accent, #0078d4);
-    color: #ffffff;
-  }
-  ::slotted(.list-item .selection-indicator) {
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--metro-foreground-secondary, rgba(255,255,255,0.5));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--metro-transition-fast, 167ms) ease-out;
-  }
-  ::slotted(.list-item[selected] .selection-indicator) {
-    background: #ffffff;
-    border-color: #ffffff;
-  }
-  ::slotted(.list-item .selection-indicator::after) {
-    content: "";
-    width: 8px;
-    height: 8px;
-    background: var(--metro-accent, #0078d4);
-    opacity: 0;
-    transition: opacity var(--metro-transition-fast, 167ms) ease-out;
-  }
-  ::slotted(.list-item[selected] .selection-indicator::after) {
-    opacity: 1;
-  }
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--metro-border, rgba(255,255,255,0.2));
-    border-radius: 4px;
-  }
-`;
-
 export class MetroListBox extends LitElement {
+  static formAssociated = true;
+
   static properties = {
     disabled: { type: Boolean, reflect: true },
-    selectionMode: { type: String, reflect: true },
+    name: { type: String, reflect: true },
+    selectionMode: { type: String, reflect: true, attribute: "selection-mode" },
   };
 
   declare disabled: boolean;
+  declare name: string;
   declare selectionMode: SelectionMode;
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    disabledState,
+    scrollbarVisible,
+    css`
+      :host {
+        display: block;
+        border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+        background: var(--metro-background, #1f1f1f);
+      }
+      .list-container {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      ::slotted(.list-item) {
+        display: flex;
+        align-items: center;
+        gap: var(--metro-spacing-sm, 8px);
+        padding: var(--metro-spacing-md, 12px);
+        cursor: pointer;
+        color: var(--metro-foreground, #ffffff);
+        border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
+        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        user-select: none;
+      }
+      ::slotted(.list-item:hover) {
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+      }
+      ::slotted(.list-item[selected]) {
+        background: var(--metro-accent, #0078d4);
+        color: #ffffff;
+      }
+      ::slotted(.list-item .selection-indicator) {
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--metro-transition-fast, 167ms) ease-out;
+      }
+      ::slotted(.list-item[selected] .selection-indicator) {
+        background: #ffffff;
+        border-color: #ffffff;
+      }
+      ::slotted(.list-item .selection-indicator::after) {
+        content: "";
+        width: 8px;
+        height: 8px;
+        background: var(--metro-accent, #0078d4);
+        opacity: 0;
+        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+      }
+      ::slotted(.list-item[selected] .selection-indicator::after) {
+        opacity: 1;
+      }
+    `,
+  ];
 
   #selectedIndices: Set<number> = new Set();
   #lastSelectedIndex = -1;
+  #internals: ElementInternals;
 
   constructor() {
     super();
     this.disabled = false;
+    this.name = "";
     this.selectionMode = "single";
+    this.#internals = this.attachInternals();
   }
 
   render() {
@@ -174,6 +174,8 @@ export class MetroListBox extends LitElement {
     const selectedItems = Array.from(this.#selectedIndices).map(i => items[i]).filter(Boolean);
     const selectedValues = selectedItems.map(item => item.textContent);
     
+    this.#updateFormValue();
+    
     this.dispatchEvent(new CustomEvent("selectionchanged", {
       detail: { 
         selectedIndices: Array.from(this.#selectedIndices),
@@ -183,6 +185,44 @@ export class MetroListBox extends LitElement {
       bubbles: true,
       composed: true,
     }));
+  }
+
+  #updateFormValue(): void {
+    const selectedValues = this.#getSelectedValues();
+    
+    if (selectedValues.length === 0) {
+      this.#internals.setFormValue(null);
+    } else if (selectedValues.length === 1) {
+      this.#internals.setFormValue(selectedValues[0]);
+    } else {
+      const formData = new FormData();
+      for (const val of selectedValues) {
+        formData.append(this.name || "list-box", val);
+      }
+      this.#internals.setFormValue(formData);
+    }
+  }
+
+  #getSelectedValues(): string[] {
+    const items = this.querySelectorAll(".list-item");
+    const selectedItems = Array.from(this.#selectedIndices).map(i => items[i]).filter(Boolean);
+    return selectedItems.map(item => {
+      const dataValue = item.getAttribute("data-value");
+      return dataValue !== null ? dataValue : (item.textContent?.trim() || "");
+    });
+  }
+
+  get value(): string[] {
+    return this.#getSelectedValues();
+  }
+
+  formDisabledCallback(disabled: boolean): void {
+    this.disabled = disabled;
+  }
+
+  formResetCallback(): void {
+    this.#clearSelection();
+    this.#updateFormValue();
   }
 
   get selectedIndices(): number[] {

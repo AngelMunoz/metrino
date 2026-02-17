@@ -1,13 +1,5 @@
 import { LitElement, html, css } from "lit";
 
-const baseStyles = css`
-  :host {
-    display: block;
-    padding: var(--metro-spacing-md, 12px);
-    box-sizing: border-box;
-  }
-`;
-
 export class MetroPivotItem extends LitElement {
   static properties = {
     header: { type: String, reflect: true },
@@ -15,7 +7,13 @@ export class MetroPivotItem extends LitElement {
 
   declare header: string;
 
-  static styles = baseStyles;
+  static styles = css`
+    :host {
+      display: block;
+      padding: var(--metro-spacing-md, 12px);
+      box-sizing: border-box;
+    }
+  `;
 
   constructor() {
     super();

@@ -1,109 +1,6 @@
 import { LitElement, html, css } from "lit";
+import { baseTypography, closeButton } from "../../styles/shared.ts";
 import "./icon.ts";
-
-const baseStyles = css`
-  :host {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--metro-spacing-md, 12px);
-    gap: var(--metro-spacing-sm, 8px);
-    pointer-events: none;
-  }
-  .toast {
-    background: var(--metro-background, #1f1f1f);
-    border-top: 4px solid var(--metro-accent, #0078d4);
-    padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
-    min-width: 300px;
-    max-width: 400px;
-    width: 100%;
-    pointer-events: auto;
-    animation: metro-slide-down var(--metro-transition-normal, 250ms)
-      var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-    font-family: var(--metro-font-family, system-ui, -apple-system, sans-serif);
-    display: flex;
-    align-items: flex-start;
-    gap: var(--metro-spacing-md, 12px);
-  }
-  @keyframes metro-slide-down {
-    from {
-      opacity: 0;
-      transform: translateY(-100%);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes metro-slide-up {
-    from {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(-100%);
-    }
-  }
-  .toast.exiting {
-    animation: metro-slide-up var(--metro-transition-fast, 167ms) ease-out forwards;
-  }
-  .toast.success {
-    border-top-color: #00a300;
-  }
-  .toast.warning {
-    border-top-color: #f09609;
-  }
-  .toast.error {
-    border-top-color: #e51400;
-  }
-  .toast-icon {
-    flex-shrink: 0;
-    color: var(--metro-accent, #0078d4);
-  }
-  .toast.success .toast-icon {
-    color: #00a300;
-  }
-  .toast.warning .toast-icon {
-    color: #f09609;
-  }
-  .toast.error .toast-icon {
-    color: #e51400;
-  }
-  .toast-content {
-    flex: 1;
-    min-width: 0;
-  }
-  .toast-title {
-    font-size: var(--metro-font-size-normal, 14px);
-    font-weight: 600;
-    color: var(--metro-foreground, #ffffff);
-    margin-bottom: 2px;
-  }
-  .toast-message {
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-  .toast-close {
-    background: none;
-    border: none;
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-    cursor: pointer;
-    padding: 0;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .toast-close:hover {
-    color: var(--metro-foreground, #ffffff);
-  }
-`;
 
 interface ToastOptions {
   title?: string;
@@ -120,7 +17,105 @@ const severityIcons: Record<string, string> = {
 };
 
 export class MetroToast extends LitElement {
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    closeButton,
+    css`
+      :host {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: var(--metro-spacing-md, 12px);
+        gap: var(--metro-spacing-sm, 8px);
+        pointer-events: none;
+      }
+      .toast {
+        background: var(--metro-background, #1f1f1f);
+        border-top: 4px solid var(--metro-accent, #0078d4);
+        padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
+        min-width: 300px;
+        max-width: 400px;
+        width: 100%;
+        pointer-events: auto;
+        animation: metro-slide-down var(--metro-transition-normal, 250ms)
+          var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        display: flex;
+        align-items: flex-start;
+        gap: var(--metro-spacing-md, 12px);
+      }
+      @keyframes metro-slide-down {
+        from {
+          opacity: 0;
+          transform: translateY(-100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes metro-slide-up {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-100%);
+        }
+      }
+      .toast.exiting {
+        animation: metro-slide-up var(--metro-transition-fast, 167ms) ease-out forwards;
+      }
+      .toast.success {
+        border-top-color: #00a300;
+      }
+      .toast.warning {
+        border-top-color: #f09609;
+      }
+      .toast.error {
+        border-top-color: #e51400;
+      }
+      .toast-icon {
+        flex-shrink: 0;
+        color: var(--metro-accent, #0078d4);
+      }
+      .toast.success .toast-icon {
+        color: #00a300;
+      }
+      .toast.warning .toast-icon {
+        color: #f09609;
+      }
+      .toast.error .toast-icon {
+        color: #e51400;
+      }
+      .toast-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .toast-title {
+        font-size: var(--metro-font-size-normal, 14px);
+        font-weight: 600;
+        color: var(--metro-foreground, #ffffff);
+        margin-bottom: 2px;
+      }
+      .toast-message {
+        font-size: var(--metro-font-size-small, 12px);
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+      }
+      .close-btn {
+        padding: 0;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    `,
+  ];
 
   #toasts: Map<string, HTMLElement> = new Map();
   #toastId = 0;
@@ -154,7 +149,7 @@ export class MetroToast extends LitElement {
     `;
 
     const closeBtn = document.createElement("button");
-    closeBtn.className = "toast-close";
+    closeBtn.className = "close-btn";
     closeBtn.setAttribute("aria-label", "Close");
     closeBtn.appendChild(closeIcon);
     closeBtn.addEventListener("click", () => this.hide(id));

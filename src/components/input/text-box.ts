@@ -1,39 +1,5 @@
-import { LitElement, html, css, type PropertyValues } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-  }
-  input {
-    width: 100%;
-    padding: var(--metro-spacing-md, 12px);
-    font-size: var(--metro-font-size-normal, 14px);
-    font-family: inherit;
-    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-    border: 2px solid transparent;
-    color: var(--metro-foreground, #ffffff);
-    outline: none;
-    transition: border-color var(--metro-transition-fast, 167ms) ease-out;
-    box-sizing: border-box;
-  }
-  input:focus {
-    border-color: var(--metro-accent, #0078d4);
-  }
-  input::placeholder {
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-  input:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .label {
-    display: block;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-`;
+import { LitElement, html, type PropertyValues } from "lit";
+import { inputBase } from "../../styles/shared.ts";
 
 export class MetroTextBox extends LitElement {
   static formAssociated = true;
@@ -54,7 +20,7 @@ export class MetroTextBox extends LitElement {
   declare name: string;
   declare required: boolean;
 
-  static styles = baseStyles;
+  static styles = inputBase;
 
   #internals: ElementInternals;
 

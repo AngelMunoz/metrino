@@ -1,50 +1,6 @@
 import { LitElement, html, css } from "lit";
+import { baseTypography } from "../../styles/shared.ts";
 import "./icon.ts";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    background: var(--metro-background, #1f1f1f);
-  }
-  .expander-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
-    cursor: pointer;
-    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .expander-header:hover {
-    background: var(--metro-highlight-hover, rgba(255, 255, 255, 0.15));
-  }
-  .expander-title {
-    font-size: var(--metro-font-size-normal, 14px);
-    font-weight: 400;
-    color: var(--metro-foreground, #ffffff);
-  }
-  .expander-icon {
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-    transition: transform var(--metro-transition-fast, 167ms) ease-out;
-    font-size: 12px;
-  }
-  :host([expanded]) .expander-icon {
-    transform: rotate(180deg);
-  }
-  .expander-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height var(--metro-transition-slow, 333ms)
-      var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-  }
-  :host([expanded]) .expander-content {
-    max-height: 500px;
-  }
-  .expander-inner {
-    padding: var(--metro-spacing-lg, 16px);
-  }
-`;
 
 export class MetroExpander extends LitElement {
   static properties = {
@@ -55,7 +11,52 @@ export class MetroExpander extends LitElement {
   declare expanded: boolean;
   declare title: string;
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    css`
+      :host {
+        display: block;
+        background: var(--metro-background, #1f1f1f);
+      }
+      .expander-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
+        cursor: pointer;
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .expander-header:hover {
+        background: var(--metro-highlight-hover, rgba(255, 255, 255, 0.15));
+      }
+      .expander-title {
+        font-size: var(--metro-font-size-normal, 14px);
+        font-weight: 400;
+        color: var(--metro-foreground, #ffffff);
+      }
+      .expander-icon {
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        transition: transform var(--metro-transition-fast, 167ms) ease-out;
+        font-size: 12px;
+      }
+      :host([expanded]) .expander-icon {
+        transform: rotate(180deg);
+      }
+      .expander-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height var(--metro-transition-slow, 333ms)
+          var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      :host([expanded]) .expander-content {
+        max-height: 500px;
+      }
+      .expander-inner {
+        padding: var(--metro-spacing-lg, 16px);
+      }
+    `,
+  ];
 
   constructor() {
     super();

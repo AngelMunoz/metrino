@@ -1,49 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--metro-spacing-sm, 8px);
-    cursor: pointer;
-    font-family: var(--metro-font-family, system-ui, -apple-system, sans-serif);
-    font-size: var(--metro-font-size-normal, 14px);
-    color: var(--metro-foreground, #ffffff);
-  }
-  :host([disabled]) {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .checkbox {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--metro-foreground-secondary, rgba(255,255,255,0.7));
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .checkbox.checked {
-    background: var(--metro-accent, #0078d4);
-    border-color: var(--metro-accent, #0078d4);
-  }
-  .checkmark {
-    width: 12px;
-    height: 12px;
-    color: #ffffff;
-    opacity: 0;
-    transform: scale(0);
-    transition: all var(--metro-transition-fast, 167ms) ease-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .checkbox.checked .checkmark {
-    opacity: 1;
-    transform: scale(1);
-  }
-`;
+import { toggleControlBase } from "../../styles/shared.ts";
 
 export class MetroCheckBox extends LitElement {
   static formAssociated = true;
@@ -60,7 +16,40 @@ export class MetroCheckBox extends LitElement {
   declare name: string;
   declare value: string;
 
-  static styles = baseStyles;
+  static styles = [
+    toggleControlBase,
+    css`
+      .checkbox {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .checkbox.checked {
+        background: var(--metro-accent, #0078d4);
+        border-color: var(--metro-accent, #0078d4);
+      }
+      .checkmark {
+        width: 12px;
+        height: 12px;
+        color: #ffffff;
+        opacity: 0;
+        transform: scale(0);
+        transition: all var(--metro-transition-fast, 167ms) ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .checkbox.checked .checkmark {
+        opacity: 1;
+        transform: scale(1);
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
 

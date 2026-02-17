@@ -1,24 +1,5 @@
 import { LitElement, html, css } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: flex;
-    flex-direction: column;
-    background: var(--metro-highlight, rgba(255,255,255,0.1));
-    min-height: 400px;
-  }
-  .item-header {
-    font-size: var(--metro-font-size-large, 20px);
-    font-weight: 300;
-    color: var(--metro-accent, #0078d4);
-    padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
-    margin: 0;
-  }
-  .item-content {
-    flex: 1;
-    padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
-  }
-`;
+import { baseTypography } from "../../styles/shared.ts";
 
 export class MetroPanoramaItem extends LitElement {
   static properties = {
@@ -27,7 +8,28 @@ export class MetroPanoramaItem extends LitElement {
 
   declare header: string;
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    css`
+      :host {
+        display: flex;
+        flex-direction: column;
+        background: var(--metro-highlight, rgba(255,255,255,0.1));
+        min-height: 400px;
+      }
+      .item-header {
+        font-size: var(--metro-font-size-large, 20px);
+        font-weight: 300;
+        color: var(--metro-accent, #0078d4);
+        padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
+        margin: 0;
+      }
+      .item-content {
+        flex: 1;
+        padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
+      }
+    `,
+  ];
 
   constructor() {
     super();

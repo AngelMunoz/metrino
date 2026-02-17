@@ -1,64 +1,7 @@
 import { LitElement, html, css } from "lit";
+import { tileBase, tileSizes } from "../../styles/shared.ts";
 
 type TileSize = "small" | "medium" | "wide" | "large";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    position: relative;
-    perspective: 1000px;
-    cursor: pointer;
-  }
-  .tile-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transition: transform var(--metro-transition-slow, 333ms) ease-out;
-    transform-style: preserve-3d;
-  }
-  :host([flipped]) .tile-container {
-    transform: rotateX(180deg);
-  }
-  .tile-face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--metro-spacing-sm, 8px);
-    box-sizing: border-box;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-  }
-  .tile-front {
-    background: var(--metro-accent, #0078d4);
-    color: #ffffff;
-  }
-  .tile-back {
-    background: var(--metro-background, #1f1f1f);
-    color: var(--metro-foreground, #ffffff);
-    transform: rotateX(180deg);
-  }
-  /* Size variants */
-  :host([size="small"]) {
-    width: 70px;
-    height: 70px;
-  }
-  :host([size="medium"]) {
-    width: 150px;
-    height: 150px;
-  }
-  :host([size="wide"]) {
-    width: 310px;
-    height: 150px;
-  }
-  :host([size="large"]) {
-    width: 310px;
-    height: 310px;
-  }
-`;
 
 export class MetroFlipTile extends LitElement {
   static properties = {
@@ -69,7 +12,46 @@ export class MetroFlipTile extends LitElement {
   declare size: TileSize;
   declare flipped: boolean;
 
-  static styles = baseStyles;
+  static styles = [
+    tileBase,
+    tileSizes,
+    css`
+      :host {
+        perspective: 1000px;
+      }
+      .tile-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform var(--metro-transition-slow, 333ms) ease-out;
+        transform-style: preserve-3d;
+      }
+      :host([flipped]) .tile-container {
+        transform: rotateX(180deg);
+      }
+      .tile-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--metro-spacing-sm, 8px);
+        box-sizing: border-box;
+      }
+      .tile-front {
+        background: var(--metro-accent, #0078d4);
+        color: #ffffff;
+      }
+      .tile-back {
+        background: var(--metro-background, #1f1f1f);
+        color: var(--metro-foreground, #ffffff);
+        transform: rotateX(180deg);
+      }
+    `,
+  ];
 
   constructor() {
     super();

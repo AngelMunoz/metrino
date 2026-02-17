@@ -1,31 +1,5 @@
 import { LitElement, html, css } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: flex;
-    flex-direction: column;
-    min-width: 200px;
-    flex: 1;
-  }
-  .section-header {
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    font-size: var(--metro-font-size-xxlarge, 42px);
-    font-weight: 200;
-    color: var(--metro-foreground, #ffffff);
-    margin: 0 0 var(--metro-spacing-md, 12px) 0;
-    padding: var(--metro-spacing-sm, 8px) 0;
-    cursor: pointer;
-    transition: color var(--metro-transition-fast, 167ms) ease-out;
-    user-select: none;
-  }
-  .section-header:hover {
-    color: var(--metro-accent, #0078d4);
-  }
-  .section-content {
-    padding: var(--metro-spacing-md, 12px);
-    padding-top: 0;
-  }
-`;
+import { baseTypography } from "../../styles/shared.ts";
 
 export class MetroHubSection extends LitElement {
   static properties = {
@@ -34,7 +8,34 @@ export class MetroHubSection extends LitElement {
 
   declare header: string;
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    css`
+      :host {
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+        flex: 1;
+      }
+      .section-header {
+        font-size: var(--metro-font-size-xxlarge, 42px);
+        font-weight: 200;
+        color: var(--metro-foreground, #ffffff);
+        margin: 0 0 var(--metro-spacing-md, 12px) 0;
+        padding: var(--metro-spacing-sm, 8px) 0;
+        cursor: pointer;
+        transition: color var(--metro-transition-fast, 167ms) ease-out;
+        user-select: none;
+      }
+      .section-header:hover {
+        color: var(--metro-accent, #0078d4);
+      }
+      .section-content {
+        padding: var(--metro-spacing-md, 12px);
+        padding-top: 0;
+      }
+    `,
+  ];
 
   constructor() {
     super();

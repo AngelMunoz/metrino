@@ -1,53 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    padding: var(--metro-spacing-sm, 8px) 0;
-  }
-  :host([disabled]) {
-    opacity: 0.4;
-  }
-  .slider-container {
-    position: relative;
-    height: 24px;
-    display: flex;
-    align-items: center;
-  }
-  .track {
-    width: 100%;
-    height: 4px;
-    background: var(--metro-foreground-secondary, rgba(255,255,255,0.4));
-    position: relative;
-  }
-  .fill {
-    height: 100%;
-    background: var(--metro-accent, #0078d4);
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-  .thumb {
-    width: 16px;
-    height: 16px;
-    background: #ffffff;
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    cursor: pointer;
-  }
-  input[type="range"] {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
-  :host([disabled]) input[type="range"] {
-    cursor: not-allowed;
-  }
-`;
+import { baseTypography, disabledState } from "../../styles/shared.ts";
 
 export class MetroSlider extends LitElement {
   static formAssociated = true;
@@ -68,7 +20,51 @@ export class MetroSlider extends LitElement {
   declare disabled: boolean;
   declare name: string;
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    disabledState,
+    css`
+      :host {
+        display: block;
+        padding: var(--metro-spacing-sm, 8px) 0;
+      }
+      .slider-container {
+        position: relative;
+        height: 24px;
+        display: flex;
+        align-items: center;
+      }
+      .track {
+        width: 100%;
+        height: 4px;
+        background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.4));
+        position: relative;
+      }
+      .fill {
+        height: 100%;
+        background: var(--metro-accent, #0078d4);
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .thumb {
+        width: 16px;
+        height: 16px;
+        background: #ffffff;
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+      }
+      input[type="range"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
 

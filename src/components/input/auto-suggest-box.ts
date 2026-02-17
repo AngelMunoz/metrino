@@ -1,75 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
+import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    position: relative;
-  }
-  .input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  input {
-    width: 100%;
-    padding: var(--metro-spacing-md, 12px);
-    padding-right: 40px;
-    font-size: var(--metro-font-size-normal, 14px);
-    font-family: inherit;
-    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-    border: 2px solid transparent;
-    color: var(--metro-foreground, #ffffff);
-    outline: none;
-    transition: border-color var(--metro-transition-fast, 167ms) ease-out;
-    box-sizing: border-box;
-  }
-  input:focus {
-    border-color: var(--metro-accent, #0078d4);
-  }
-  input::placeholder {
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-  .search-icon {
-    position: absolute;
-    right: var(--metro-spacing-md, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-    pointer-events: none;
-  }
-  .suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--metro-background, #1f1f1f);
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 100;
-    display: none;
-  }
-  .suggestions.open {
-    display: block;
-  }
-  .suggestion-item {
-    padding: var(--metro-spacing-md, 12px);
-    cursor: pointer;
-    color: var(--metro-foreground, #ffffff);
-    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .suggestion-item:hover,
-  .suggestion-item.highlighted {
-    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-  }
-  .suggestion-item strong {
-    color: var(--metro-accent, #0078d4);
-  }
-  .no-results {
-    padding: var(--metro-spacing-md, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
-    font-style: italic;
-  }
-`;
 
 export class MetroAutoSuggestBox extends LitElement {
   static formAssociated = true;
@@ -88,7 +19,62 @@ export class MetroAutoSuggestBox extends LitElement {
   declare disabled: boolean;
   declare name: string;
 
-  static styles = baseStyles;
+  static styles = [
+    inputBase,
+    dropdownAnimation,
+    css`
+      :host {
+        position: relative;
+      }
+      .input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      input {
+        padding-right: 40px;
+      }
+      .search-icon {
+        position: absolute;
+        right: var(--metro-spacing-md, 12px);
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        pointer-events: none;
+      }
+      .suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--metro-background, #1f1f1f);
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+      }
+      .suggestions.open {
+        display: block;
+        animation: dropdownEnter var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .suggestion-item {
+        padding: var(--metro-spacing-md, 12px);
+        cursor: pointer;
+        color: var(--metro-foreground, #ffffff);
+        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .suggestion-item:hover,
+      .suggestion-item.highlighted {
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+      }
+      .suggestion-item strong {
+        color: var(--metro-accent, #0078d4);
+      }
+      .no-results {
+        padding: var(--metro-spacing-md, 12px);
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
+        font-style: italic;
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
   #suggestions: string[] = [];

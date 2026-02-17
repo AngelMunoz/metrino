@@ -1,36 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-  }
-  input {
-    width: 100%;
-    padding: var(--metro-spacing-md, 12px);
-    font-size: var(--metro-font-size-normal, 14px);
-    font-family: inherit;
-    background: var(--metro-highlight, rgba(255,255,255,0.1));
-    border: 2px solid transparent;
-    color: var(--metro-foreground, #ffffff);
-    outline: none;
-    transition: border-color var(--metro-transition-fast, 167ms) ease-out;
-    box-sizing: border-box;
-  }
-  input:focus {
-    border-color: var(--metro-accent, #0078d4);
-  }
-  input::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
-  }
-  .label {
-    display: block;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255,255,255,0.7));
-  }
-`;
+import { inputBase } from "../../styles/shared.ts";
 
 export class MetroTimePicker extends LitElement {
   static formAssociated = true;
@@ -49,7 +18,15 @@ export class MetroTimePicker extends LitElement {
   declare required: boolean;
   declare disabled: boolean;
 
-  static styles = baseStyles;
+  static styles = [
+    inputBase,
+    css`
+      input::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
 

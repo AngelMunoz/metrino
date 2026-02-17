@@ -1,67 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
+import { inputBase } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-  }
-  .input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  input {
-    width: 100%;
-    padding: var(--metro-spacing-md, 12px);
-    padding-right: 44px;
-    font-size: var(--metro-font-size-normal, 14px);
-    font-family: inherit;
-    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-    border: 2px solid transparent;
-    color: var(--metro-foreground, #ffffff);
-    outline: none;
-    transition: border-color var(--metro-transition-fast, 167ms) ease-out;
-    box-sizing: border-box;
-  }
-  input:focus {
-    border-color: var(--metro-accent, #0078d4);
-  }
-  input::placeholder {
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-  input:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .label {
-    display: block;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-  .reveal-btn {
-    position: absolute;
-    right: var(--metro-spacing-sm, 8px);
-    background: none;
-    border: none;
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-    cursor: pointer;
-    padding: var(--metro-spacing-xs, 4px);
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .reveal-btn:hover {
-    color: var(--metro-foreground, #ffffff);
-  }
-  .reveal-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-`;
 
 export class MetroPasswordBox extends LitElement {
   static formAssociated = true;
@@ -84,7 +23,50 @@ export class MetroPasswordBox extends LitElement {
   declare required: boolean;
   declare revealed: boolean;
 
-  static styles = baseStyles;
+  static styles = [
+    inputBase,
+    css`
+      .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      input::-ms-reveal,
+      input::-ms-clear {
+        display: none;
+      }
+      input::-webkit-credentials-auto-fill-button {
+        visibility: hidden;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+      }
+      input {
+        padding-right: 44px;
+      }
+      .reveal-btn {
+        position: absolute;
+        right: var(--metro-spacing-sm, 8px);
+        background: none;
+        border: none;
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        cursor: pointer;
+        padding: var(--metro-spacing-xs, 4px);
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .reveal-btn:hover {
+        color: var(--metro-foreground, #ffffff);
+      }
+      .reveal-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
 

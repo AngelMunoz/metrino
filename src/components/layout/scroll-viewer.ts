@@ -1,15 +1,5 @@
 import { LitElement, html, css } from "lit";
-
-const baseStyles = css`
-  :host { display: block; overflow: hidden; box-sizing: border-box; }
-  .scroll-container { width: 100%; height: 100%; overflow: auto; }
-  :host([scrollOrientation="horizontal"]) .scroll-container { overflow-x: auto; overflow-y: hidden; }
-  :host([scrollOrientation="vertical"]) .scroll-container { overflow-x: hidden; overflow-y: auto; }
-  :host([scrollOrientation="both"]) .scroll-container { overflow: auto; }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--metro-border, rgba(255,255,255,0.2)); border-radius: 4px; }
-`;
+import { scrollbarVisible } from "../../styles/shared.ts";
 
 export type ScrollOrientation = "horizontal" | "vertical" | "both";
 
@@ -20,7 +10,16 @@ export class MetroScrollViewer extends LitElement {
 
   declare scrollOrientation: ScrollOrientation;
 
-  static styles = baseStyles;
+  static styles = [
+    scrollbarVisible,
+    css`
+      :host { display: block; overflow: hidden; box-sizing: border-box; }
+      .scroll-container { width: 100%; height: 100%; overflow: auto; }
+      :host([scrollOrientation="horizontal"]) .scroll-container { overflow-x: auto; overflow-y: hidden; }
+      :host([scrollOrientation="vertical"]) .scroll-container { overflow-x: hidden; overflow-y: auto; }
+      :host([scrollOrientation="both"]) .scroll-container { overflow: auto; }
+    `,
+  ];
 
   constructor() {
     super();

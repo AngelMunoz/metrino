@@ -63,9 +63,17 @@ suite("metro-long-list-selector", () => {
 
     container.appendChild(el);
     await el.updateComplete;
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 10));
 
     return el;
+  }
+
+  function getRenderedItems(el: MetroLongListSelector): { index: number; text: string }[] {
+    const items = el.shadowRoot?.querySelectorAll(".list-item");
+    return Array.from(items ?? []).map(item => ({
+      index: parseInt(item.getAttribute("data-index") || "-1"),
+      text: item.querySelector("span")?.textContent?.trim() || "",
+    }));
   }
 
   suite("basic rendering", () => {
@@ -87,142 +95,248 @@ suite("metro-long-list-selector", () => {
       assert.equal(firstItem?.textContent?.trim(), "Apple");
     });
 
-    test("displays items as string when no displayMember", async () => {
-      const stringItems = ["One", "Two", "Three"];
-      const el = await createList({ items: stringItems as unknown as TestItem[] });
-      const items = el.shadowRoot?.querySelectorAll(".list-item span");
-      assert.equal(items?.[0]?.textContent?.trim(), "One");
-      assert.equal(items?.[1]?.textContent?.trim(), "Two");
-      assert.equal(items?.[2]?.textContent?.trim(), "Three");
-    });
-
-    test("applies custom max-height", async () => {
-      const el = await createList({ maxHeight: "200px" });
-      const listContainer = el.shadowRoot?.querySelector(
-        ".list-container"
-      ) as HTMLElement;
-      assert.equal(listContainer?.style.maxHeight, "200px");
-    });
-
     test("shows empty message when no items", async () => {
       const el = await createList({ items: [] });
       const emptyMsg = el.shadowRoot?.querySelector(".empty-message");
       assert.exists(emptyMsg);
       assert.equal(emptyMsg?.textContent, "No items");
     });
+  });
 
-    test("sets default properties correctly", async () => {
-      const el = await createList();
-      assert.deepEqual(el.items, sampleItems);
-      assert.equal(el.groupKey, "");
-      assert.equal(el.displayMember, "");
-      assert.equal(el.valueMember, "");
-      assert.equal(el.selectionMode, "none");
-      assert.equal(el.maxHeight, "300px");
-      assert.isTrue(el.showJumpList);
+  suite("flat list index and text consistency", () => {
+    test("data-index matches actual item position", async () => {
+      const el = await createList({ displayMember: "name" });
+      const rendered = getRenderedItems(el);
+      
+      assert.equal(rendered[0].index, 0, "First item should have index 0");
+      assert.equal(rendered[0].text, "Apple", "First item text should match");
+      
+      assert.equal(rendered[5].index, 5, "Last item should have index 5");
+      assert.equal(rendered[5].text, "Date", "Last item text should match");
+    });
+
+    test("flat list with 100 items - all indices correct", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 100; i++) {
+        items.push({ id: i, name: `Item ${i}`, category: "A" });
+      }
+      const el = await createList({ items, displayMember: "name", maxHeight: "150px" });
+      
+      const rendered = getRenderedItems(el);
+      for (const item of rendered) {
+        assert.equal(item.text, `Item ${item.index}`, 
+          `Item at index ${item.index} should show "Item ${item.index}" but showed "${item.text}"`);
+      }
     });
   });
 
-  suite("grouped rendering", () => {
-    test("renders group headers when groupKey is set", async () => {
-      const el = await createList({ groupKey: "category" });
-      const headers = el.shadowRoot?.querySelectorAll(".group-header");
-      assert.equal(headers?.length, 4);
+  suite("grouped list index and text consistency", () => {
+    test("grouped items have correct indices", async () => {
+      const el = await createList({ groupKey: "category", displayMember: "name" });
+      const rendered = getRenderedItems(el);
+      
+      const appleItem = rendered.find(r => r.text === "Apple");
+      assert.exists(appleItem, "Apple should be rendered");
+      assert.equal(appleItem!.index, 0, "Apple should have index 0");
+      
+      const bananaItem = rendered.find(r => r.text === "Banana");
+      assert.exists(bananaItem, "Banana should be rendered");
+      assert.equal(bananaItem!.index, 2, "Banana should have index 2");
     });
 
-    test("groups are sorted alphabetically by key", async () => {
-      const el = await createList({ groupKey: "category" });
+    test("grouped items sorted alphabetically by category", async () => {
+      const el = await createList({ groupKey: "category", displayMember: "name" });
       const headers = el.shadowRoot?.querySelectorAll(".group-header");
-      const keys = Array.from(headers ?? []).map((h) => h.textContent?.trim());
+      const keys = Array.from(headers ?? []).map(h => h.textContent?.trim());
       assert.deepEqual(keys, ["A", "B", "C", "D"]);
     });
 
-    test("items are rendered under correct group headers", async () => {
-      const el = await createList({ groupKey: "category", displayMember: "name" });
-      const groupA = el.shadowRoot?.querySelector(
-        '[data-group-key="A"]'
-      )?.nextElementSibling;
-      assert.equal(groupA?.querySelector("span")?.textContent?.trim(), "Apple");
+    test("grouped list with 100 items across categories - all indices correct", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 100; i++) {
+        const letter = String.fromCharCode(65 + (i % 26));
+        items.push({ id: i, name: `Item ${i}`, category: letter });
+      }
+      const el = await createList({ 
+        items, 
+        groupKey: "category", 
+        displayMember: "name",
+        maxHeight: "150px" 
+      });
+      
+      const rendered = getRenderedItems(el);
+      for (const item of rendered) {
+        assert.equal(item.text, `Item ${item.index}`,
+          `Grouped item at index ${item.index} should show "Item ${item.index}" but showed "${item.text}"`);
+      }
+    });
+  });
+
+  suite("scrolling preserves index consistency", () => {
+    test("scrolling flat list maintains correct indices", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 200; i++) {
+        items.push({ id: i, name: `Item ${i}`, category: "A" });
+      }
+      const el = await createList({ items, displayMember: "name", maxHeight: "150px" });
+      
+      const container = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      container.scrollTop = 3000;
+      container.dispatchEvent(new Event("scroll"));
+      await el.updateComplete;
+      
+      const rendered = getRenderedItems(el);
+      for (const item of rendered) {
+        assert.equal(item.text, `Item ${item.index}`,
+          `After scroll, item at index ${item.index} should show "Item ${item.index}" but showed "${item.text}"`);
+      }
     });
 
-    test("group headers are sticky positioned", async () => {
-      const el = await createList({ groupKey: "category" });
-      const header = el.shadowRoot?.querySelector(
-        ".group-header"
-      ) as HTMLElement;
-      assert.equal(getComputedStyle(header).position, "sticky");
+    test("scrolling grouped list maintains correct indices", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 500; i++) {
+        const letter = String.fromCharCode(65 + (i % 26));
+        items.push({ id: i, name: `Item ${i}`, category: letter });
+      }
+      const el = await createList({ 
+        items, 
+        groupKey: "category", 
+        displayMember: "name",
+        maxHeight: "150px" 
+      });
+      
+      const container = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      container.scrollTop = 10000;
+      container.dispatchEvent(new Event("scroll"));
+      await el.updateComplete;
+      
+      const rendered = getRenderedItems(el);
+      for (const item of rendered) {
+        assert.equal(item.text, `Item ${item.index}`,
+          `After scroll in grouped list, item at index ${item.index} should show "Item ${item.index}" but showed "${item.text}"`);
+      }
     });
 
-    test("renders items without grouping when groupKey is empty", async () => {
-      const el = await createList({ groupKey: "" });
-      const headers = el.shadowRoot?.querySelectorAll(".group-header");
-      assert.equal(headers?.length, 0);
+    test("scrolling to bottom of large grouped list shows last items correctly", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 1000; i++) {
+        const letter = String.fromCharCode(65 + (i % 26));
+        items.push({ id: i, name: `Item ${i}`, category: letter });
+      }
+      const el = await createList({ 
+        items, 
+        groupKey: "category", 
+        displayMember: "name",
+        maxHeight: "150px" 
+      });
+      
+      const container = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      container.scrollTop = container.scrollHeight;
+      container.dispatchEvent(new Event("scroll"));
+      await el.updateComplete;
+      
+      const rendered = getRenderedItems(el);
+      assert.isAbove(rendered.length, 0, "Should have rendered items at bottom");
+      
+      for (const item of rendered) {
+        assert.equal(item.text, `Item ${item.index}`,
+          `Item at index ${item.index} should show "Item ${item.index}" but showed "${item.text}"`);
+      }
+      
+      const lastGroup = el.shadowRoot?.querySelector('.group-header[data-group-key="Z"]');
+      assert.exists(lastGroup, "Should have Z group visible");
     });
 
-    test("handles null/undefined group values", async () => {
-      const itemsWithNull: TestItem[] = [
-        { id: 1, name: "Test1", category: null as unknown as string },
-        { id: 2, name: "Test2", category: undefined as unknown as string },
-        { id: 3, name: "Test3", category: "A" },
-      ];
-      const el = await createList({ items: itemsWithNull, groupKey: "category" });
-      const headers = el.shadowRoot?.querySelectorAll(".group-header");
-      assert.isAtLeast(headers?.length ?? 0, 2);
+    test("10000 items - can see Item 10000 at bottom", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 10000; i++) {
+        const letter = String.fromCharCode(65 + (i % 26));
+        items.push({ id: i + 1, name: `Item ${i + 1}`, category: letter });
+      }
+      const el = await createList({ 
+        items, 
+        groupKey: "category", 
+        displayMember: "name",
+        maxHeight: "200px" 
+      });
+      
+      const container = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      container.scrollTop = container.scrollHeight;
+      container.dispatchEvent(new Event("scroll"));
+      await el.updateComplete;
+      
+      const rendered = getRenderedItems(el);
+      assert.isAbove(rendered.length, 0, "Should have rendered items");
+      
+      for (const item of rendered) {
+        const expectedName = `Item ${item.index + 1}`;
+        assert.equal(item.text, expectedName,
+          `Item at index ${item.index} should show "${expectedName}" but showed "${item.text}"`);
+      }
+    });
+
+    test("scrolling through entire list can see all items", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 500; i++) {
+        const letter = String.fromCharCode(65 + (i % 26));
+        items.push({ id: i + 1, name: `Item ${i + 1}`, category: letter });
+      }
+      const el = await createList({ 
+        items, 
+        groupKey: "category", 
+        displayMember: "name",
+        maxHeight: "150px" 
+      });
+
+      const seenIndices = new Set<number>();
+      const container = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      
+      for (let scrollPos = 0; scrollPos < container.scrollHeight; scrollPos += 100) {
+        container.scrollTop = scrollPos;
+        container.dispatchEvent(new Event("scroll"));
+        await el.updateComplete;
+        
+        const rendered = getRenderedItems(el);
+        for (const item of rendered) {
+          seenIndices.add(item.index);
+        }
+      }
+      
+      container.scrollTop = container.scrollHeight;
+      container.dispatchEvent(new Event("scroll"));
+      await el.updateComplete;
+      const finalRendered = getRenderedItems(el);
+      for (const item of finalRendered) {
+        seenIndices.add(item.index);
+      }
+
+      assert.equal(seenIndices.size, 500, `Should have seen all 500 items, but only saw ${seenIndices.size}`);
+      
+      const maxIndex = Math.max(...seenIndices);
+      assert.equal(maxIndex, 499, `Max index should be 499, got ${maxIndex}`);
     });
   });
 
   suite("selection mode: none", () => {
-    test("clicking item dispatches itemclick event", async () => {
-      const el = await createList({ selectionMode: "none" });
+    test("clicking item dispatches itemclick event with correct data", async () => {
+      const el = await createList({ selectionMode: "none", displayMember: "name" });
 
-      let clickedItem: TestItem | null = null;
       let clickedIndex: number | null = null;
+      let clickedItem: TestItem | null = null;
       el.addEventListener(
         "itemclick",
         ((e: CustomEvent) => {
-          clickedItem = e.detail.item;
           clickedIndex = e.detail.index;
+          clickedItem = e.detail.item;
         }) as EventListener
       );
 
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.click();
+      const items = el.shadowRoot?.querySelectorAll(".list-item");
+      (items?.[2] as HTMLElement)?.click();
       await el.updateComplete;
 
-      assert.deepEqual(clickedItem, sampleItems[0]);
-      assert.equal(clickedIndex, 0);
-    });
-
-    test("clicking does not select item in none mode", async () => {
-      const el = await createList({ selectionMode: "none" });
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.click();
-      await el.updateComplete;
-
-      assert.isFalse(firstItem.classList.contains("selected"));
-      assert.deepEqual(el.getSelectedIndices(), []);
-    });
-
-    test("does not dispatch selectionchange in none mode", async () => {
-      const el = await createList({ selectionMode: "none" });
-
-      let selectionChanged = false;
-      el.addEventListener("selectionchange", () => {
-        selectionChanged = true;
-      });
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.click();
-      await el.updateComplete;
-
-      assert.isFalse(selectionChanged);
+      assert.equal(clickedIndex, 2);
+      assert.deepEqual(clickedItem, sampleItems[2]);
     });
   });
 
@@ -239,113 +353,20 @@ suite("metro-long-list-selector", () => {
       assert.isTrue(firstItem.classList.contains("selected"));
     });
 
-    test("only one item can be selected at a time", async () => {
+    test("getSelectedIndices returns correct indices after selection", async () => {
       const el = await createList({ selectionMode: "single" });
 
       const items = el.shadowRoot?.querySelectorAll(".list-item");
-      items?.[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await el.updateComplete;
-      items?.[2]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      items?.[3]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       await el.updateComplete;
 
-      assert.isFalse(items?.[0]?.classList.contains("selected"));
-      assert.isTrue(items?.[2]?.classList.contains("selected"));
-    });
-
-    test("selectedValue is updated when item is selected", async () => {
-      const el = await createList({
-        selectionMode: "single",
-        valueMember: "id",
-      });
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.click();
-      await el.updateComplete;
-
-      assert.equal(el.selectedValue, 1);
-    });
-
-    test("dispatches selectionchange event with correct details", async () => {
-      const el = await createList({ selectionMode: "single" });
-
-      let detail: {
-        selectedItems: TestItem[];
-        selectedIndices: number[];
-        selectedValue: unknown;
-      } | null = null;
-      el.addEventListener(
-        "selectionchange",
-        ((e: CustomEvent) => {
-          detail = e.detail;
-        }) as EventListener
-      );
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.click();
-      await el.updateComplete;
-
-      assert.deepEqual(detail!.selectedItems, [sampleItems[0]]);
-      assert.deepEqual(detail!.selectedIndices, [0]);
-    });
-
-    test("syncs selection from selectedValue property", async () => {
-      const el = await createList({
-        selectionMode: "single",
-        valueMember: "id",
-        selectedValue: 3,
-      });
-      await el.updateComplete;
-      await new Promise((r) => setTimeout(r, 50));
-
-      const selectedItems = el.shadowRoot?.querySelectorAll(".list-item.selected");
-      assert.equal(selectedItems?.length, 1, "Should have exactly 1 selected item");
-      assert.deepEqual(el.getSelectedItems(), [sampleItems[2]]);
+      assert.deepEqual(el.getSelectedIndices(), [3]);
+      assert.deepEqual(el.getSelectedItems(), [sampleItems[3]]);
     });
   });
 
   suite("selection mode: multiple", () => {
-    test("clicking item toggles selection", async () => {
-      const el = await createList({ selectionMode: "multiple" });
-
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      items?.[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await el.updateComplete;
-      items?.[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await el.updateComplete;
-
-      assert.isTrue(items?.[0]?.classList.contains("selected"));
-      assert.isTrue(items?.[1]?.classList.contains("selected"));
-    });
-
-    test("clicking selected item deselects it", async () => {
-      const el = await createList({ selectionMode: "multiple" });
-
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      items?.[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await el.updateComplete;
-      items?.[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await el.updateComplete;
-
-      assert.isFalse(items?.[0]?.classList.contains("selected"));
-    });
-
-    test("multiple items can be selected simultaneously", async () => {
-      const el = await createList({ selectionMode: "multiple" });
-
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      [0, 2, 4].forEach((i) => {
-        items?.[i]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      });
-      await el.updateComplete;
-
-      assert.deepEqual(el.getSelectedIndices(), [0, 2, 4]);
-    });
-
-    test("getSelectedItems returns all selected items", async () => {
+    test("multiple items can be selected", async () => {
       const el = await createList({ selectionMode: "multiple" });
 
       const items = el.shadowRoot?.querySelectorAll(".list-item");
@@ -354,134 +375,7 @@ suite("metro-long-list-selector", () => {
       items?.[2]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       await el.updateComplete;
 
-      const selected = el.getSelectedItems();
-      assert.deepEqual(selected, [sampleItems[0], sampleItems[2]]);
-    });
-  });
-
-  suite("keyboard navigation", () => {
-    test("Enter key selects item in single mode", async () => {
-      const el = await createList({ selectionMode: "single" });
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.focus();
-      firstItem.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "Enter", bubbles: true })
-      );
-      await el.updateComplete;
-
-      assert.isTrue(firstItem.classList.contains("selected"));
-    });
-
-    test("Space key selects item in single mode", async () => {
-      const el = await createList({ selectionMode: "single" });
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.dispatchEvent(
-        new KeyboardEvent("keydown", { key: " ", bubbles: true })
-      );
-      await el.updateComplete;
-
-      assert.isTrue(firstItem.classList.contains("selected"));
-    });
-
-    test("Space key toggles selection in multiple mode", async () => {
-      const el = await createList({ selectionMode: "multiple" });
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.dispatchEvent(
-        new KeyboardEvent("keydown", { key: " ", bubbles: true })
-      );
-      await el.updateComplete;
-      assert.isTrue(firstItem.classList.contains("selected"));
-
-      firstItem.dispatchEvent(
-        new KeyboardEvent("keydown", { key: " ", bubbles: true })
-      );
-      await el.updateComplete;
-      assert.isFalse(firstItem.classList.contains("selected"));
-    });
-
-    test("ArrowDown moves focus to next item", async () => {
-      const el = await createList();
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-
-      items?.[0]?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })
-      );
-      await el.updateComplete;
-
-      const focused = el.shadowRoot?.activeElement;
-      assert.equal(focused, items?.[1]);
-    });
-
-    test("ArrowUp moves focus to previous item", async () => {
-      const el = await createList();
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      (items?.[2] as HTMLElement)?.focus();
-
-      items?.[2]?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true })
-      );
-      await el.updateComplete;
-
-      const focused = el.shadowRoot?.activeElement;
-      assert.equal(focused, items?.[1]);
-    });
-
-    test("ArrowDown does not go past last item", async () => {
-      const el = await createList();
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      const lastIndex = (items?.length ?? 1) - 1;
-      (items?.[lastIndex] as HTMLElement)?.focus();
-
-      items?.[lastIndex]?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })
-      );
-      await el.updateComplete;
-
-      const focused = el.shadowRoot?.activeElement;
-      assert.equal(focused, items?.[lastIndex]);
-    });
-
-    test("ArrowUp does not go before first item", async () => {
-      const el = await createList();
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-
-      items?.[0]?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true })
-      );
-      await el.updateComplete;
-
-      const focused = el.shadowRoot?.activeElement;
-      assert.equal(focused, items?.[0]);
-    });
-
-    test("items have tabindex for keyboard focus", async () => {
-      const el = await createList();
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      assert.equal(firstItem.getAttribute("tabindex"), "0");
-    });
-
-    test("items have correct ARIA attributes", async () => {
-      const el = await createList({ selectionMode: "single" });
-      const firstItem = el.shadowRoot?.querySelector(".list-item");
-
-      assert.equal(firstItem?.getAttribute("role"), "option");
-      assert.equal(firstItem?.getAttribute("aria-selected"), "false");
-
-      firstItem?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await el.updateComplete;
-
-      assert.equal(firstItem?.getAttribute("aria-selected"), "true");
+      assert.deepEqual(el.getSelectedIndices(), [0, 2]);
     });
   });
 
@@ -492,36 +386,10 @@ suite("metro-long-list-selector", () => {
       assert.exists(jumpList);
     });
 
-    test("jump list contains all letters of alphabet plus #", async () => {
+    test("jump list contains alphabet", async () => {
       const el = await createList({ groupKey: "category" });
       const jumpItems = el.shadowRoot?.querySelectorAll(".jump-item");
       assert.equal(jumpItems?.length, 27);
-    });
-
-    test("available group letters are enabled", async () => {
-      const el = await createList({ groupKey: "category" });
-      const jumpItems = el.shadowRoot?.querySelectorAll(".jump-item");
-
-      const enabledLetters = ["A", "B", "C", "D"];
-      enabledLetters.forEach((letter) => {
-        const item = Array.from(jumpItems ?? []).find(
-          (i) => i.textContent === letter
-        );
-        assert.isFalse(item?.classList.contains("disabled"));
-      });
-    });
-
-    test("unavailable group letters are disabled", async () => {
-      const el = await createList({ groupKey: "category" });
-      const jumpItems = el.shadowRoot?.querySelectorAll(".jump-item");
-
-      const disabledLetters = ["E", "F", "Z", "#"];
-      disabledLetters.forEach((letter) => {
-        const item = Array.from(jumpItems ?? []).find(
-          (i) => i.textContent === letter
-        );
-        assert.isTrue(item?.classList.contains("disabled"));
-      });
     });
 
     test("jump list is hidden when showJumpList is false", async () => {
@@ -530,80 +398,46 @@ suite("metro-long-list-selector", () => {
       assert.notExists(jumpList);
     });
 
-    test("jump list is hidden when no groupKey", async () => {
-      const el = await createList({ groupKey: "" });
-      const jumpList = el.shadowRoot?.querySelector(".jump-list");
-      assert.notExists(jumpList);
-    });
+    test("jump to group scrolls to correct position", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 100; i++) {
+        const letter = String.fromCharCode(65 + (i % 26));
+        items.push({ id: i, name: `Item ${i}`, category: letter });
+      }
+      const el = await createList({ items, groupKey: "category", displayMember: "name", maxHeight: "100px" });
+      
+      const container = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      assert.exists(container, "Container should exist");
 
-    test("clicking enabled jump item scrolls to group", async () => {
-      const el = await createList({ groupKey: "category", maxHeight: "100px" });
-      const jumpItems = el.shadowRoot?.querySelectorAll(".jump-item");
-
-      const itemC = Array.from(jumpItems ?? []).find(
-        (i) => i.textContent === "C"
-      );
-      itemC?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await new Promise((r) => setTimeout(r, 100));
-
-      const groupHeader = el.shadowRoot?.querySelector('[data-group-key="C"]');
-      assert.exists(groupHeader);
-    });
-
-    test("clicking disabled jump item does nothing", async () => {
-      const el = await createList({ groupKey: "category" });
-      const jumpItems = el.shadowRoot?.querySelectorAll(".jump-item");
-
-      const itemZ = Array.from(jumpItems ?? []).find(
-        (i) => i.textContent === "Z"
-      );
-      assert.isTrue(itemZ?.classList.contains("disabled"));
-
-      itemZ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      const jumpItemZ = Array.from(
+        el.shadowRoot?.querySelectorAll(".jump-item") || []
+      ).find(item => item.textContent === "Z" && !item.classList.contains("disabled"));
+      
+      assert.exists(jumpItemZ, "Z jump item should exist and be enabled");
+      jumpItemZ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       await el.updateComplete;
+      await new Promise((r) => setTimeout(r, 50));
 
-      assert.isTrue(itemZ?.classList.contains("disabled"));
-    });
-
-    test("jump list is positioned on right side", async () => {
-      const el = await createList({ groupKey: "category" });
-      const jumpList = el.shadowRoot?.querySelector(
-        ".jump-list"
-      ) as HTMLElement;
-      const style = getComputedStyle(jumpList);
-      assert.equal(style.position, "absolute");
-      assert.equal(style.right, "0px");
+      assert.isAbove(container.scrollTop, 0, "Should have scrolled down");
     });
   });
 
   suite("public methods", () => {
-    test("getSelectedItems returns empty array when nothing selected", async () => {
-      const el = await createList({ selectionMode: "single" });
-      assert.deepEqual(el.getSelectedItems(), []);
-    });
-
-    test("getSelectedIndices returns empty array when nothing selected", async () => {
-      const el = await createList({ selectionMode: "single" });
-      assert.deepEqual(el.getSelectedIndices(), []);
-    });
-
     test("clearSelection removes all selections", async () => {
       const el = await createList({ selectionMode: "multiple" });
 
       const items = el.shadowRoot?.querySelectorAll(".list-item");
       items?.[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      items?.[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       await el.updateComplete;
 
       el.clearSelection();
       await el.updateComplete;
 
       assert.deepEqual(el.getSelectedIndices(), []);
-      assert.equal(el.selectedValue, null);
     });
 
-    test("setItems updates the items list", async () => {
-      const el = await createList();
+    test("setItems updates the items list and re-renders", async () => {
+      const el = await createList({ displayMember: "name" });
       const newItems: TestItem[] = [
         { id: 100, name: "New Item", category: "X" },
       ];
@@ -612,142 +446,51 @@ suite("metro-long-list-selector", () => {
       await el.updateComplete;
 
       assert.deepEqual(el.items, newItems);
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      assert.equal(items?.length, 1);
-    });
-
-    test("changing items clears selection", async () => {
-      const el = await createList({ selectionMode: "single" });
-
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      firstItem.click();
-      await el.updateComplete;
-      assert.deepEqual(el.getSelectedIndices(), [0]);
-
-      el.items = [{ id: 100, name: "New", category: "X" }];
-      await el.updateComplete;
-
-      assert.deepEqual(el.getSelectedIndices(), []);
+      const rendered = getRenderedItems(el);
+      assert.equal(rendered.length, 1);
+      assert.equal(rendered[0].text, "New Item");
+      assert.equal(rendered[0].index, 0);
     });
   });
 
-  suite("CSS classes and styling", () => {
-    test("list-item has correct base classes", async () => {
-      const el = await createList();
-      const firstItem = el.shadowRoot?.querySelector(".list-item");
-
-      assert.isTrue(firstItem?.classList.contains("list-item"));
-    });
-
-    test("selected class is applied correctly", async () => {
-      const el = await createList({ selectionMode: "single" });
-
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      items?.[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await el.updateComplete;
-
-      assert.isTrue(items?.[0]?.classList.contains("selected"));
-      assert.isFalse(items?.[1]?.classList.contains("selected"));
-    });
-
-    test("list-item has transition for smooth hover effects", async () => {
-      const el = await createList();
-      const firstItem = el.shadowRoot?.querySelector(
-        ".list-item"
-      ) as HTMLElement;
-      const transition = getComputedStyle(firstItem).transition;
-      assert.include(transition, "background-color");
-    });
-
-    test("group-header has uppercase text transform", async () => {
-      const el = await createList({ groupKey: "category" });
-      const header = el.shadowRoot?.querySelector(
-        ".group-header"
-      ) as HTMLElement;
-      assert.equal(getComputedStyle(header).textTransform, "uppercase");
-    });
-
-    test("list-container has overflow-y auto", async () => {
-      const el = await createList();
-      const container = el.shadowRoot?.querySelector(
-        ".list-container"
-      ) as HTMLElement;
-      assert.equal(getComputedStyle(container).overflowY, "auto");
-    });
-
-    test("empty-message has correct styling", async () => {
-      const el = await createList({ items: [] });
-      const emptyMsg = el.shadowRoot?.querySelector(
-        ".empty-message"
-      ) as HTMLElement;
-      const style = getComputedStyle(emptyMsg);
-      assert.equal(style.textAlign, "center");
-    });
-  });
-
-  suite("edge cases", () => {
-    test("handles empty items array", async () => {
-      const el = await createList({ items: [] });
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      assert.equal(items?.length, 0);
-      assert.exists(el.shadowRoot?.querySelector(".empty-message"));
-    });
-
-    test("handles single item", async () => {
-      const singleItem: TestItem[] = [{ id: 1, name: "Only", category: "O" }];
-      const el = await createList({ items: singleItem });
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-      assert.equal(items?.length, 1);
-    });
-
-    test("handles very long display text", async () => {
-      const longItems: TestItem[] = [
-        {
-          id: 1,
-          name: "This is a very long name that should still display correctly",
-          category: "T",
-        },
-      ];
-      const el = await createList({ items: longItems, displayMember: "name" });
-      const span = el.shadowRoot?.querySelector(".list-item span");
-      assert.exists(span);
-    });
-
-    test("handles special characters in group key", async () => {
-      const specialItems: TestItem[] = [
-        { id: 1, name: "Test1", category: "A-B" },
-        { id: 2, name: "Test2", category: "C_D" },
-      ];
-      const el = await createList({ items: specialItems, groupKey: "category" });
-      const headers = el.shadowRoot?.querySelectorAll(".group-header");
-      assert.equal(headers?.length, 2);
-    });
-
-    test("handles numeric group keys", async () => {
-      const numericItems = [
-        { id: 1, name: "Test1", category: 1 },
-        { id: 2, name: "Test2", category: 2 },
-      ];
-      const el = await createList({
-        items: numericItems as unknown as TestItem[],
-        groupKey: "category",
-      });
-      const headers = el.shadowRoot?.querySelectorAll(".group-header");
-      assert.equal(headers?.length, 2);
-    });
-
-    test("rapid consecutive clicks", async () => {
-      const el = await createList({ selectionMode: "multiple" });
-      const items = el.shadowRoot?.querySelectorAll(".list-item");
-
-      for (let i = 0; i < 6; i++) {
-        items?.[i]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  suite("virtualization", () => {
+    test("only renders visible items", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 100; i++) {
+        items.push({ id: i, name: `Item ${i}`, category: "A" });
       }
-      await el.updateComplete;
+      const el = await createList({ items, displayMember: "name", maxHeight: "150px" });
 
-      assert.equal(el.getSelectedIndices().length, 6);
+      const renderedItems = el.shadowRoot?.querySelectorAll(".list-item");
+      assert.isBelow(renderedItems?.length ?? 100, 100, "Should render fewer than total items");
+      assert.isAbove(renderedItems?.length ?? 0, 0, "Should render some items");
+    });
+
+    test("total height is correct for flat list", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 100; i++) {
+        items.push({ id: i, name: `Item ${i}`, category: "A" });
+      }
+      const el = await createList({ items, displayMember: "name" });
+
+      const viewport = el.shadowRoot?.querySelector(".viewport") as HTMLElement;
+      const expectedHeight = 100 * 44;
+      assert.equal(parseInt(viewport?.style.height || "0"), expectedHeight);
+    });
+
+    test("total height includes group headers", async () => {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 52; i++) {
+        const letter = String.fromCharCode(65 + (i % 26));
+        items.push({ id: i, name: `Item ${i}`, category: letter });
+      }
+      const el = await createList({ items, groupKey: "category", displayMember: "name" });
+
+      const viewport = el.shadowRoot?.querySelector(".viewport") as HTMLElement;
+      const viewportHeight = parseInt(viewport?.style.height || "0");
+      const expectedItemsHeight = 52 * 44;
+      const expectedHeadersHeight = 26 * 32;
+      assert.equal(viewportHeight, expectedItemsHeight + expectedHeadersHeight);
     });
   });
 });

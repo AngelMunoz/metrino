@@ -1,45 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--metro-spacing-sm, 8px);
-    cursor: pointer;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    font-size: var(--metro-font-size-normal, 14px);
-    color: var(--metro-foreground, #ffffff);
-  }
-  :host([disabled]) {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .radio {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid var(--metro-foreground-secondary, rgba(255,255,255,0.7));
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .radio.checked {
-    border-color: var(--metro-accent, #0078d4);
-  }
-  .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--metro-accent, #0078d4);
-    opacity: 0;
-    transition: opacity var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .radio.checked .dot {
-    opacity: 1;
-  }
-`;
+import { toggleControlBase } from "../../styles/shared.ts";
 
 export class MetroRadioButton extends LitElement {
   static formAssociated = true;
@@ -56,7 +16,36 @@ export class MetroRadioButton extends LitElement {
   declare name: string;
   declare value: string;
 
-  static styles = baseStyles;
+  static styles = [
+    toggleControlBase,
+    css`
+      .radio {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .radio.checked {
+        border-color: var(--metro-accent, #0078d4);
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--metro-accent, #0078d4);
+        opacity: 0;
+        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .radio.checked .dot {
+        opacity: 1;
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
 

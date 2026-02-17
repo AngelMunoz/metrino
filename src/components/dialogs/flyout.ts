@@ -1,32 +1,5 @@
 import { LitElement, html, css } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-  }
-  :host([open]) {
-    display: block;
-  }
-  .flyout {
-    position: fixed;
-    background: var(--metro-background, #1f1f1f);
-    min-width: 160px;
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity var(--metro-transition-fast, 167ms) ease-out, transform var(--metro-transition-fast, 167ms) ease-out;
-  }
-  :host([open]) .flyout {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-  }
-`;
+import { baseTypography } from "../../styles/shared.ts";
 
 export class MetroFlyout extends LitElement {
   static properties = {
@@ -37,7 +10,36 @@ export class MetroFlyout extends LitElement {
   declare open: boolean;
   declare placement: "top" | "bottom" | "left" | "right";
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    css`
+      :host {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+      }
+      :host([open]) {
+        display: block;
+      }
+      .flyout {
+        position: fixed;
+        background: var(--metro-background, #1f1f1f);
+        min-width: 160px;
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: opacity var(--metro-transition-fast, 167ms) ease-out, transform var(--metro-transition-fast, 167ms) ease-out;
+      }
+      :host([open]) .flyout {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+      }
+    `,
+  ];
 
   #target: Element | null = null;
 

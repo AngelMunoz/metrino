@@ -1,51 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--metro-spacing-sm, 8px);
-    cursor: pointer;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    font-size: var(--metro-font-size-normal, 14px);
-    color: var(--metro-foreground, #ffffff);
-  }
-  :host([disabled]) {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .switch {
-    width: 44px;
-    height: 22px;
-    background: transparent;
-    border: 2px solid var(--metro-foreground, #ffffff);
-    border-radius: 0;
-    position: relative;
-    transition:
-      background-color var(--metro-transition-fast, 167ms) ease-out,
-      border-color var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .switch.checked {
-    background: var(--metro-accent, #0078d4);
-    border-color: var(--metro-accent, #0078d4);
-  }
-  .thumb {
-    width: 14px;
-    height: 14px;
-    background: var(--metro-foreground, #ffffff);
-    border-radius: 0;
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    transition:
-      transform var(--metro-transition-fast, 167ms) ease-out,
-      background-color var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .switch.checked .thumb {
-    transform: translateX(22px);
-    background: #ffffff;
-  }
-`;
+import { toggleControlBase } from "../../styles/shared.ts";
 
 export class MetroToggleSwitch extends LitElement {
   static formAssociated = true;
@@ -62,7 +16,42 @@ export class MetroToggleSwitch extends LitElement {
   declare name: string;
   declare value: string;
 
-  static styles = baseStyles;
+  static styles = [
+    toggleControlBase,
+    css`
+      .switch {
+        width: 44px;
+        height: 22px;
+        background: transparent;
+        border: 2px solid var(--metro-foreground, #ffffff);
+        border-radius: 0;
+        position: relative;
+        transition:
+          background-color var(--metro-transition-fast, 167ms) ease-out,
+          border-color var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .switch.checked {
+        background: var(--metro-accent, #0078d4);
+        border-color: var(--metro-accent, #0078d4);
+      }
+      .thumb {
+        width: 14px;
+        height: 14px;
+        background: var(--metro-foreground, #ffffff);
+        border-radius: 0;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition:
+          transform var(--metro-transition-fast, 167ms) ease-out,
+          background-color var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .switch.checked .thumb {
+        transform: translateX(22px);
+        background: #ffffff;
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
 

@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { baseTypography, closeButton } from "../../styles/shared.ts";
 import "./icon.ts";
 
 const severityIconMap: Record<string, string> = {
@@ -7,63 +8,6 @@ const severityIconMap: Record<string, string> = {
   warning: "warning",
   error: "error",
 };
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, system-ui, -apple-system, sans-serif);
-  }
-  .info-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--metro-spacing-md, 12px);
-    padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
-    background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-    border-left: 4px solid
-      var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
-  }
-  .info-bar.informational {
-    border-left-color: var(--metro-accent, #0078d4);
-  }
-  .info-bar.success {
-    border-left-color: #00a300;
-  }
-  .info-bar.warning {
-    border-left-color: #f09609;
-  }
-  .info-bar.error {
-    border-left-color: #e51400;
-  }
-  .info-icon {
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-  .info-content {
-    flex: 1;
-  }
-  .info-title {
-    font-size: var(--metro-font-size-normal, 14px);
-    font-weight: 600;
-    color: var(--metro-foreground, #ffffff);
-    margin-bottom: 2px;
-  }
-  .info-message {
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-  .info-close {
-    background: none;
-    border: none;
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-    font-size: 16px;
-    cursor: pointer;
-    padding: 4px;
-    line-height: 1;
-  }
-  .info-close:hover {
-    color: var(--metro-foreground, #ffffff);
-  }
-`;
 
 export class MetroInfoBar extends LitElement {
   static properties = {
@@ -76,7 +20,56 @@ export class MetroInfoBar extends LitElement {
   declare title: string;
   declare closable: boolean;
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    closeButton,
+    css`
+      :host {
+        display: block;
+      }
+      .info-bar {
+        display: flex;
+        align-items: center;
+        gap: var(--metro-spacing-md, 12px);
+        padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+        border-left: 4px solid
+          var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
+      }
+      .info-bar.informational {
+        border-left-color: var(--metro-accent, #0078d4);
+      }
+      .info-bar.success {
+        border-left-color: #00a300;
+      }
+      .info-bar.warning {
+        border-left-color: #f09609;
+      }
+      .info-bar.error {
+        border-left-color: #e51400;
+      }
+      .info-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .info-content {
+        flex: 1;
+      }
+      .info-title {
+        font-size: var(--metro-font-size-normal, 14px);
+        font-weight: 600;
+        color: var(--metro-foreground, #ffffff);
+        margin-bottom: 2px;
+      }
+      .info-message {
+        font-size: var(--metro-font-size-small, 12px);
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+      }
+      .close-btn {
+        font-size: 16px;
+      }
+    `,
+  ];
 
   constructor() {
     super();
@@ -99,7 +92,7 @@ export class MetroInfoBar extends LitElement {
         </div>
         ${this.closable
           ? html`<button
-              class="info-close"
+              class="close-btn"
               @click=${this.#close}
               aria-label="Close"
             >

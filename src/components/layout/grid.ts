@@ -1,10 +1,5 @@
 import { LitElement, html, css } from "lit";
 
-const baseStyles = css`
-  :host { display: grid; box-sizing: border-box; }
-  ::slotted(*) { min-width: 0; min-height: 0; }
-`;
-
 export class MetroGrid extends LitElement {
   static properties = {
     rows: { type: String },
@@ -14,7 +9,10 @@ export class MetroGrid extends LitElement {
   declare rows: string | undefined;
   declare columns: string | undefined;
 
-  static styles = baseStyles;
+  static styles = css`
+    :host { display: grid; box-sizing: border-box; }
+    ::slotted(*) { min-width: 0; min-height: 0; }
+  `;
 
   render() {
     const rowStyles = this.rows ? `grid-template-rows: ${this.rows};` : "";

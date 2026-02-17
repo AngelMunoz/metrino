@@ -253,37 +253,6 @@ const iconMap: Record<string, string> = {
   success: mdiCheckCircle,
 };
 
-const baseStyles = css`
-  :host {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    color: currentColor;
-  }
-  svg {
-    width: 1em;
-    height: 1em;
-    fill: currentColor;
-    vertical-align: middle;
-  }
-  :host([size="small"]) {
-    font-size: 12px;
-  }
-  :host([size="normal"]) {
-    font-size: 16px;
-  }
-  :host([size="medium"]) {
-    font-size: 20px;
-  }
-  :host([size="large"]) {
-    font-size: 24px;
-  }
-  :host([size="xlarge"]) {
-    font-size: 32px;
-  }
-`;
-
 export class MetroIcon extends LitElement {
   static properties = {
     icon: { type: String, reflect: true },
@@ -293,7 +262,36 @@ export class MetroIcon extends LitElement {
   declare icon: string;
   declare size: "small" | "normal" | "medium" | "large" | "xlarge";
 
-  static styles = baseStyles;
+  static styles = css`
+    :host {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      color: currentColor;
+    }
+    svg {
+      width: 1em;
+      height: 1em;
+      fill: currentColor;
+      vertical-align: middle;
+    }
+    :host([size="small"]) {
+      font-size: 12px;
+    }
+    :host([size="normal"]) {
+      font-size: 16px;
+    }
+    :host([size="medium"]) {
+      font-size: 20px;
+    }
+    :host([size="large"]) {
+      font-size: 24px;
+    }
+    :host([size="xlarge"]) {
+      font-size: 32px;
+    }
+  `;
 
   constructor() {
     super();

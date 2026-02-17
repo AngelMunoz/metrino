@@ -1,75 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    font-family: var(--metro-font-family, system-ui, -apple-system, sans-serif);
-  }
-  .input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  input {
-    width: 100%;
-    padding: var(--metro-spacing-md, 12px);
-    padding-right: 80px;
-    font-size: var(--metro-font-size-normal, 14px);
-    font-family: inherit;
-    background: var(--metro-highlight, rgba(255,255,255,0.1));
-    border: 2px solid transparent;
-    color: var(--metro-foreground, #ffffff);
-    outline: none;
-    transition: border-color var(--metro-transition-fast, 167ms) ease-out;
-    box-sizing: border-box;
-  }
-  input:focus {
-    border-color: var(--metro-accent, #0078d4);
-  }
-  input:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .spin-buttons {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .spin-button {
-    flex: 1;
-    width: 32px;
-    background: transparent;
-    border: none;
-    border-left: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-    color: var(--metro-foreground-secondary, rgba(255,255,255,0.7));
-    cursor: pointer;
-    font-size: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .spin-button:hover {
-    background: var(--metro-highlight, rgba(255,255,255,0.1));
-    color: var(--metro-foreground, #ffffff);
-  }
-  .spin-button:active {
-    background: var(--metro-accent, #0078d4);
-    color: #ffffff;
-  }
-  .spin-button.up {
-    border-bottom: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-  }
-  .label {
-    display: block;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255,255,255,0.7));
-  }
-`;
+import { inputBase } from "../../styles/shared.ts";
 
 export class MetroNumberBox extends LitElement {
   static formAssociated = true;
@@ -94,7 +24,60 @@ export class MetroNumberBox extends LitElement {
   declare label: string;
   declare name: string;
 
-  static styles = baseStyles;
+  static styles = [
+    inputBase,
+    css`
+      .input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      input::-webkit-inner-spin-button,
+      input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type="number"] {
+        -moz-appearance: textfield;
+      }
+      input {
+        padding-right: 80px;
+      }
+      .spin-buttons {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .spin-button {
+        flex: 1;
+        width: 32px;
+        background: transparent;
+        border: none;
+        border-left: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        cursor: pointer;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .spin-button:hover {
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+        color: var(--metro-foreground, #ffffff);
+      }
+      .spin-button:active {
+        background: var(--metro-accent, #0078d4);
+        color: #ffffff;
+      }
+      .spin-button.up {
+        border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
 

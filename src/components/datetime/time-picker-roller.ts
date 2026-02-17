@@ -1,4 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
+import { baseTypography, formLabel, pickerRollerBase } from "../../styles/shared.ts";
 
 const HOURS_12 = ["12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
 const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -41,114 +42,6 @@ function parseTimeValue(value: string, hourFormat: "12" | "24"): { hour: number;
   }
 }
 
-const baseStyles = css`
-  :host {
-    display: inline-block;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    min-width: max-content;
-  }
-  .label {
-    display: block;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-    font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-  }
-  .picker-container {
-    display: flex;
-    gap: 4px;
-    background: var(--metro-background, #1f1f1f);
-    border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-    padding: var(--metro-spacing-md, 12px);
-    user-select: none;
-    touch-action: none;
-  }
-  .picker-column {
-    position: relative;
-    height: 180px;
-    min-height: 180px;
-    flex-shrink: 0;
-    overflow: hidden;
-    touch-action: none;
-  }
-  .picker-column--hour {
-    width: 50px;
-  }
-  .picker-column--minute {
-    width: 50px;
-  }
-  .picker-column--period {
-    width: 50px;
-  }
-  .picker-column::before,
-  .picker-column::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 60px;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .picker-column::before {
-    top: 0;
-    background: linear-gradient(to bottom, var(--metro-background, #1f1f1f) 0%, transparent 100%);
-  }
-  .picker-column::after {
-    bottom: 0;
-    background: linear-gradient(to top, var(--metro-background, #1f1f1f) 0%, transparent 100%);
-  }
-  .picker-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    width: 100%;
-    top: calc(50% - 20px);
-    transition: transform var(--metro-transition-fast, 167ms) ease-out;
-    will-change: transform;
-  }
-  .picker-list.dragging {
-    transition: none;
-  }
-  .picker-item {
-    height: ${ITEM_HEIGHT}px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--metro-font-size-normal, 14px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
-    cursor: pointer;
-    transition: color var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .picker-item.selected {
-    color: var(--metro-foreground, #ffffff);
-    font-size: var(--metro-font-size-medium, 16px);
-    font-weight: 600;
-  }
-  .picker-item:hover {
-    color: var(--metro-foreground, #ffffff);
-  }
-  .selection-indicator {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: ${ITEM_HEIGHT}px;
-    transform: translateY(-50%);
-    border-top: 2px solid var(--metro-accent, #0078d4);
-    border-bottom: 2px solid var(--metro-accent, #0078d4);
-    pointer-events: none;
-  }
-  .separator {
-    display: flex;
-    align-items: center;
-    font-size: var(--metro-font-size-medium, 16px);
-    color: var(--metro-foreground, #ffffff);
-    font-weight: 600;
-    padding: 0 2px;
-  }
-`;
-
 export class MetroTimePickerRoller extends LitElement {
   static formAssociated = true;
 
@@ -168,7 +61,40 @@ export class MetroTimePickerRoller extends LitElement {
   declare disabled: boolean;
   declare hourFormat: "12" | "24";
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    formLabel,
+    pickerRollerBase,
+    css`
+      :host {
+        display: inline-block;
+        min-width: max-content;
+      }
+      .picker-column--hour {
+        width: 50px;
+      }
+      .picker-column--minute {
+        width: 50px;
+      }
+      .picker-column--period {
+        width: 50px;
+      }
+      .picker-list.dragging {
+        transition: none;
+      }
+      .picker-item:hover {
+        color: var(--metro-foreground, #ffffff);
+      }
+      .separator {
+        display: flex;
+        align-items: center;
+        font-size: var(--metro-font-size-medium, 16px);
+        color: var(--metro-foreground, #ffffff);
+        font-weight: 600;
+        padding: 0 2px;
+      }
+    `,
+  ];
 
   #internals: ElementInternals;
   #hourOffset = 0;

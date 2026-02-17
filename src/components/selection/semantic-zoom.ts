@@ -1,60 +1,5 @@
 import { LitElement, html, css } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    position: relative;
-    overflow: hidden;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    touch-action: none;
-  }
-  .zoom-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-  .zoomed-in,
-  .zoomed-out {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    transition:
-      transform var(--metro-transition-slow, 333ms)
-        var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
-      opacity var(--metro-transition-fast, 167ms) ease-out;
-  }
-  .zoomed-in {
-    transform: scale(1);
-    opacity: 1;
-  }
-  .zoomed-out {
-    transform: scale(0.5);
-    opacity: 0;
-    pointer-events: none;
-  }
-  :host([zoomed="out"]) .zoomed-in {
-    transform: scale(2);
-    opacity: 0;
-    pointer-events: none;
-  }
-  :host([zoomed="out"]) .zoomed-out {
-    transform: scale(1);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .zoom-hint {
-    position: absolute;
-    bottom: var(--metro-spacing-md, 12px);
-    right: var(--metro-spacing-md, 12px);
-    background: var(--metro-accent, #0078d4);
-    color: #ffffff;
-    padding: var(--metro-spacing-xs, 4px) var(--metro-spacing-sm, 8px);
-    font-size: var(--metro-font-size-small, 12px);
-    cursor: pointer;
-    border: none;
-    font-family: inherit;
-  }
-`;
+import { baseTypography } from "../../styles/shared.ts";
 
 export class MetroSemanticZoom extends LitElement {
   static properties = {
@@ -63,7 +8,63 @@ export class MetroSemanticZoom extends LitElement {
 
   declare zoomed: "in" | "out";
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    css`
+      :host {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        touch-action: none;
+      }
+      .zoom-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+      .zoomed-in,
+      .zoomed-out {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        transition:
+          transform var(--metro-transition-slow, 333ms)
+            var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          opacity var(--metro-transition-fast, 167ms) ease-out;
+      }
+      .zoomed-in {
+        transform: scale(1);
+        opacity: 1;
+      }
+      .zoomed-out {
+        transform: scale(0.5);
+        opacity: 0;
+        pointer-events: none;
+      }
+      :host([zoomed="out"]) .zoomed-in {
+        transform: scale(2);
+        opacity: 0;
+        pointer-events: none;
+      }
+      :host([zoomed="out"]) .zoomed-out {
+        transform: scale(1);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .zoom-hint {
+        position: absolute;
+        bottom: var(--metro-spacing-md, 12px);
+        right: var(--metro-spacing-md, 12px);
+        background: var(--metro-accent, #0078d4);
+        color: #ffffff;
+        padding: var(--metro-spacing-xs, 4px) var(--metro-spacing-sm, 8px);
+        font-size: var(--metro-font-size-small, 12px);
+        cursor: pointer;
+        border: none;
+        font-family: inherit;
+      }
+    `,
+  ];
 
   #pinchStartDistance = 0;
   #isPinching = false;

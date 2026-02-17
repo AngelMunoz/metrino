@@ -1,64 +1,8 @@
 import { LitElement, html, css } from "lit";
+import { tileBase, tileSizes, tileBadge } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
 type TileSize = "small" | "medium" | "large";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    position: relative;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    cursor: pointer;
-  }
-  .tile-container {
-    width: 100%;
-    height: 100%;
-    background: var(--metro-accent, #0078d4);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--metro-spacing-md, 12px);
-    box-sizing: border-box;
-    color: #ffffff;
-  }
-  .tile-icon {
-    margin-bottom: var(--metro-spacing-sm, 8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .tile-title {
-    font-size: var(--metro-font-size-normal, 14px);
-    font-weight: 400;
-    text-align: center;
-  }
-  .tile-count {
-    font-size: var(--metro-font-size-xxlarge, 42px);
-    font-weight: 300;
-    margin-bottom: var(--metro-spacing-xs, 4px);
-  }
-  .tile-badge {
-    position: absolute;
-    top: var(--metro-spacing-xs, 4px);
-    right: var(--metro-spacing-xs, 4px);
-    min-width: 18px;
-    height: 18px;
-    background: var(--metro-accent, #0078d4);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 0 4px;
-  }
-  :host([size="small"]) { width: 70px; height: 70px; }
-  :host([size="small"]) .tile-title { display: none; }
-  :host([size="small"]) .tile-icon { margin-bottom: 0; }
-  :host([size="medium"]) { width: 150px; height: 150px; }
-  :host([size="large"]) { width: 310px; height: 310px; }
-`;
 
 export class MetroIconicTile extends LitElement {
   static properties = {
@@ -75,7 +19,43 @@ export class MetroIconicTile extends LitElement {
   declare count: number;
   declare badge: string;
 
-  static styles = baseStyles;
+  static styles = [
+    tileBase,
+    tileSizes,
+    tileBadge,
+    css`
+      .tile-container {
+        width: 100%;
+        height: 100%;
+        background: var(--metro-accent, #0078d4);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--metro-spacing-md, 12px);
+        box-sizing: border-box;
+        color: #ffffff;
+      }
+      .tile-icon {
+        margin-bottom: var(--metro-spacing-sm, 8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tile-title {
+        font-size: var(--metro-font-size-normal, 14px);
+        font-weight: 400;
+        text-align: center;
+      }
+      .tile-count {
+        font-size: var(--metro-font-size-xxlarge, 42px);
+        font-weight: 300;
+        margin-bottom: var(--metro-spacing-xs, 4px);
+      }
+      :host([size="small"]) .tile-title { display: none; }
+      :host([size="small"]) .tile-icon { margin-bottom: 0; }
+    `,
+  ];
 
   constructor() {
     super();

@@ -1,16 +1,5 @@
 :root {
-  --metro-accent: #0078d4;
-  --metro-accent-light: #429ce3;
-  --metro-accent-dark: #005a9e;
-
-  --metro-background: #1f1f1f;
-  --metro-foreground: #ffffff;
-  --metro-foreground-secondary: rgba(255, 255, 255, 0.7);
-  --metro-foreground-disabled: rgba(255, 255, 255, 0.4);
-  --metro-border: rgba(255, 255, 255, 0.2);
-  --metro-highlight: rgba(255, 255, 255, 0.1);
-  --metro-highlight-hover: rgba(255, 255, 255, 0.15);
-  --metro-highlight-active: rgba(255, 255, 255, 0.08);
+  color-scheme: light dark;
 
   --metro-font-family:
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
@@ -33,6 +22,50 @@
   --metro-transition-normal: 250ms;
   --metro-transition-slow: 333ms;
   --metro-easing: cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+:root,
+[data-theme="dark"] {
+  --metro-accent: #0078d4;
+  --metro-accent-light: #429ce3;
+  --metro-accent-dark: #005a9e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --metro-background: #1f1f1f;
+    --metro-foreground: #ffffff;
+    --metro-foreground-secondary: rgba(255, 255, 255, 0.7);
+    --metro-foreground-disabled: rgba(255, 255, 255, 0.4);
+    --metro-border: rgba(255, 255, 255, 0.2);
+    --metro-highlight: rgba(255, 255, 255, 0.1);
+    --metro-highlight-hover: rgba(255, 255, 255, 0.15);
+    --metro-highlight-active: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --metro-background: #ffffff;
+    --metro-foreground: #1f1f1f;
+    --metro-foreground-secondary: rgba(0, 0, 0, 0.7);
+    --metro-foreground-disabled: rgba(0, 0, 0, 0.4);
+    --metro-border: rgba(0, 0, 0, 0.2);
+    --metro-highlight: rgba(0, 0, 0, 0.1);
+    --metro-highlight-hover: rgba(0, 0, 0, 0.08);
+    --metro-highlight-active: rgba(0, 0, 0, 0.15);
+  }
+}
+
+[data-theme="dark"] {
+  --metro-background: #1f1f1f;
+  --metro-foreground: #ffffff;
+  --metro-foreground-secondary: rgba(255, 255, 255, 0.7);
+  --metro-foreground-disabled: rgba(255, 255, 255, 0.4);
+  --metro-border: rgba(255, 255, 255, 0.2);
+  --metro-highlight: rgba(255, 255, 255, 0.1);
+  --metro-highlight-hover: rgba(255, 255, 255, 0.15);
+  --metro-highlight-active: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="light"] {

@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { focusRing, pressState, disabledState } from "../../styles/shared.ts";
+import { focusRing, pressState, disabledState, baseTypography } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
   setupButtonRole,
@@ -22,17 +22,12 @@ export class MetroButton extends LitElement {
     focusRing,
     pressState,
     disabledState,
+    baseTypography,
     css`
       :host {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-family: var(
-          --metro-font-family,
-          "Segoe UI",
-          system-ui,
-          sans-serif
-        );
         font-size: var(--metro-font-size-normal, 14px);
         font-weight: 400;
         letter-spacing: 0.02em;

@@ -1,54 +1,7 @@
 import { LitElement, html, css } from "lit";
+import { tileBase, tileSizes } from "../../styles/shared.ts";
 
 type TileSize = "medium" | "wide";
-
-const baseStyles = css`
-  :host {
-    display: block;
-    position: relative;
-    overflow: hidden;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    cursor: pointer;
-  }
-  .tile-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: var(--metro-accent, #0078d4);
-  }
-  ::slotted([slot="cycle"]) {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    transform: translateY(100%);
-    transition:
-      opacity var(--metro-transition-slow, 333ms) ease-out,
-      transform var(--metro-transition-slow, 333ms) ease-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    box-sizing: border-box;
-  }
-  ::slotted(.cycle-content.active) {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  ::slotted(.cycle-content.exiting) {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  /* Size variants */
-  :host([size="medium"]) {
-    width: 150px;
-    height: 150px;
-  }
-  :host([size="wide"]) {
-    width: 310px;
-    height: 150px;
-  }
-`;
 
 export class MetroCycleTile extends LitElement {
   static properties = {
@@ -59,7 +12,41 @@ export class MetroCycleTile extends LitElement {
   declare size: TileSize;
   declare interval: number;
 
-  static styles = baseStyles;
+  static styles = [
+    tileBase,
+    tileSizes,
+    css`
+      .tile-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: var(--metro-accent, #0078d4);
+      }
+      ::slotted([slot="cycle"]) {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transform: translateY(100%);
+        transition:
+          opacity var(--metro-transition-slow, 333ms) ease-out,
+          transform var(--metro-transition-slow, 333ms) ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        box-sizing: border-box;
+      }
+      ::slotted(.cycle-content.active) {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      ::slotted(.cycle-content.exiting) {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+    `,
+  ];
 
   #currentIndex = 0;
   #timer: number | null = null;

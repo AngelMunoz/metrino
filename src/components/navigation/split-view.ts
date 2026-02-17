@@ -1,122 +1,5 @@
 import { LitElement, html, css } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: flex;
-    position: relative;
-    height: 100%;
-    width: 100%;
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    overflow: hidden;
-  }
-
-  .split-pane {
-    height: 100%;
-    background: var(--metro-background, #1f1f1f);
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-  .pane-content {
-    height: 100%;
-    width: 320px;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
-  .content {
-    flex: 1;
-    height: 100%;
-    overflow: auto;
-    background: var(--metro-background, #1f1f1f);
-  }
-
-  /* Overlay mode - pane slides over content */
-  :host([display-mode="overlay"]) .split-pane {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 320px;
-    transform: translateX(-100%);
-    transition: transform var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-    z-index: 100;
-    border-right: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-  }
-
-  :host([display-mode="overlay"][pane-placement="right"]) .split-pane {
-    left: auto;
-    right: 0;
-    transform: translateX(100%);
-    border-right: none;
-    border-left: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-  }
-
-  :host([display-mode="overlay"][open]) .split-pane {
-    transform: translateX(0);
-  }
-
-  /* Inline mode - pane pushes content */
-  :host([display-mode="inline"]) .split-pane {
-    width: 0;
-    transition: width var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-    border-right: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-  }
-
-  :host([display-mode="inline"][pane-placement="right"]) .split-pane {
-    order: 2;
-    border-right: none;
-    border-left: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-  }
-
-  :host([display-mode="inline"][pane-placement="right"]) .content {
-    order: 1;
-  }
-
-  :host([display-mode="inline"][open]) .split-pane {
-    width: 320px;
-  }
-
-  /* Compact mode - always shows 48px, expands to full when open */
-  :host([display-mode="compact"]) .split-pane {
-    width: 48px;
-    transition: width var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-    border-right: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-  }
-
-  :host([display-mode="compact"][pane-placement="right"]) .split-pane {
-    order: 2;
-    border-right: none;
-    border-left: 1px solid var(--metro-border, rgba(255,255,255,0.2));
-  }
-
-  :host([display-mode="compact"][pane-placement="right"]) .content {
-    order: 1;
-  }
-
-  :host([display-mode="compact"][open]) .split-pane {
-    width: 320px;
-  }
-
-  :host([display-mode="compact"]) .pane-content {
-    width: 320px;
-  }
-
-  /* Backdrop for overlay mode */
-  .backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 50;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--metro-transition-fast, 167ms) ease-out;
-  }
-
-  :host([display-mode="overlay"][open]) .backdrop {
-    opacity: 1;
-    pointer-events: auto;
-  }
-`;
+import { baseTypography } from "../../styles/shared.ts";
 
 export class MetroSplitView extends LitElement {
   static properties = {
@@ -129,7 +12,121 @@ export class MetroSplitView extends LitElement {
   declare displayMode: "overlay" | "inline" | "compact";
   declare panePlacement: "left" | "right";
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    css`
+      :host {
+        display: flex;
+        position: relative;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .split-pane {
+        height: 100%;
+        background: var(--metro-background, #1f1f1f);
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+
+      .pane-content {
+        height: 100%;
+        width: 320px;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .content {
+        flex: 1;
+        height: 100%;
+        overflow: auto;
+        background: var(--metro-background, #1f1f1f);
+      }
+
+      :host([display-mode="overlay"]) .split-pane {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 320px;
+        transform: translateX(-100%);
+        transition: transform var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        z-index: 100;
+        border-right: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+      }
+
+      :host([display-mode="overlay"][pane-placement="right"]) .split-pane {
+        left: auto;
+        right: 0;
+        transform: translateX(100%);
+        border-right: none;
+        border-left: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+      }
+
+      :host([display-mode="overlay"][open]) .split-pane {
+        transform: translateX(0);
+      }
+
+      :host([display-mode="inline"]) .split-pane {
+        width: 0;
+        transition: width var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        border-right: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+      }
+
+      :host([display-mode="inline"][pane-placement="right"]) .split-pane {
+        order: 2;
+        border-right: none;
+        border-left: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+      }
+
+      :host([display-mode="inline"][pane-placement="right"]) .content {
+        order: 1;
+      }
+
+      :host([display-mode="inline"][open]) .split-pane {
+        width: 320px;
+      }
+
+      :host([display-mode="compact"]) .split-pane {
+        width: 48px;
+        transition: width var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        border-right: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+      }
+
+      :host([display-mode="compact"][pane-placement="right"]) .split-pane {
+        order: 2;
+        border-right: none;
+        border-left: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
+      }
+
+      :host([display-mode="compact"][pane-placement="right"]) .content {
+        order: 1;
+      }
+
+      :host([display-mode="compact"][open]) .split-pane {
+        width: 320px;
+      }
+
+      :host([display-mode="compact"]) .pane-content {
+        width: 320px;
+      }
+
+      .backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 50;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+      }
+
+      :host([display-mode="overlay"][open]) .backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    `,
+  ];
 
   constructor() {
     super();

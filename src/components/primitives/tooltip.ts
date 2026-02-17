@@ -1,34 +1,5 @@
 import { LitElement, html, css } from "lit";
-
-const baseStyles = css`
-  :host {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    pointer-events: none;
-  }
-  :host([open]) {
-    display: block;
-  }
-  .tooltip {
-    position: fixed;
-    background: var(--metro-background, #1f1f1f);
-    color: var(--metro-foreground, #ffffff);
-    padding: var(--metro-spacing-sm, 8px) var(--metro-spacing-md, 12px);
-    font-family: var(--metro-font-family, "Segoe UI", system-ui, sans-serif);
-    font-size: var(--metro-font-size-small, 12px);
-    border-radius: 0;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity var(--metro-transition-fast, 167ms) ease-out;
-  }
-  :host([open]) .tooltip {
-    opacity: 1;
-  }
-  :host([open]) .tooltip {
-    opacity: 1;
-  }
-`;
+import { baseTypography } from "../../styles/shared.ts";
 
 export class MetroTooltip extends LitElement {
   static properties = {
@@ -41,7 +12,34 @@ export class MetroTooltip extends LitElement {
   declare text: string;
   declare placement: "top" | "bottom" | "left" | "right";
 
-  static styles = baseStyles;
+  static styles = [
+    baseTypography,
+    css`
+      :host {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        pointer-events: none;
+      }
+      :host([open]) {
+        display: block;
+      }
+      .tooltip {
+        position: fixed;
+        background: var(--metro-background, #1f1f1f);
+        color: var(--metro-foreground, #ffffff);
+        padding: var(--metro-spacing-sm, 8px) var(--metro-spacing-md, 12px);
+        font-size: var(--metro-font-size-small, 12px);
+        border-radius: 0;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+      }
+      :host([open]) .tooltip {
+        opacity: 1;
+      }
+    `,
+  ];
 
   #target: Element | null = null;
   #hideTimeout: number | null = null;

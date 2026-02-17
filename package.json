@@ -1,14 +1,559 @@
 {
   "name": "metrino",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Windows Phone 8 / Windows 8 Metro design system web components",
+  "license": "MIT",
+  "author": "Angel D. Munoz <scythes.lol@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AngelMunoz/metrino.git"
+  },
+  "bugs": "https://github.com/AngelMunoz/metrino/issues",
+  "homepage": "https://github.com/AngelMunoz/metrino#readme",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./button": {
+      "import": {
+        "types": "./dist/components/buttons/button.d.ts",
+        "default": "./dist/components/buttons/button.js"
+      },
+      "require": {
+        "types": "./dist/components/buttons/button.d.ts",
+        "default": "./dist/components/buttons/button.cjs"
+      }
+    },
+    "./hyperlink-button": {
+      "import": {
+        "types": "./dist/components/buttons/hyperlink-button.d.ts",
+        "default": "./dist/components/buttons/hyperlink-button.js"
+      },
+      "require": {
+        "types": "./dist/components/buttons/hyperlink-button.d.ts",
+        "default": "./dist/components/buttons/hyperlink-button.cjs"
+      }
+    },
+    "./repeat-button": {
+      "import": {
+        "types": "./dist/components/buttons/repeat-button.d.ts",
+        "default": "./dist/components/buttons/repeat-button.js"
+      },
+      "require": {
+        "types": "./dist/components/buttons/repeat-button.d.ts",
+        "default": "./dist/components/buttons/repeat-button.cjs"
+      }
+    },
+    "./date-picker": {
+      "import": {
+        "types": "./dist/components/datetime/date-picker.d.ts",
+        "default": "./dist/components/datetime/date-picker.js"
+      },
+      "require": {
+        "types": "./dist/components/datetime/date-picker.d.ts",
+        "default": "./dist/components/datetime/date-picker.cjs"
+      }
+    },
+    "./date-picker-roller": {
+      "import": {
+        "types": "./dist/components/datetime/date-picker-roller.d.ts",
+        "default": "./dist/components/datetime/date-picker-roller.js"
+      },
+      "require": {
+        "types": "./dist/components/datetime/date-picker-roller.d.ts",
+        "default": "./dist/components/datetime/date-picker-roller.cjs"
+      }
+    },
+    "./time-picker": {
+      "import": {
+        "types": "./dist/components/datetime/time-picker.d.ts",
+        "default": "./dist/components/datetime/time-picker.js"
+      },
+      "require": {
+        "types": "./dist/components/datetime/time-picker.d.ts",
+        "default": "./dist/components/datetime/time-picker.cjs"
+      }
+    },
+    "./time-picker-roller": {
+      "import": {
+        "types": "./dist/components/datetime/time-picker-roller.d.ts",
+        "default": "./dist/components/datetime/time-picker-roller.js"
+      },
+      "require": {
+        "types": "./dist/components/datetime/time-picker-roller.d.ts",
+        "default": "./dist/components/datetime/time-picker-roller.cjs"
+      }
+    },
+    "./content-dialog": {
+      "import": {
+        "types": "./dist/components/dialogs/content-dialog.d.ts",
+        "default": "./dist/components/dialogs/content-dialog.js"
+      },
+      "require": {
+        "types": "./dist/components/dialogs/content-dialog.d.ts",
+        "default": "./dist/components/dialogs/content-dialog.cjs"
+      }
+    },
+    "./flyout": {
+      "import": {
+        "types": "./dist/components/dialogs/flyout.d.ts",
+        "default": "./dist/components/dialogs/flyout.js"
+      },
+      "require": {
+        "types": "./dist/components/dialogs/flyout.d.ts",
+        "default": "./dist/components/dialogs/flyout.cjs"
+      }
+    },
+    "./message-dialog": {
+      "import": {
+        "types": "./dist/components/dialogs/message-dialog.d.ts",
+        "default": "./dist/components/dialogs/message-dialog.js"
+      },
+      "require": {
+        "types": "./dist/components/dialogs/message-dialog.d.ts",
+        "default": "./dist/components/dialogs/message-dialog.cjs"
+      }
+    },
+    "./auto-suggest-box": {
+      "import": {
+        "types": "./dist/components/input/auto-suggest-box.d.ts",
+        "default": "./dist/components/input/auto-suggest-box.js"
+      },
+      "require": {
+        "types": "./dist/components/input/auto-suggest-box.d.ts",
+        "default": "./dist/components/input/auto-suggest-box.cjs"
+      }
+    },
+    "./check-box": {
+      "import": {
+        "types": "./dist/components/input/check-box.d.ts",
+        "default": "./dist/components/input/check-box.js"
+      },
+      "require": {
+        "types": "./dist/components/input/check-box.d.ts",
+        "default": "./dist/components/input/check-box.cjs"
+      }
+    },
+    "./combo-box": {
+      "import": {
+        "types": "./dist/components/input/combo-box.d.ts",
+        "default": "./dist/components/input/combo-box.js"
+      },
+      "require": {
+        "types": "./dist/components/input/combo-box.d.ts",
+        "default": "./dist/components/input/combo-box.cjs"
+      }
+    },
+    "./number-box": {
+      "import": {
+        "types": "./dist/components/input/number-box.d.ts",
+        "default": "./dist/components/input/number-box.js"
+      },
+      "require": {
+        "types": "./dist/components/input/number-box.d.ts",
+        "default": "./dist/components/input/number-box.cjs"
+      }
+    },
+    "./password-box": {
+      "import": {
+        "types": "./dist/components/input/password-box.d.ts",
+        "default": "./dist/components/input/password-box.js"
+      },
+      "require": {
+        "types": "./dist/components/input/password-box.d.ts",
+        "default": "./dist/components/input/password-box.cjs"
+      }
+    },
+    "./radio-button": {
+      "import": {
+        "types": "./dist/components/input/radio-button.d.ts",
+        "default": "./dist/components/input/radio-button.js"
+      },
+      "require": {
+        "types": "./dist/components/input/radio-button.d.ts",
+        "default": "./dist/components/input/radio-button.cjs"
+      }
+    },
+    "./rating": {
+      "import": {
+        "types": "./dist/components/input/rating.d.ts",
+        "default": "./dist/components/input/rating.js"
+      },
+      "require": {
+        "types": "./dist/components/input/rating.d.ts",
+        "default": "./dist/components/input/rating.cjs"
+      }
+    },
+    "./slider": {
+      "import": {
+        "types": "./dist/components/input/slider.d.ts",
+        "default": "./dist/components/input/slider.js"
+      },
+      "require": {
+        "types": "./dist/components/input/slider.d.ts",
+        "default": "./dist/components/input/slider.cjs"
+      }
+    },
+    "./text-box": {
+      "import": {
+        "types": "./dist/components/input/text-box.d.ts",
+        "default": "./dist/components/input/text-box.js"
+      },
+      "require": {
+        "types": "./dist/components/input/text-box.d.ts",
+        "default": "./dist/components/input/text-box.cjs"
+      }
+    },
+    "./toggle-switch": {
+      "import": {
+        "types": "./dist/components/input/toggle-switch.d.ts",
+        "default": "./dist/components/input/toggle-switch.js"
+      },
+      "require": {
+        "types": "./dist/components/input/toggle-switch.d.ts",
+        "default": "./dist/components/input/toggle-switch.cjs"
+      }
+    },
+    "./grid": {
+      "import": {
+        "types": "./dist/components/layout/grid.d.ts",
+        "default": "./dist/components/layout/grid.js"
+      },
+      "require": {
+        "types": "./dist/components/layout/grid.d.ts",
+        "default": "./dist/components/layout/grid.cjs"
+      }
+    },
+    "./scroll-viewer": {
+      "import": {
+        "types": "./dist/components/layout/scroll-viewer.d.ts",
+        "default": "./dist/components/layout/scroll-viewer.js"
+      },
+      "require": {
+        "types": "./dist/components/layout/scroll-viewer.d.ts",
+        "default": "./dist/components/layout/scroll-viewer.cjs"
+      }
+    },
+    "./stack-panel": {
+      "import": {
+        "types": "./dist/components/layout/stack-panel.d.ts",
+        "default": "./dist/components/layout/stack-panel.js"
+      },
+      "require": {
+        "types": "./dist/components/layout/stack-panel.d.ts",
+        "default": "./dist/components/layout/stack-panel.cjs"
+      }
+    },
+    "./tile-grid": {
+      "import": {
+        "types": "./dist/components/layout/tile-grid.d.ts",
+        "default": "./dist/components/layout/tile-grid.js"
+      },
+      "require": {
+        "types": "./dist/components/layout/tile-grid.d.ts",
+        "default": "./dist/components/layout/tile-grid.cjs"
+      }
+    },
+    "./wrap-panel": {
+      "import": {
+        "types": "./dist/components/layout/wrap-panel.d.ts",
+        "default": "./dist/components/layout/wrap-panel.js"
+      },
+      "require": {
+        "types": "./dist/components/layout/wrap-panel.d.ts",
+        "default": "./dist/components/layout/wrap-panel.cjs"
+      }
+    },
+    "./app-bar": {
+      "import": {
+        "types": "./dist/components/navigation/app-bar.d.ts",
+        "default": "./dist/components/navigation/app-bar.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/app-bar.d.ts",
+        "default": "./dist/components/navigation/app-bar.cjs"
+      }
+    },
+    "./app-bar-button": {
+      "import": {
+        "types": "./dist/components/navigation/app-bar-button.d.ts",
+        "default": "./dist/components/navigation/app-bar-button.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/app-bar-button.d.ts",
+        "default": "./dist/components/navigation/app-bar-button.cjs"
+      }
+    },
+    "./hub": {
+      "import": {
+        "types": "./dist/components/navigation/hub.d.ts",
+        "default": "./dist/components/navigation/hub.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/hub.d.ts",
+        "default": "./dist/components/navigation/hub.cjs"
+      }
+    },
+    "./hub-section": {
+      "import": {
+        "types": "./dist/components/navigation/hub-section.d.ts",
+        "default": "./dist/components/navigation/hub-section.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/hub-section.d.ts",
+        "default": "./dist/components/navigation/hub-section.cjs"
+      }
+    },
+    "./panorama": {
+      "import": {
+        "types": "./dist/components/navigation/panorama.d.ts",
+        "default": "./dist/components/navigation/panorama.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/panorama.d.ts",
+        "default": "./dist/components/navigation/panorama.cjs"
+      }
+    },
+    "./panorama-item": {
+      "import": {
+        "types": "./dist/components/navigation/panorama-item.d.ts",
+        "default": "./dist/components/navigation/panorama-item.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/panorama-item.d.ts",
+        "default": "./dist/components/navigation/panorama-item.cjs"
+      }
+    },
+    "./pivot": {
+      "import": {
+        "types": "./dist/components/navigation/pivot.d.ts",
+        "default": "./dist/components/navigation/pivot.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/pivot.d.ts",
+        "default": "./dist/components/navigation/pivot.cjs"
+      }
+    },
+    "./pivot-item": {
+      "import": {
+        "types": "./dist/components/navigation/pivot-item.d.ts",
+        "default": "./dist/components/navigation/pivot-item.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/pivot-item.d.ts",
+        "default": "./dist/components/navigation/pivot-item.cjs"
+      }
+    },
+    "./split-view": {
+      "import": {
+        "types": "./dist/components/navigation/split-view.d.ts",
+        "default": "./dist/components/navigation/split-view.js"
+      },
+      "require": {
+        "types": "./dist/components/navigation/split-view.d.ts",
+        "default": "./dist/components/navigation/split-view.cjs"
+      }
+    },
+    "./expander": {
+      "import": {
+        "types": "./dist/components/primitives/expander.d.ts",
+        "default": "./dist/components/primitives/expander.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/expander.d.ts",
+        "default": "./dist/components/primitives/expander.cjs"
+      }
+    },
+    "./icon": {
+      "import": {
+        "types": "./dist/components/primitives/icon.d.ts",
+        "default": "./dist/components/primitives/icon.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/icon.d.ts",
+        "default": "./dist/components/primitives/icon.cjs"
+      }
+    },
+    "./info-bar": {
+      "import": {
+        "types": "./dist/components/primitives/info-bar.d.ts",
+        "default": "./dist/components/primitives/info-bar.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/info-bar.d.ts",
+        "default": "./dist/components/primitives/info-bar.cjs"
+      }
+    },
+    "./menu-flyout": {
+      "import": {
+        "types": "./dist/components/primitives/menu-flyout.d.ts",
+        "default": "./dist/components/primitives/menu-flyout.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/menu-flyout.d.ts",
+        "default": "./dist/components/primitives/menu-flyout.cjs"
+      }
+    },
+    "./person-picture": {
+      "import": {
+        "types": "./dist/components/primitives/person-picture.d.ts",
+        "default": "./dist/components/primitives/person-picture.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/person-picture.d.ts",
+        "default": "./dist/components/primitives/person-picture.cjs"
+      }
+    },
+    "./text-block": {
+      "import": {
+        "types": "./dist/components/primitives/text-block.d.ts",
+        "default": "./dist/components/primitives/text-block.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/text-block.d.ts",
+        "default": "./dist/components/primitives/text-block.cjs"
+      }
+    },
+    "./toast": {
+      "import": {
+        "types": "./dist/components/primitives/toast.d.ts",
+        "default": "./dist/components/primitives/toast.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/toast.d.ts",
+        "default": "./dist/components/primitives/toast.cjs"
+      }
+    },
+    "./tooltip": {
+      "import": {
+        "types": "./dist/components/primitives/tooltip.d.ts",
+        "default": "./dist/components/primitives/tooltip.js"
+      },
+      "require": {
+        "types": "./dist/components/primitives/tooltip.d.ts",
+        "default": "./dist/components/primitives/tooltip.cjs"
+      }
+    },
+    "./progress-bar": {
+      "import": {
+        "types": "./dist/components/progress/progress-bar.d.ts",
+        "default": "./dist/components/progress/progress-bar.js"
+      },
+      "require": {
+        "types": "./dist/components/progress/progress-bar.d.ts",
+        "default": "./dist/components/progress/progress-bar.cjs"
+      }
+    },
+    "./progress-ring": {
+      "import": {
+        "types": "./dist/components/progress/progress-ring.d.ts",
+        "default": "./dist/components/progress/progress-ring.js"
+      },
+      "require": {
+        "types": "./dist/components/progress/progress-ring.d.ts",
+        "default": "./dist/components/progress/progress-ring.cjs"
+      }
+    },
+    "./list-box": {
+      "import": {
+        "types": "./dist/components/selection/list-box.d.ts",
+        "default": "./dist/components/selection/list-box.js"
+      },
+      "require": {
+        "types": "./dist/components/selection/list-box.d.ts",
+        "default": "./dist/components/selection/list-box.cjs"
+      }
+    },
+    "./long-list-selector": {
+      "import": {
+        "types": "./dist/components/selection/long-list-selector.d.ts",
+        "default": "./dist/components/selection/long-list-selector.js"
+      },
+      "require": {
+        "types": "./dist/components/selection/long-list-selector.d.ts",
+        "default": "./dist/components/selection/long-list-selector.cjs"
+      }
+    },
+    "./semantic-zoom": {
+      "import": {
+        "types": "./dist/components/selection/semantic-zoom.d.ts",
+        "default": "./dist/components/selection/semantic-zoom.js"
+      },
+      "require": {
+        "types": "./dist/components/selection/semantic-zoom.d.ts",
+        "default": "./dist/components/selection/semantic-zoom.cjs"
+      }
+    },
+    "./cycle-tile": {
+      "import": {
+        "types": "./dist/components/tiles/cycle-tile.d.ts",
+        "default": "./dist/components/tiles/cycle-tile.js"
+      },
+      "require": {
+        "types": "./dist/components/tiles/cycle-tile.d.ts",
+        "default": "./dist/components/tiles/cycle-tile.cjs"
+      }
+    },
+    "./flip-tile": {
+      "import": {
+        "types": "./dist/components/tiles/flip-tile.d.ts",
+        "default": "./dist/components/tiles/flip-tile.js"
+      },
+      "require": {
+        "types": "./dist/components/tiles/flip-tile.d.ts",
+        "default": "./dist/components/tiles/flip-tile.cjs"
+      }
+    },
+    "./iconic-tile": {
+      "import": {
+        "types": "./dist/components/tiles/iconic-tile.d.ts",
+        "default": "./dist/components/tiles/iconic-tile.js"
+      },
+      "require": {
+        "types": "./dist/components/tiles/iconic-tile.d.ts",
+        "default": "./dist/components/tiles/iconic-tile.cjs"
+      }
+    },
+    "./live-tile": {
+      "import": {
+        "types": "./dist/components/tiles/live-tile.d.ts",
+        "default": "./dist/components/tiles/live-tile.js"
+      },
+      "require": {
+        "types": "./dist/components/tiles/live-tile.d.ts",
+        "default": "./dist/components/tiles/live-tile.cjs"
+      }
+    },
+    "./styles.css": "./dist/metrino.css"
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": ["**/*.css"],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "build:vite": "vite build",
+    "build:types": "tsc -p tsconfig.build.json",
     "preview": "vite preview",
     "test": "web-test-runner \"src/**/*.test.ts\" --node-resolve",
-    "test:watch": "web-test-runner \"src/**/*.test.ts\" --node-resolve --watch"
+    "test:watch": "web-test-runner \"src/**/*.test.ts\" --node-resolve --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "lit": "^3.0.0"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.4.47"
   },
   "devDependencies": {
     "@types/chai": "^5.2.3",
@@ -23,9 +568,5 @@
   },
   "overrides": {
     "vite": "^8.0.0-beta.13"
-  },
-  "dependencies": {
-    "@mdi/js": "^7.4.47",
-    "lit": "^3.3.2"
   }
 }
