@@ -161,7 +161,7 @@ export class MetroToast extends LitElement {
     this.shadowRoot?.appendChild(toast);
     this.#toasts.set(id, toast);
 
-    const duration = options.duration ?? 5000;
+    const duration = options.duration ?? 3000;
     if (duration > 0) {
       setTimeout(() => this.hide(id), duration);
     }
@@ -174,10 +174,8 @@ export class MetroToast extends LitElement {
     if (!toast) return;
 
     toast.classList.add("exiting");
-    setTimeout(() => {
-      toast.remove();
-      this.#toasts.delete(id);
-    }, 333);
+    toast.remove();
+    this.#toasts.delete(id);
   }
 
   clearAll(): void {

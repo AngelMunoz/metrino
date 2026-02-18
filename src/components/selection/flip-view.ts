@@ -1,6 +1,15 @@
 import { LitElement, html, css, type PropertyValues, type TemplateResult, nothing } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
+import {
+  createGestureState,
+  updateGesture,
+  resolveGesture,
+  compressBoundary,
+  predictInertiaDistance,
+  normalizePointerEvent,
+  type GestureState,
+} from "../../utils/touch-physics.ts";
 
 export class MetroFlipView extends LitElement {
   static properties = {
@@ -130,9 +139,9 @@ export class MetroFlipView extends LitElement {
     `,
   ];
 
-  #isDragging = false;
-  #startX = 0;
-  #currentX = 0;
+  #gestureState: GestureState | null = null;
+  #dragOffset = 0;
+  #boundaryBounce = 0;
 
   constructor() {
     super();
@@ -146,7 +155,7 @@ export class MetroFlipView extends LitElement {
   render() {
     const itemCount = this.#getItemCount();
     const translateX = -(this.index * 100);
-    const dragOffset = this.#isDragging ? ((this.#currentX - this.#startX) / this.clientWidth) * 100 : 0;
+    const dragOffset = this.#dragOffset;
 
     return html`
       <div
@@ -155,9 +164,12 @@ export class MetroFlipView extends LitElement {
         @pointermove=${this.#handlePointerMove}
         @pointerup=${this.#handlePointerUp}
         @pointercancel=${this.#handlePointerUp}
+        @touchstart=${this.#handleTouchStart}
+        @touchmove=${this.#handleTouchMove}
+        @touchend=${this.#handleTouchEnd}
       >
         <div
-          class="flip-track ${this.#isDragging ? "dragging" : ""}"
+          class="flip-track ${this.#gestureState ? "dragging" : ""}"
           style="transform: translateX(calc(${translateX}% + ${dragOffset}%))"
         >
           ${this.#renderItems()}
@@ -235,35 +247,100 @@ export class MetroFlipView extends LitElement {
 
   #handlePointerDown(e: PointerEvent): void {
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    
-    this.#isDragging = true;
-    this.#startX = e.clientX;
-    this.#currentX = e.clientX;
+    const info = normalizePointerEvent(e);
+    this.#gestureState = createGestureState(info);
+    this.#dragOffset = 0;
+    this.#boundaryBounce = 0;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
   #handlePointerMove(e: PointerEvent): void {
-    if (!this.#isDragging) return;
-    this.#currentX = e.clientX;
-    this.requestUpdate();
+    if (!this.#gestureState) return;
+    const info = normalizePointerEvent(e);
+    this.#gestureState = updateGesture(this.#gestureState, info);
+
+    if (this.#gestureState.resolved === "drag-x" || this.#gestureState.resolved === null) {
+      const dx = info.clientX - this.#gestureState.startX;
+      const itemCount = this.#getItemCount();
+      const atStart = this.index === 0 && dx > 0;
+      const atEnd = this.index >= itemCount - 1 && dx < 0;
+
+      if (atStart || atEnd) {
+        // Boundary resistance — rubber-band effect
+        this.#boundaryBounce = compressBoundary(dx);
+        this.#dragOffset = (this.#boundaryBounce / this.clientWidth) * 100;
+      } else {
+        this.#dragOffset = (dx / this.clientWidth) * 100;
+      }
+      this.requestUpdate();
+    }
   }
 
   #handlePointerUp(_e: PointerEvent): void {
-    if (!this.#isDragging) return;
-    
-    const diff = this.#currentX - this.#startX;
-    const threshold = this.clientWidth * 0.2;
-    const itemCount = this.#getItemCount();
-    
-    if (diff < -threshold && this.index < itemCount - 1) {
-      this.#goNext();
-    } else if (diff > threshold && this.index > 0) {
-      this.#goPrev();
+    this.#finishGesture();
+  }
+
+  // Touch event fallback for environments without PointerEvent
+  #handleTouchStart(e: TouchEvent): void {
+    // Skip if pointer events already handled this
+    if (this.#gestureState) return;
+    const info = normalizePointerEvent(e);
+    this.#gestureState = createGestureState(info);
+    this.#dragOffset = 0;
+    this.#boundaryBounce = 0;
+  }
+
+  #handleTouchMove(e: TouchEvent): void {
+    if (!this.#gestureState) return;
+    const info = normalizePointerEvent(e);
+    this.#gestureState = updateGesture(this.#gestureState, info);
+
+    if (this.#gestureState.resolved === "drag-x" || this.#gestureState.resolved === null) {
+      e.preventDefault();
+      const dx = info.clientX - this.#gestureState.startX;
+      const itemCount = this.#getItemCount();
+      const atStart = this.index === 0 && dx > 0;
+      const atEnd = this.index >= itemCount - 1 && dx < 0;
+
+      if (atStart || atEnd) {
+        this.#boundaryBounce = compressBoundary(dx);
+        this.#dragOffset = (this.#boundaryBounce / this.clientWidth) * 100;
+      } else {
+        this.#dragOffset = (dx / this.clientWidth) * 100;
+      }
+      this.requestUpdate();
     }
-    
-    this.#isDragging = false;
-    this.#startX = 0;
-    this.#currentX = 0;
+  }
+
+  #handleTouchEnd(_e: TouchEvent): void {
+    this.#finishGesture();
+  }
+
+  #finishGesture(): void {
+    if (!this.#gestureState) return;
+
+    const result = resolveGesture(this.#gestureState);
+    const itemCount = this.#getItemCount();
+
+    if (result.type === "tap") {
+      // Let click events handle taps
+    } else if (result.type === "drag-x" || result.type === null) {
+      // Calculate target from velocity + distance
+      const velocityPx = result.velocityX;
+      const predictedPx = predictInertiaDistance(velocityPx);
+      const totalDx = result.dx + predictedPx;
+      const threshold = this.clientWidth * 0.15;
+
+      if (totalDx < -threshold && this.index < itemCount - 1) {
+        this.#goNext();
+      } else if (totalDx > threshold && this.index > 0) {
+        this.#goPrev();
+      }
+    }
+
+    this.#gestureState = null;
+    this.#dragOffset = 0;
+    this.#boundaryBounce = 0;
     this.requestUpdate();
   }
 

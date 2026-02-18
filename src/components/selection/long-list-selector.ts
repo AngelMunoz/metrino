@@ -1,5 +1,12 @@
 import { LitElement, html, css, type PropertyValues, type TemplateResult, nothing } from "lit";
 import { baseTypography, scrollbarVisible } from "../../styles/shared.ts";
+import {
+  createGestureState,
+  updateGesture,
+  resolveGesture,
+  normalizePointerEvent,
+  type GestureState,
+} from "../../utils/touch-physics.ts";
 
 export interface LongListSelectorItem {
   [key: string]: unknown;
@@ -103,6 +110,11 @@ export class MetroLongListSelector extends LitElement {
       .list-item:active {
         background: var(--metro-accent-dark, #005a9e);
       }
+      .list-item.cross-sliding {
+        transform: translateX(var(--cross-slide-offset, 0px));
+        opacity: 0.8;
+        transition: transform 0.15s var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
       .empty-message {
         padding: var(--metro-spacing-lg, 16px);
         color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
@@ -157,6 +169,8 @@ export class MetroLongListSelector extends LitElement {
   #scrollTop = 0;
   #clientHeight = 300;
   #jumpListCache: Map<string, LongListSelectorGroup> = new Map();
+  #gestureState: GestureState | null = null;
+  #crossSlideIndex: number | null = null;
 
   constructor() {
     super();
@@ -279,13 +293,16 @@ export class MetroLongListSelector extends LitElement {
 
     return html`
       <div
-        class="list-item ${isSelected ? "selected" : ""}"
+        class="list-item ${isSelected ? "selected" : ""} ${this.#crossSlideIndex === index ? "cross-sliding" : ""}"
         role="option"
         tabindex="0"
         aria-selected=${isSelected}
         data-index=${index}
         @click=${() => this.#handleItemClick(index)}
         @keydown=${(e: KeyboardEvent) => this.#handleKeyDown(e, index)}
+        @pointerdown=${(e: PointerEvent) => this.#handleItemPointerDown(e, index)}
+        @pointermove=${(e: PointerEvent) => this.#handleItemPointerMove(e)}
+        @pointerup=${(e: PointerEvent) => this.#handleItemPointerUp(e, index)}
       >
         <span>${displayText}</span>
       </div>
@@ -333,6 +350,48 @@ export class MetroLongListSelector extends LitElement {
 
     this.requestUpdate();
     this.#dispatchSelectionChange();
+  }
+
+  #handleItemPointerDown(e: PointerEvent, index: number): void {
+    if (this.selectionMode === "none") return;
+    this.#gestureState = createGestureState(normalizePointerEvent(e));
+    this.#crossSlideIndex = index;
+  }
+
+  #handleItemPointerMove(e: PointerEvent): void {
+    if (!this.#gestureState || this.selectionMode === "none") return;
+    this.#gestureState = updateGesture(this.#gestureState, normalizePointerEvent(e));
+
+    if (this.#gestureState.resolved === "cross-slide" || this.#gestureState.resolved === "drag-x") {
+      const dx = normalizePointerEvent(e).clientX - this.#gestureState.startX;
+      const el = (e.target as HTMLElement).closest(".list-item") as HTMLElement;
+      if (el) {
+        el.style.setProperty("--cross-slide-offset", `${Math.min(dx, 50)}px`);
+      }
+    }
+  }
+
+  #handleItemPointerUp(e: PointerEvent, index: number): void {
+    if (!this.#gestureState || this.selectionMode === "none") return;
+    const result = resolveGesture(this.#gestureState);
+
+    if (result.type === "cross-slide" || (result.type === "drag-x" && Math.abs(result.dx) > 30)) {
+      if (this.#selectedIndices.has(index)) {
+        this.#selectedIndices.delete(index);
+      } else {
+        this.#selectedIndices.add(index);
+      }
+      this.requestUpdate();
+      this.#dispatchSelectionChange();
+    }
+
+    const el = (e.target as HTMLElement).closest(".list-item") as HTMLElement;
+    if (el) {
+      el.style.removeProperty("--cross-slide-offset");
+    }
+    this.#gestureState = null;
+    this.#crossSlideIndex = null;
+    this.requestUpdate();
   }
 
   #handleKeyDown(e: KeyboardEvent, index: number): void {

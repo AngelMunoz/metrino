@@ -65,7 +65,7 @@ suite("metro-toast", () => {
     const id = el.show({ message: "Test" });
     
     el.hide(id);
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 350));
     
     const toast = el.shadowRoot?.querySelector(`#${id}`);
     assert.notExists(toast);

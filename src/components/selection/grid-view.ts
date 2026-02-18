@@ -5,6 +5,13 @@ import {
   type VirtualizationGroup,
   groupItems,
 } from "../../utils/virtualization.ts";
+import {
+  createGestureState,
+  updateGesture,
+  resolveGesture,
+  normalizePointerEvent,
+  type GestureState,
+} from "../../utils/touch-physics.ts";
 
 type SelectionMode = "none" | "single" | "multiple" | "extended";
 
@@ -106,6 +113,7 @@ export class MetroGridView extends LitElement {
   #clientWidth = 800;
   #lastFocusedIndex: number | null = null;
   #groups: VirtualizationGroup<GridViewItem>[] = [];
+  #gestureState: GestureState | null = null;
 
   constructor() {
     super();
@@ -224,6 +232,9 @@ export class MetroGridView extends LitElement {
         @click=${() => this.#handleItemClick(index)}
         @keydown=${(e: KeyboardEvent) => this.#handleKeyDown(e, index)}
         @dblclick=${() => this.#handleItemInvoke(index)}
+        @pointerdown=${(e: PointerEvent) => this.#handleItemPointerDown(e)}
+        @pointermove=${(e: PointerEvent) => this.#handleItemPointerMove(e)}
+        @pointerup=${(e: PointerEvent) => this.#handleItemPointerUp(e, index)}
       >
         ${this.#renderItemContent(item, index)}
       </div>
@@ -289,6 +300,32 @@ export class MetroGridView extends LitElement {
     this.#lastFocusedIndex = index;
     this.requestUpdate();
     this.#dispatchSelectionChange();
+  }
+
+  #handleItemPointerDown(e: PointerEvent): void {
+    if (this.selectionMode === "none") return;
+    this.#gestureState = createGestureState(normalizePointerEvent(e));
+  }
+
+  #handleItemPointerMove(e: PointerEvent): void {
+    if (!this.#gestureState || this.selectionMode === "none") return;
+    this.#gestureState = updateGesture(this.#gestureState, normalizePointerEvent(e));
+  }
+
+  #handleItemPointerUp(_e: PointerEvent, index: number): void {
+    if (!this.#gestureState || this.selectionMode === "none") return;
+    const result = resolveGesture(this.#gestureState);
+    this.#gestureState = null;
+
+    if (result.type === "cross-slide" || (result.type === "drag-x" && Math.abs(result.dx) > 30)) {
+      if (this.#selectedIndices.has(index)) {
+        this.#selectedIndices.delete(index);
+      } else {
+        this.#selectedIndices.add(index);
+      }
+      this.requestUpdate();
+      this.#dispatchSelectionChange();
+    }
   }
 
   #handleItemInvoke(index: number): void {
