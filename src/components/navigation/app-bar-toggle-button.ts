@@ -35,7 +35,7 @@ export class MetroAppBarToggleButton extends LitElement {
         border: none;
         color: var(--metro-foreground, #ffffff);
         cursor: pointer;
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .icon-circle {
         width: 40px;
@@ -46,8 +46,8 @@ export class MetroAppBarToggleButton extends LitElement {
         align-items: center;
         justify-content: center;
         transition:
-          background-color var(--metro-transition-fast, 167ms) ease-out,
-          border-color var(--metro-transition-fast, 167ms) ease-out;
+          background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([checked]) .icon-circle {
         background: var(--metro-accent, #0078d4);
@@ -75,7 +75,7 @@ export class MetroAppBarToggleButton extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: color var(--metro-transition-fast, 167ms) ease-out;
+        transition: color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .label {
         font-size: var(--metro-font-size-small, 12px);
@@ -86,9 +86,9 @@ export class MetroAppBarToggleButton extends LitElement {
         overflow: hidden;
         margin-top: 0;
         transition:
-          max-height var(--metro-transition-fast, 167ms) ease-out,
-          opacity var(--metro-transition-fast, 167ms) ease-out,
-          margin-top var(--metro-transition-fast, 167ms) ease-out;
+          max-height var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          margin-top var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([data-expanded]) .label {
         max-height: 20px;

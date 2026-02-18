@@ -38,9 +38,9 @@ suite("metro-live-tile", () => {
     assert.equal(el.size, "wide");
   });
 
-  test("default interval is 5000", async () => {
+  test("default interval is 0 (pseudo-random 6-10s)", async () => {
     const el = await createTile();
-    assert.equal(el.interval, 5000);
+    assert.equal(el.interval, 0);
   });
 
   test("interval attribute works", async () => {

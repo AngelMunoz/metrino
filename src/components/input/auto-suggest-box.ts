@@ -37,7 +37,7 @@ export class MetroAutoSuggestBox extends LitElement {
       .search-icon {
         position: absolute;
         right: var(--metro-spacing-md, 12px);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         pointer-events: none;
       }
       .suggestions {
@@ -53,13 +53,13 @@ export class MetroAutoSuggestBox extends LitElement {
       }
       .suggestions.open {
         display: block;
-        animation: dropdownEnter var(--metro-transition-fast, 167ms) ease-out;
+        animation: dropdownEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .suggestion-item {
         padding: var(--metro-spacing-md, 12px);
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .suggestion-item:hover,
       .suggestion-item.highlighted {

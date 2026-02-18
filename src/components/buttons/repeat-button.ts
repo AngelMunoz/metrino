@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { focusRing, pressState, disabledState, baseTypography } from "../../styles/shared.ts";
+import { focusRing, pressState, disabledState, baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
   setupButtonRole,
@@ -47,7 +47,7 @@ export class MetroRepeatButton extends LitElement {
         text-align: center;
         user-select: none;
         box-sizing: border-box;
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
       :host(:hover) {
@@ -71,13 +71,14 @@ export class MetroRepeatButton extends LitElement {
       }
 
       :host(.pressed) {
-        background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         color: var(--metro-background, #1f1f1f);
       }
     `,
   ];
 
   #repeatState: RepeatState = { timer: null, interval: null };
+  #cleanupTilt?: () => void;
 
   constructor() {
     super();
@@ -93,6 +94,7 @@ export class MetroRepeatButton extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     setupButtonRole(this, this.disabled);
+    this.#cleanupTilt = applyTiltEffect(this);
     this.addEventListener("click", this.#handleClick);
     this.addEventListener("keydown", this.#handleKeydown);
     this.addEventListener("mousedown", this.#handlePointerDown);
@@ -105,6 +107,7 @@ export class MetroRepeatButton extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     stopRepeat(this.#repeatState);
+    this.#cleanupTilt?.();
     this.removeEventListener("click", this.#handleClick);
     this.removeEventListener("keydown", this.#handleKeydown);
     this.removeEventListener("mousedown", this.#handlePointerDown);

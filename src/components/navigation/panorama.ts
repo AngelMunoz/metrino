@@ -81,15 +81,14 @@ export class MetroPanorama extends LitElement {
 
   #handleScroll(): void {
     if (!this.#scrollContainer || !this.backgroundImage) return;
-    
+
     const parallaxBg = this.shadowRoot?.querySelector(".parallax-bg") as HTMLElement;
     if (!parallaxBg) return;
-    
+
     const scrollLeft = this.#scrollContainer.scrollLeft;
-    const maxScroll = this.#scrollContainer.scrollWidth - this.#scrollContainer.clientWidth;
-    const parallaxOffset = (scrollLeft / maxScroll) * 20;
-    
-    parallaxBg.style.transform = `translateX(-${parallaxOffset}%)`;
+    const parallaxOffset = scrollLeft * 0.2;
+
+    parallaxBg.style.transform = `translateX(-${parallaxOffset}px)`;
   }
 }
 

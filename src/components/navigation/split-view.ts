@@ -118,7 +118,7 @@ export class MetroSplitView extends LitElement {
         z-index: 50;
         opacity: 0;
         pointer-events: none;
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
       :host([display-mode="overlay"][open]) .backdrop {

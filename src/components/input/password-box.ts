@@ -49,14 +49,14 @@ export class MetroPasswordBox extends LitElement {
         right: var(--metro-spacing-sm, 8px);
         background: none;
         border: none;
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         cursor: pointer;
         padding: var(--metro-spacing-xs, 4px);
         font-size: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: color var(--metro-transition-fast, 167ms) ease-out;
+        transition: color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .reveal-btn:hover {
         color: var(--metro-foreground, #ffffff);

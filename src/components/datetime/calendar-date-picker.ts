@@ -45,9 +45,9 @@ export class MetroCalendarDatePicker extends LitElement {
         right: var(--metro-spacing-md, 12px);
         top: 50%;
         transform: translateY(-50%);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         pointer-events: none;
-        transition: transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: transform var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) .picker-icon {
         transform: translateY(-50%) rotate(180deg);
@@ -58,7 +58,7 @@ export class MetroCalendarDatePicker extends LitElement {
         left: 0;
         z-index: 100;
         display: none;
-        animation: dropdownEnter var(--metro-transition-fast, 167ms) ease-out;
+        animation: dropdownEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) .dropdown {
         display: block;

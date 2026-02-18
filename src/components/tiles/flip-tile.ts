@@ -23,11 +23,11 @@ export class MetroFlipTile extends LitElement {
         position: relative;
         width: 100%;
         height: 100%;
-        transition: transform var(--metro-transition-slow, 333ms) ease-out;
+        transition: transform var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         transform-style: preserve-3d;
       }
       :host([flipped]) .tile-container {
-        transform: rotateX(180deg);
+        transform: rotateY(180deg);
       }
       .tile-face {
         position: absolute;
@@ -48,7 +48,7 @@ export class MetroFlipTile extends LitElement {
       .tile-back {
         background: var(--metro-background, #1f1f1f);
         color: var(--metro-foreground, #ffffff);
-        transform: rotateX(180deg);
+        transform: rotateY(180deg);
       }
     `,
   ];

@@ -24,7 +24,7 @@ export class MetroHubSection extends LitElement {
         margin: 0 0 var(--metro-spacing-md, 12px) 0;
         padding: var(--metro-spacing-sm, 8px) 0;
         cursor: pointer;
-        transition: color var(--metro-transition-fast, 167ms) ease-out;
+        transition: color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         user-select: none;
       }
       .section-header:hover {

@@ -70,8 +70,8 @@ export class MetroFlipView extends LitElement {
         align-items: center;
         justify-content: center;
         opacity: 0;
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out,
-          background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         z-index: 10;
       }
       :host(:hover) .nav-button,
@@ -117,8 +117,8 @@ export class MetroFlipView extends LitElement {
         border: none;
         padding: 0;
         cursor: pointer;
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out,
-          transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .indicator:hover {
         opacity: 0.7;

@@ -57,13 +57,13 @@ export class MetroNumberBox extends LitElement {
         background: transparent;
         border: none;
         border-left: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         cursor: pointer;
         font-size: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all var(--metro-transition-fast, 167ms) ease-out;
+        transition: all var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .spin-button:hover {
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));

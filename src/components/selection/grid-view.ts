@@ -64,9 +64,9 @@ export class MetroGridView extends LitElement {
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
         border: 2px solid transparent;
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out,
-          border-color var(--metro-transition-fast, 167ms) ease-out,
-          transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         overflow: hidden;
         display: flex;
         align-items: center;

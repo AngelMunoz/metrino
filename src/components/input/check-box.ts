@@ -19,15 +19,19 @@ export class MetroCheckBox extends LitElement {
   static styles = [
     toggleControlBase,
     css`
+      :host {
+        padding: 7px;
+        margin: -7px;
+      }
       .checkbox {
         width: 20px;
         height: 20px;
-        border: 2px solid var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        border: 2px solid var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all var(--metro-transition-fast, 167ms) ease-out;
+        transition: all var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .checkbox.checked {
         background: var(--metro-accent, #0078d4);
@@ -39,7 +43,7 @@ export class MetroCheckBox extends LitElement {
         color: #ffffff;
         opacity: 0;
         transform: scale(0);
-        transition: all var(--metro-transition-fast, 167ms) ease-out;
+        transition: all var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         display: flex;
         align-items: center;
         justify-content: center;

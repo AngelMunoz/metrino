@@ -30,7 +30,7 @@ export class MetroSemanticZoom extends LitElement {
         transition:
           transform var(--metro-transition-slow, 333ms)
             var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
-          opacity var(--metro-transition-fast, 167ms) ease-out;
+          opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .zoomed-in {
         transform: scale(1);

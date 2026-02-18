@@ -28,85 +28,65 @@ export class MetroProgressBar extends LitElement {
         position: relative;
         overflow: hidden;
       }
+
       .progress-fill {
         height: 100%;
         background: var(--metro-accent, #0078d4);
-        transition: width var(--metro-transition-fast, 167ms) ease-out;
+        transition: width var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
       .progress-container.indeterminate {
         width: 100%;
         height: 4px;
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
         position: relative;
         overflow: hidden;
       }
 
-      .indeterminate-dots {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-      }
-
+      /*
+       * Windows 8 Metro indeterminate progress bar:
+       * 5 small dots travel left-to-right, accelerating in the center
+       * and decelerating at the edges before fading out and reappearing.
+       */
       .indeterminate-dot {
         position: absolute;
+        top: 0;
         width: 4px;
         height: 4px;
+        border-radius: 50%;
         background: var(--metro-accent, #0078d4);
-        border-radius: 2px;
-        top: 0;
-        animation: indeterminate-travel 2.4s linear infinite;
+        animation: dot-flow 2.4s cubic-bezier(0.7, 0.0, 0.3, 1.0) infinite;
       }
 
       .indeterminate-dot:nth-child(1) { animation-delay: 0s; }
-      .indeterminate-dot:nth-child(2) { animation-delay: 0.12s; }
-      .indeterminate-dot:nth-child(3) { animation-delay: 0.24s; }
-      .indeterminate-dot:nth-child(4) { animation-delay: 0.36s; }
-      .indeterminate-dot:nth-child(5) { animation-delay: 0.48s; }
+      .indeterminate-dot:nth-child(2) { animation-delay: 0.22s; }
+      .indeterminate-dot:nth-child(3) { animation-delay: 0.44s; }
+      .indeterminate-dot:nth-child(4) { animation-delay: 0.66s; }
+      .indeterminate-dot:nth-child(5) { animation-delay: 0.88s; }
 
-      @keyframes indeterminate-travel {
+      @keyframes dot-flow {
         0% {
-          left: 0%;
-          width: 4px;
-          opacity: 0.2;
+          left: -2%;
+          opacity: 0;
         }
         5% {
           opacity: 1;
         }
-        20% {
-          left: 20%;
-          width: 4px;
-        }
-        40% {
-          left: 40%;
-          width: 4px;
-        }
         50% {
-          left: 50%;
-          width: 16px;
-        }
-        60% {
-          left: 60%;
-          width: 4px;
-        }
-        80% {
-          left: 80%;
-          width: 4px;
+          opacity: 1;
         }
         95% {
           opacity: 1;
         }
         100% {
           left: 100%;
-          width: 4px;
-          opacity: 0.2;
+          opacity: 0;
         }
       }
 
       .progress-label {
         font-size: var(--metro-font-size-small, 12px);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         margin-top: var(--metro-spacing-xs, 4px);
         text-align: center;
       }
@@ -128,13 +108,11 @@ export class MetroProgressBar extends LitElement {
       ${this.indeterminate
         ? html`
           <div class="progress-container indeterminate" role="progressbar" aria-busy="true">
-            <div class="indeterminate-dots">
-              <div class="indeterminate-dot"></div>
-              <div class="indeterminate-dot"></div>
-              <div class="indeterminate-dot"></div>
-              <div class="indeterminate-dot"></div>
-              <div class="indeterminate-dot"></div>
-            </div>
+            <div class="indeterminate-dot"></div>
+            <div class="indeterminate-dot"></div>
+            <div class="indeterminate-dot"></div>
+            <div class="indeterminate-dot"></div>
+            <div class="indeterminate-dot"></div>
           </div>
         `
         : html`

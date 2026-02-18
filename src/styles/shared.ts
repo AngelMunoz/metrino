@@ -27,7 +27,7 @@ export const tiltEffect = css`
     perspective: 1000px;
   }
   :host(.tilt) .tilt-content {
-    transition: transform var(--metro-transition-fast, 167ms) ease-out;
+    transition: transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
     transform-style: preserve-3d;
   }
 `;
@@ -80,7 +80,7 @@ export const inputBase = css`
     border-radius: 0;
     color: var(--metro-foreground, #ffffff);
     outline: none;
-    transition: border-color var(--metro-transition-fast, 167ms) ease-out;
+    transition: border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
     box-sizing: border-box;
   }
   input:focus,
@@ -89,7 +89,7 @@ export const inputBase = css`
   }
   input::placeholder,
   textarea::placeholder {
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
   }
   input:disabled,
   textarea:disabled {
@@ -100,7 +100,7 @@ export const inputBase = css`
     display: block;
     margin-bottom: var(--metro-spacing-xs, 4px);
     font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
   }
 `;
 
@@ -150,7 +150,7 @@ export const tileBadge = css`
 
 export const transitionFast = css`
   transition-duration: var(--metro-transition-fast, 167ms);
-  transition-timing-function: ease-out;
+  transition-timing-function: var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
 `;
 
 export const hoverHighlight = css`
@@ -167,7 +167,7 @@ export const listItemBase = css`
     padding: var(--metro-spacing-md, 12px);
     cursor: pointer;
     color: var(--metro-foreground, #ffffff);
-    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+    transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   }
   .list-item-base:hover {
     background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
@@ -192,7 +192,7 @@ export const selectableItemBase = css`
     cursor: pointer;
     color: var(--metro-foreground, #ffffff);
     border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
-    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+    transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
     box-sizing: border-box;
     user-select: none;
   }
@@ -303,7 +303,7 @@ export const closeButton = css`
   .close-btn {
     background: none;
     border: none;
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
     cursor: pointer;
     padding: 4px;
     line-height: 1;
@@ -324,7 +324,7 @@ export const iconButtonBase = css`
     border: none;
     color: var(--metro-foreground, #ffffff);
     cursor: pointer;
-    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+    transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   }
   :host(:hover) {
     background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
@@ -339,7 +339,7 @@ export const formLabel = css`
     display: block;
     margin-bottom: var(--metro-spacing-xs, 4px);
     font-size: var(--metro-font-size-small, 12px);
-    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
   }
 `;
 
@@ -386,7 +386,7 @@ export const pickerRollerBase = css`
     position: absolute;
     width: 100%;
     top: calc(50% - 20px);
-    transition: transform var(--metro-transition-fast, 167ms) ease-out;
+    transition: transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
     will-change: transform;
   }
   .picker-item {
@@ -397,7 +397,7 @@ export const pickerRollerBase = css`
     font-size: var(--metro-font-size-normal, 14px);
     color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
     cursor: pointer;
-    transition: color var(--metro-transition-fast, 167ms) ease-out;
+    transition: color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   }
   .picker-item.selected {
     color: var(--metro-foreground, #ffffff);
@@ -438,12 +438,12 @@ export function applyTiltEffect(el: HTMLElement): () => void {
     const rotateY = ((x - centerX) / centerX) * 5;
 
     el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    el.style.transition = "transform 100ms ease-out";
+    el.style.transition = "transform 100ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1))";
   };
 
   const handlePointerUp = () => {
     el.style.transform = "";
-    el.style.transition = "transform 167ms ease-out";
+    el.style.transition = "transform 167ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1))";
   };
 
   el.addEventListener("pointerdown", handlePointerDown);
@@ -476,16 +476,16 @@ export const buttonBase = css`
     user-select: none;
     box-sizing: border-box;
     transition:
-      background-color var(--metro-transition-fast, 167ms) ease-out,
-      border-color var(--metro-transition-fast, 167ms) ease-out;
+      background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+      border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   }
   :host(:hover) {
     background: var(--metro-foreground, #fff);
     color: var(--metro-background, #1f1f1f);
   }
   :host(.pressed) {
-    background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-    border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
+    border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
     color: var(--metro-background, #1f1f1f);
   }
 `;
@@ -499,7 +499,7 @@ export const menuItemStyles = css`
     cursor: pointer;
     color: var(--metro-foreground, #ffffff);
     font-size: var(--metro-font-size-normal, 14px);
-    transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+    transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   }
   ::slotted(.menu-item:hover) {
     background: var(--metro-highlight, rgba(255, 255, 255, 0.1));

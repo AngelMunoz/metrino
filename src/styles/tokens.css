@@ -10,6 +10,9 @@
   --metro-font-size-large: 20px;
   --metro-font-size-xlarge: 28px;
   --metro-font-size-xxlarge: 42px;
+  --metro-font-size-hero: 56px;
+  --metro-font-size-header-2: 26px;
+  --metro-font-size-badge: 11px;
 
   --metro-spacing-xs: 4px;
   --metro-spacing-sm: 8px;
@@ -33,9 +36,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --metro-background: #1f1f1f;
+    --metro-background: #000000;
     --metro-foreground: #ffffff;
-    --metro-foreground-secondary: rgba(255, 255, 255, 0.7);
+    --metro-foreground-secondary: rgba(255, 255, 255, 0.6);
     --metro-foreground-disabled: rgba(255, 255, 255, 0.4);
     --metro-border: rgba(255, 255, 255, 0.2);
     --metro-highlight: rgba(255, 255, 255, 0.1);
@@ -58,9 +61,9 @@
 }
 
 [data-theme="dark"] {
-  --metro-background: #1f1f1f;
+  --metro-background: #000000;
   --metro-foreground: #ffffff;
-  --metro-foreground-secondary: rgba(255, 255, 255, 0.7);
+  --metro-foreground-secondary: rgba(255, 255, 255, 0.6);
   --metro-foreground-disabled: rgba(255, 255, 255, 0.4);
   --metro-border: rgba(255, 255, 255, 0.2);
   --metro-highlight: rgba(255, 255, 255, 0.1);

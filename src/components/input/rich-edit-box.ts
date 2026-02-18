@@ -48,7 +48,7 @@ export class MetroRichEditBox extends LitElement {
         cursor: pointer;
         font-size: var(--metro-font-size-normal, 14px);
         font-weight: 600;
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .toolbar-btn:focus {
         outline: 2px solid var(--metro-accent, #0078d4);
@@ -77,7 +77,7 @@ export class MetroRichEditBox extends LitElement {
         border: 2px solid transparent;
         color: var(--metro-foreground, #ffffff);
         outline: none;
-        transition: border-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         box-sizing: border-box;
         overflow: auto;
       }
@@ -86,7 +86,7 @@ export class MetroRichEditBox extends LitElement {
       }
       .editor:empty::before {
         content: attr(data-placeholder);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         pointer-events: none;
       }
       .editor[contenteditable="false"] {

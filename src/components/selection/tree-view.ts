@@ -42,7 +42,7 @@ export class MetroTreeView extends LitElement {
         padding: var(--metro-spacing-sm, 8px) var(--metro-spacing-md, 12px);
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         user-select: none;
         outline: none;
       }
@@ -67,7 +67,7 @@ export class MetroTreeView extends LitElement {
         height: 16px;
         margin-right: 4px;
         flex-shrink: 0;
-        transition: transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .chevron.expanded {
         transform: rotate(90deg);

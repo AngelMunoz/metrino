@@ -44,7 +44,7 @@ export class MetroListPicker extends LitElement {
         display: flex;
         align-items: flex-end;
         justify-content: center;
-        animation: overlayEnter var(--metro-transition-normal, 250ms) ease-out;
+        animation: overlayEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       @keyframes overlayEnter {
         from {
@@ -58,7 +58,7 @@ export class MetroListPicker extends LitElement {
         width: 100%;
         max-height: 80vh;
         background: var(--metro-background, #1f1f1f);
-        animation: pickerSlideUp var(--metro-transition-normal, 250ms) ease-out;
+        animation: pickerSlideUp var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         display: flex;
         flex-direction: column;
       }
@@ -102,7 +102,7 @@ export class MetroListPicker extends LitElement {
         color: var(--metro-foreground, #ffffff);
         font-size: var(--metro-font-size-normal, 14px);
         border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         user-select: none;
       }
       .picker-item:hover {

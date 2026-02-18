@@ -33,7 +33,7 @@ export class MetroTooltip extends LitElement {
         border-radius: 0;
         white-space: nowrap;
         opacity: 0;
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) .tooltip {
         opacity: 1;

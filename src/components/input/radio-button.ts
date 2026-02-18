@@ -19,16 +19,20 @@ export class MetroRadioButton extends LitElement {
   static styles = [
     toggleControlBase,
     css`
+      :host {
+        padding: 7px;
+        margin: -7px;
+      }
       .radio {
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        border: 2px solid var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        border: 2px solid var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all var(--metro-transition-fast, 167ms) ease-out;
+        transition: all var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .radio.checked {
         border-color: var(--metro-accent, #0078d4);
@@ -39,7 +43,7 @@ export class MetroRadioButton extends LitElement {
         border-radius: 50%;
         background: var(--metro-accent, #0078d4);
         opacity: 0;
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .radio.checked .dot {
         opacity: 1;

@@ -43,8 +43,8 @@ export class MetroLiveTile extends LitElement {
         opacity: 0;
         transform: translateY(100%);
         transition:
-          opacity var(--metro-transition-slow, 333ms) ease-out,
-          transform var(--metro-transition-slow, 333ms) ease-out;
+          opacity var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          transform var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         box-sizing: border-box;
       }
       .live-content.active {
@@ -81,7 +81,7 @@ export class MetroLiveTile extends LitElement {
   constructor() {
     super();
     this.size = "medium";
-    this.interval = 5000;
+    this.interval = 0;
   }
 
   render() {
@@ -136,15 +136,20 @@ export class MetroLiveTile extends LitElement {
     this.#stopCycle();
     if (this.#items.length <= 1) return;
 
-    this.#timer = window.setInterval(() => {
-      this.#currentIndex = (this.#currentIndex + 1) % this.#items.length;
-      this.#renderCurrentItem();
-    }, this.interval);
+    const scheduleNext = (): void => {
+      const interval = 6000 + Math.random() * 4000;
+      this.#timer = window.setTimeout(() => {
+        this.#currentIndex = (this.#currentIndex + 1) % this.#items.length;
+        this.#renderCurrentItem();
+        scheduleNext();
+      }, interval);
+    };
+    scheduleNext();
   }
 
   #stopCycle(): void {
     if (this.#timer !== null) {
-      clearInterval(this.#timer);
+      clearTimeout(this.#timer);
       this.#timer = null;
     }
   }

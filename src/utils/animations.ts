@@ -42,21 +42,21 @@ export const animationKeyframes: CSSResult = css`
   @keyframes metro-turnstile-in {
     from {
       opacity: 0;
-      transform: perspective(1000px) rotateY(30deg);
+      transform: perspective(1000px) rotateY(10deg) scale(0.9);
     }
     to {
       opacity: 1;
-      transform: perspective(1000px) rotateY(0deg);
+      transform: perspective(1000px) rotateY(0deg) scale(1);
     }
   }
   @keyframes metro-turnstile-out {
     from {
       opacity: 1;
-      transform: perspective(1000px) rotateY(0deg);
+      transform: perspective(1000px) rotateY(0deg) scale(1);
     }
     to {
       opacity: 0;
-      transform: perspective(1000px) rotateY(-30deg);
+      transform: perspective(1000px) rotateY(-15deg) scale(0.8);
     }
   }
   @keyframes metro-continuum-enter {
@@ -88,10 +88,10 @@ export const animationKeyframes: CSSResult = css`
 
 export const animationClasses: CSSResult = css`
   .metro-animate-fade-in {
-    animation: metro-fade-in 167ms ease-out forwards;
+    animation: metro-fade-in 167ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
   }
   .metro-animate-fade-out {
-    animation: metro-fade-out 167ms ease-out forwards;
+    animation: metro-fade-out 167ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
   }
   .metro-animate-slide-up {
     animation: metro-slide-up 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
@@ -103,10 +103,10 @@ export const animationClasses: CSSResult = css`
     animation: metro-slide-right 250ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
   }
   .metro-animate-turnstile-in {
-    animation: metro-turnstile-in 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    animation: metro-turnstile-in 450ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
   }
   .metro-animate-turnstile-out {
-    animation: metro-turnstile-out 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    animation: metro-turnstile-out 350ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
   }
   .metro-animate-continuum-enter {
     animation: metro-continuum-enter 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
@@ -143,8 +143,8 @@ const ANIMATION_DURATIONS: Record<AnimationName, number> = {
   "slide-up": 333,
   "slide-left": 250,
   "slide-right": 250,
-  "turnstile-in": 333,
-  "turnstile-out": 333,
+  "turnstile-in": 450,
+  "turnstile-out": 350,
   "continuum-enter": 333,
   "continuum-exit": 333,
   "tile-flip": 500,

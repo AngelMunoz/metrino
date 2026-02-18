@@ -87,11 +87,11 @@
 }
 
 .metro-animate-fade-in {
-  animation: metro-fade-in var(--metro-transition-fast) ease-out forwards;
+  animation: metro-fade-in var(--metro-transition-fast) var(--metro-easing) forwards;
 }
 
 .metro-animate-fade-out {
-  animation: metro-fade-out var(--metro-transition-fast) ease-out forwards;
+  animation: metro-fade-out var(--metro-transition-fast) var(--metro-easing) forwards;
 }
 
 .metro-animate-slide-up {
@@ -130,49 +130,49 @@
   animation-delay: 50ms;
 }
 .metro-entrance-stagger > *:nth-child(3) {
-  animation-delay: 100ms;
+  animation-delay: 90ms;
 }
 .metro-entrance-stagger > *:nth-child(4) {
-  animation-delay: 150ms;
+  animation-delay: 125ms;
 }
 .metro-entrance-stagger > *:nth-child(5) {
-  animation-delay: 200ms;
+  animation-delay: 155ms;
 }
 .metro-entrance-stagger > *:nth-child(6) {
-  animation-delay: 250ms;
+  animation-delay: 180ms;
 }
 .metro-entrance-stagger > *:nth-child(7) {
-  animation-delay: 300ms;
+  animation-delay: 202ms;
 }
 .metro-entrance-stagger > *:nth-child(8) {
-  animation-delay: 350ms;
+  animation-delay: 222ms;
 }
 .metro-entrance-stagger > *:nth-child(9) {
-  animation-delay: 400ms;
+  animation-delay: 240ms;
 }
 .metro-entrance-stagger > *:nth-child(10) {
-  animation-delay: 450ms;
+  animation-delay: 256ms;
 }
 
 @keyframes metro-turnstile-in {
   from {
     opacity: 0;
-    transform: perspective(1000px) rotateY(30deg);
+    transform: perspective(1000px) rotateY(10deg) scale(0.9);
   }
   to {
     opacity: 1;
-    transform: perspective(1000px) rotateY(0deg);
+    transform: perspective(1000px) rotateY(0deg) scale(1);
   }
 }
 
 @keyframes metro-turnstile-out {
   from {
     opacity: 1;
-    transform: perspective(1000px) rotateY(0deg);
+    transform: perspective(1000px) rotateY(0deg) scale(1);
   }
   to {
     opacity: 0;
-    transform: perspective(1000px) rotateY(-30deg);
+    transform: perspective(1000px) rotateY(-15deg) scale(0.8);
   }
 }
 
@@ -210,13 +210,11 @@
 }
 
 .metro-animate-turnstile-in {
-  animation: metro-turnstile-in var(--metro-transition-slow, 333ms)
-    var(--metro-easing) forwards;
+  animation: metro-turnstile-in 450ms var(--metro-easing) forwards;
 }
 
 .metro-animate-turnstile-out {
-  animation: metro-turnstile-out var(--metro-transition-slow, 333ms)
-    var(--metro-easing) forwards;
+  animation: metro-turnstile-out 350ms var(--metro-easing) forwards;
 }
 
 .metro-animate-continuum-enter {
@@ -237,24 +235,24 @@
 
 .metro-turnstile-feather > *:nth-child(1) { animation-delay: 0ms; }
 .metro-turnstile-feather > *:nth-child(2) { animation-delay: 50ms; }
-.metro-turnstile-feather > *:nth-child(3) { animation-delay: 100ms; }
-.metro-turnstile-feather > *:nth-child(4) { animation-delay: 150ms; }
-.metro-turnstile-feather > *:nth-child(5) { animation-delay: 200ms; }
-.metro-turnstile-feather > *:nth-child(6) { animation-delay: 250ms; }
-.metro-turnstile-feather > *:nth-child(7) { animation-delay: 300ms; }
-.metro-turnstile-feather > *:nth-child(8) { animation-delay: 350ms; }
-.metro-turnstile-feather > *:nth-child(9) { animation-delay: 400ms; }
-.metro-turnstile-feather > *:nth-child(10) { animation-delay: 450ms; }
-.metro-turnstile-feather > *:nth-child(11) { animation-delay: 500ms; }
-.metro-turnstile-feather > *:nth-child(12) { animation-delay: 550ms; }
-.metro-turnstile-feather > *:nth-child(13) { animation-delay: 600ms; }
-.metro-turnstile-feather > *:nth-child(14) { animation-delay: 650ms; }
-.metro-turnstile-feather > *:nth-child(15) { animation-delay: 700ms; }
-.metro-turnstile-feather > *:nth-child(16) { animation-delay: 750ms; }
-.metro-turnstile-feather > *:nth-child(17) { animation-delay: 800ms; }
-.metro-turnstile-feather > *:nth-child(18) { animation-delay: 850ms; }
-.metro-turnstile-feather > *:nth-child(19) { animation-delay: 900ms; }
-.metro-turnstile-feather > *:nth-child(20) { animation-delay: 950ms; }
+.metro-turnstile-feather > *:nth-child(3) { animation-delay: 90ms; }
+.metro-turnstile-feather > *:nth-child(4) { animation-delay: 125ms; }
+.metro-turnstile-feather > *:nth-child(5) { animation-delay: 155ms; }
+.metro-turnstile-feather > *:nth-child(6) { animation-delay: 180ms; }
+.metro-turnstile-feather > *:nth-child(7) { animation-delay: 202ms; }
+.metro-turnstile-feather > *:nth-child(8) { animation-delay: 222ms; }
+.metro-turnstile-feather > *:nth-child(9) { animation-delay: 240ms; }
+.metro-turnstile-feather > *:nth-child(10) { animation-delay: 256ms; }
+.metro-turnstile-feather > *:nth-child(11) { animation-delay: 270ms; }
+.metro-turnstile-feather > *:nth-child(12) { animation-delay: 283ms; }
+.metro-turnstile-feather > *:nth-child(13) { animation-delay: 294ms; }
+.metro-turnstile-feather > *:nth-child(14) { animation-delay: 304ms; }
+.metro-turnstile-feather > *:nth-child(15) { animation-delay: 313ms; }
+.metro-turnstile-feather > *:nth-child(16) { animation-delay: 321ms; }
+.metro-turnstile-feather > *:nth-child(17) { animation-delay: 329ms; }
+.metro-turnstile-feather > *:nth-child(18) { animation-delay: 336ms; }
+.metro-turnstile-feather > *:nth-child(19) { animation-delay: 343ms; }
+.metro-turnstile-feather > *:nth-child(20) { animation-delay: 349ms; }
 
 @keyframes metro-theme-wipe {
   0% {
@@ -266,5 +264,5 @@
 }
 
 .metro-theme-transition {
-  animation: metro-theme-wipe 500ms ease-out forwards;
+  animation: metro-theme-wipe 500ms var(--metro-easing) forwards;
 }

@@ -30,8 +30,8 @@ export class MetroRating extends LitElement {
         font-size: 24px;
         color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.4));
         cursor: pointer;
-        transition: color var(--metro-transition-fast, 167ms) ease-out,
-                    transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+                    transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         user-select: none;
       }
       .star:hover {

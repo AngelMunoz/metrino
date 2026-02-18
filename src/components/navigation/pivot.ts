@@ -31,15 +31,15 @@ export class MetroPivot extends LitElement {
         border-bottom: 2px solid transparent;
         margin-bottom: -2px;
         transition:
-          color var(--metro-transition-fast, 167ms) ease-out,
-          transform var(--metro-transition-fast, 167ms) ease-out;
+          color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         white-space: nowrap;
         user-select: none;
         transform: scale(0.8);
         transform-origin: left center;
       }
       .pivot-header:hover {
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
       }
       .pivot-header.active {
         color: var(--metro-foreground, #ffffff);
@@ -61,7 +61,7 @@ export class MetroPivot extends LitElement {
         opacity: 0.5;
         transform: scale(0.95);
         transition:
-          opacity var(--metro-transition-slow, 333ms) ease-out,
+          opacity var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
           transform var(--metro-transition-slow, 333ms)
             var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }

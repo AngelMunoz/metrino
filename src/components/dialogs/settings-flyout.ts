@@ -29,8 +29,8 @@ export class MetroSettingsFlyout extends LitElement {
         background: rgba(0, 0, 0, 0.4);
         opacity: 0;
         visibility: hidden;
-        transition: opacity var(--metro-transition-normal, 250ms) ease-out,
-          visibility var(--metro-transition-normal, 250ms) ease-out;
+        transition: opacity var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          visibility var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         z-index: 1000;
       }
       :host([open]) .flyout-backdrop {
@@ -42,10 +42,10 @@ export class MetroSettingsFlyout extends LitElement {
         top: 0;
         right: 0;
         height: 100vh;
-        width: 320px;
+        width: 346px;
         background: var(--metro-background, #1f1f1f);
         transform: translateX(100%);
-        transition: transform var(--metro-transition-normal, 250ms)
+        transition: transform var(--metro-transition-slow, 333ms)
           var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         z-index: 1001;
         display: flex;
@@ -84,9 +84,9 @@ export class MetroSettingsFlyout extends LitElement {
         height: 32px;
         background: transparent;
         border: none;
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         cursor: pointer;
-        transition: color var(--metro-transition-fast, 167ms) ease-out;
+        transition: color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .close-btn:hover {
         color: var(--metro-foreground, #ffffff);

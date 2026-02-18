@@ -29,8 +29,8 @@ export class MetroCycleTile extends LitElement {
         opacity: 0;
         transform: translateY(100%);
         transition:
-          opacity var(--metro-transition-slow, 333ms) ease-out,
-          transform var(--metro-transition-slow, 333ms) ease-out;
+          opacity var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          transform var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         display: flex;
         align-items: center;
         justify-content: center;

@@ -23,7 +23,7 @@ export class MetroAppBar extends LitElement {
         right: 0;
         background: var(--metro-background, #1f1f1f);
         z-index: 1000;
-        transition: height var(--metro-transition-normal, 250ms)
+        transition: height var(--metro-transition-slow, 333ms)
           var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([placement="top"]) {
@@ -68,7 +68,7 @@ export class MetroAppBar extends LitElement {
         font-size: 20px;
         font-weight: bold;
         letter-spacing: 3px;
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .ellipsis-btn:hover {
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));

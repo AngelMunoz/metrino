@@ -49,7 +49,7 @@ export class MetroCalendar extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .nav-btn:hover {
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
@@ -63,7 +63,7 @@ export class MetroCalendar extends LitElement {
         grid-template-columns: repeat(7, 1fr);
         text-align: center;
         font-size: var(--metro-font-size-small, 12px);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         padding: var(--metro-spacing-sm, 8px) 0;
       }
       .weekday {
@@ -82,7 +82,7 @@ export class MetroCalendar extends LitElement {
         min-height: 40px;
         cursor: pointer;
         font-size: var(--metro-font-size-normal, 14px);
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         background: transparent;
         border: none;
         color: var(--metro-foreground, #ffffff);

@@ -38,9 +38,9 @@ export class MetroComboBox extends LitElement {
         right: var(--metro-spacing-md, 12px);
         top: 50%;
         transform: translateY(-50%);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         pointer-events: none;
-        transition: transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: transform var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) .combo-arrow {
         transform: translateY(-50%) rotate(180deg);
@@ -55,7 +55,7 @@ export class MetroComboBox extends LitElement {
         overflow-y: auto;
         z-index: 100;
         display: none;
-        animation: dropdownEnter var(--metro-transition-fast, 167ms) ease-out;
+        animation: dropdownEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) .dropdown {
         display: block;
@@ -64,7 +64,7 @@ export class MetroComboBox extends LitElement {
         padding: var(--metro-spacing-md, 12px);
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .dropdown-item:hover,
       .dropdown-item.selected {

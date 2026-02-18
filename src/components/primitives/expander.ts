@@ -25,7 +25,7 @@ export class MetroExpander extends LitElement {
         padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
         cursor: pointer;
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .expander-header:hover {
         background: var(--metro-highlight-hover, rgba(255, 255, 255, 0.15));
@@ -36,8 +36,8 @@ export class MetroExpander extends LitElement {
         color: var(--metro-foreground, #ffffff);
       }
       .expander-icon {
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-        transition: transform var(--metro-transition-fast, 167ms) ease-out;
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
+        transition: transform var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         font-size: 12px;
       }
       :host([expanded]) .expander-icon {

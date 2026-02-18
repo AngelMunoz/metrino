@@ -19,6 +19,10 @@ export class MetroToggleSwitch extends LitElement {
   static styles = [
     toggleControlBase,
     css`
+      :host {
+        padding: 6px;
+        margin: -6px;
+      }
       .switch {
         width: 44px;
         height: 22px;
@@ -27,8 +31,8 @@ export class MetroToggleSwitch extends LitElement {
         border-radius: 0;
         position: relative;
         transition:
-          background-color var(--metro-transition-fast, 167ms) ease-out,
-          border-color var(--metro-transition-fast, 167ms) ease-out;
+          background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .switch.checked {
         background: var(--metro-accent, #0078d4);
@@ -43,8 +47,8 @@ export class MetroToggleSwitch extends LitElement {
         top: 2px;
         left: 2px;
         transition:
-          transform var(--metro-transition-fast, 167ms) ease-out,
-          background-color var(--metro-transition-fast, 167ms) ease-out;
+          transform var(--metro-transition-fast, 167ms) cubic-bezier(0.34, 1.56, 0.64, 1),
+          background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .switch.checked .thumb {
         transform: translateX(22px);

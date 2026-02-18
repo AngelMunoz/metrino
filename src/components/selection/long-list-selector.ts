@@ -85,7 +85,7 @@ export class MetroLongListSelector extends LitElement {
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
         border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         height: ${ITEM_HEIGHT}px;
         box-sizing: border-box;
       }
@@ -135,8 +135,8 @@ export class MetroLongListSelector extends LitElement {
         color: var(--metro-accent, #0078d4);
         pointer-events: auto;
         opacity: 0.6;
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out,
-                    background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+                    background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .jump-item:hover {
         opacity: 1;

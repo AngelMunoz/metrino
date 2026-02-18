@@ -42,7 +42,7 @@ export class MetroToast extends LitElement {
         max-width: 400px;
         width: 100%;
         pointer-events: auto;
-        animation: metro-slide-down var(--metro-transition-normal, 250ms)
+        animation: metro-slide-down var(--metro-transition-slow, 333ms)
           var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         display: flex;
         align-items: flex-start;
@@ -69,7 +69,7 @@ export class MetroToast extends LitElement {
         }
       }
       .toast.exiting {
-        animation: metro-slide-up var(--metro-transition-fast, 167ms) ease-out forwards;
+        animation: metro-slide-up var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
       }
       .toast.success {
         border-top-color: #00a300;
@@ -105,7 +105,7 @@ export class MetroToast extends LitElement {
       }
       .toast-message {
         font-size: var(--metro-font-size-small, 12px);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
       }
       .close-btn {
         padding: 0;
@@ -177,7 +177,7 @@ export class MetroToast extends LitElement {
     setTimeout(() => {
       toast.remove();
       this.#toasts.delete(id);
-    }, 167);
+    }, 333);
   }
 
   clearAll(): void {

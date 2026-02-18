@@ -38,7 +38,7 @@ export class MetroListBox extends LitElement {
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
         border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         user-select: none;
       }
       ::slotted(.list-item:hover) {
@@ -55,7 +55,7 @@ export class MetroListBox extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all var(--metro-transition-fast, 167ms) ease-out;
+        transition: all var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       ::slotted(.list-item[selected] .selection-indicator) {
         background: #ffffff;
@@ -67,7 +67,7 @@ export class MetroListBox extends LitElement {
         height: 8px;
         background: var(--metro-accent, #0078d4);
         opacity: 0;
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       ::slotted(.list-item[selected] .selection-indicator::after) {
         opacity: 1;

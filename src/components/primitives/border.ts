@@ -37,7 +37,7 @@ export class MetroBorder extends LitElement {
 
   constructor() {
     super();
-    this.borderThickness = "1";
+    this.borderThickness = "2";
     this.borderColor = "";
     this.background = "";
     this.cornerRadius = 0;

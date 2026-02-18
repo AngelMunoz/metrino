@@ -21,155 +21,83 @@ export class MetroProgressRing extends LitElement {
 
     .ring-container {
       position: relative;
-      width: 40px;
-      height: 40px;
+      width: 20px;
+      height: 20px;
     }
 
     .ring-dot {
       position: absolute;
-      width: 4px;
-      height: 4px;
+      width: 2px;
+      height: 2px;
       background: var(--metro-accent, #0078d4);
-      border-radius: 2px;
+      border-radius: 50%;
       top: 50%;
       left: 50%;
-      margin-top: -2px;
-      margin-left: -2px;
-      animation: ring-travel 2.4s linear infinite;
+      margin-left: -1px;
+      margin-top: -1px;
+      animation: orbit-small 3s cubic-bezier(0.7, 0.0, 0.3, 1.0) infinite;
     }
 
+    /*
+     * Windows 8 Metro progress ring: 5 dots orbit independently.
+     * ease-in-out causes dots to accelerate through the top and
+     * decelerate at the bottom, creating the signature
+     * clumping/spreading "comet tail" effect.
+     * Staggered delays space the dots apart.
+     */
     .ring-dot:nth-child(1) { animation-delay: 0s; }
-    .ring-dot:nth-child(2) { animation-delay: 0.12s; }
-    .ring-dot:nth-child(3) { animation-delay: 0.24s; }
-    .ring-dot:nth-child(4) { animation-delay: 0.36s; }
-    .ring-dot:nth-child(5) { animation-delay: 0.48s; }
+    .ring-dot:nth-child(2) { animation-delay: -0.20s; }
+    .ring-dot:nth-child(3) { animation-delay: -0.40s; }
+    .ring-dot:nth-child(4) { animation-delay: -0.60s; }
+    .ring-dot:nth-child(5) { animation-delay: -0.80s; }
 
-    @keyframes ring-travel {
-      0% {
-        transform: rotate(0deg) translateY(-16px) scaleX(1);
-        opacity: 0.2;
-      }
-      5% {
-        opacity: 1;
-      }
-      20% {
-        transform: rotate(72deg) translateY(-16px) scaleX(1);
-      }
-      40% {
-        transform: rotate(144deg) translateY(-16px) scaleX(1);
-      }
-      50% {
-        transform: rotate(180deg) translateY(-16px) scaleX(4);
-      }
-      60% {
-        transform: rotate(216deg) translateY(-16px) scaleX(1);
-      }
-      80% {
-        transform: rotate(288deg) translateY(-16px) scaleX(1);
-      }
-      95% {
-        opacity: 1;
-      }
-      100% {
-        transform: rotate(360deg) translateY(-16px) scaleX(1);
-        opacity: 0.2;
-      }
+    /* Small size orbit - radius 9px */
+    @keyframes orbit-small {
+      0%   { transform: rotate(0deg) translateY(-9px); opacity: 1; }
+      50%  { transform: rotate(180deg) translateY(-9px); opacity: 1; }
+      100% { transform: rotate(360deg) translateY(-9px); opacity: 1; }
     }
 
-    :host([size="small"]) .ring-container {
-      width: 24px;
-      height: 24px;
+    /* Normal size - 32px */
+    :host([size="normal"]) .ring-container {
+      width: 32px;
+      height: 32px;
     }
-
-    :host([size="small"]) .ring-dot {
+    :host([size="normal"]) .ring-dot {
       width: 3px;
       height: 3px;
-      margin-top: -1.5px;
       margin-left: -1.5px;
+      margin-top: -1.5px;
+      animation-name: orbit-normal;
+      animation-timing-function: cubic-bezier(0.7, 0.0, 0.3, 1.0);
     }
 
-    @keyframes ring-travel-small {
-      0% {
-        transform: rotate(0deg) translateY(-10px) scaleX(1);
-        opacity: 0.2;
-      }
-      5% {
-        opacity: 1;
-      }
-      20% {
-        transform: rotate(72deg) translateY(-10px) scaleX(1);
-      }
-      40% {
-        transform: rotate(144deg) translateY(-10px) scaleX(1);
-      }
-      50% {
-        transform: rotate(180deg) translateY(-10px) scaleX(4);
-      }
-      60% {
-        transform: rotate(216deg) translateY(-10px) scaleX(1);
-      }
-      80% {
-        transform: rotate(288deg) translateY(-10px) scaleX(1);
-      }
-      95% {
-        opacity: 1;
-      }
-      100% {
-        transform: rotate(360deg) translateY(-10px) scaleX(1);
-        opacity: 0.2;
-      }
+    /* Normal orbit - radius 14px */
+    @keyframes orbit-normal {
+      0%   { transform: rotate(0deg) translateY(-14px); opacity: 1; }
+      50%  { transform: rotate(180deg) translateY(-14px); opacity: 1; }
+      100% { transform: rotate(360deg) translateY(-14px); opacity: 1; }
     }
 
-    :host([size="small"]) .ring-dot {
-      animation: ring-travel-small 2.4s linear infinite;
-    }
-
+    /* Large size - 48px */
     :host([size="large"]) .ring-container {
-      width: 60px;
-      height: 60px;
+      width: 48px;
+      height: 48px;
     }
-
     :host([size="large"]) .ring-dot {
-      width: 5px;
-      height: 5px;
-      margin-top: -2.5px;
-      margin-left: -2.5px;
+      width: 4px;
+      height: 4px;
+      margin-left: -2px;
+      margin-top: -2px;
+      animation-name: orbit-large;
+      animation-timing-function: cubic-bezier(0.7, 0.0, 0.3, 1.0);
     }
 
-    @keyframes ring-travel-large {
-      0% {
-        transform: rotate(0deg) translateY(-26px) scaleX(1);
-        opacity: 0.2;
-      }
-      5% {
-        opacity: 1;
-      }
-      20% {
-        transform: rotate(72deg) translateY(-26px) scaleX(1);
-      }
-      40% {
-        transform: rotate(144deg) translateY(-26px) scaleX(1);
-      }
-      50% {
-        transform: rotate(180deg) translateY(-26px) scaleX(5);
-      }
-      60% {
-        transform: rotate(216deg) translateY(-26px) scaleX(1);
-      }
-      80% {
-        transform: rotate(288deg) translateY(-26px) scaleX(1);
-      }
-      95% {
-        opacity: 1;
-      }
-      100% {
-        transform: rotate(360deg) translateY(-26px) scaleX(1);
-        opacity: 0.2;
-      }
-    }
-
-    :host([size="large"]) .ring-dot {
-      animation: ring-travel-large 2.4s linear infinite;
+    /* Large orbit - radius 21px */
+    @keyframes orbit-large {
+      0%   { transform: rotate(0deg) translateY(-21px); opacity: 1; }
+      50%  { transform: rotate(180deg) translateY(-21px); opacity: 1; }
+      100% { transform: rotate(360deg) translateY(-21px); opacity: 1; }
     }
   `;
 

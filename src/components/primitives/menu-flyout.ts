@@ -23,7 +23,7 @@ export class MetroMenuFlyout extends LitElement {
       .menu-flyout {
         background: var(--metro-background, #1f1f1f);
         min-width: 160px;
-        animation: menuEnter var(--metro-transition-fast, 167ms) ease-out;
+        animation: menuEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       @keyframes menuEnter {
         from {
@@ -43,7 +43,7 @@ export class MetroMenuFlyout extends LitElement {
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
         font-size: var(--metro-font-size-normal, 14px);
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       ::slotted(.menu-item:hover) {
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));

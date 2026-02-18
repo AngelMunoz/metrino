@@ -27,7 +27,7 @@ export class MetroFlyout extends LitElement {
         min-width: 160px;
         opacity: 0;
         transform: translateY(-8px);
-        transition: opacity var(--metro-transition-fast, 167ms) ease-out, transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: opacity var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)), transform var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) .flyout {
         opacity: 1;

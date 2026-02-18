@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { focusRing, disabledState, baseTypography } from "../../styles/shared.ts";
+import { focusRing, disabledState, baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
   handleDisabledClick,
@@ -50,7 +50,7 @@ export class MetroHyperlinkButton extends LitElement {
         text-decoration: none;
         user-select: none;
         box-sizing: border-box;
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
       :host(:hover) {
@@ -62,6 +62,8 @@ export class MetroHyperlinkButton extends LitElement {
       }
     `,
   ];
+
+  #cleanupTilt?: () => void;
 
   constructor() {
     super();
@@ -75,6 +77,7 @@ export class MetroHyperlinkButton extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     this.#setupRole();
+    this.#cleanupTilt = applyTiltEffect(this);
     this.addEventListener("click", this.#handleClick);
     this.addEventListener("keydown", this.#handleKeydown);
     this.addEventListener("mousedown", this.#handlePointerDown);
@@ -83,6 +86,7 @@ export class MetroHyperlinkButton extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.#cleanupTilt?.();
     this.removeEventListener("click", this.#handleClick);
     this.removeEventListener("keydown", this.#handleKeydown);
     this.removeEventListener("mousedown", this.#handlePointerDown);

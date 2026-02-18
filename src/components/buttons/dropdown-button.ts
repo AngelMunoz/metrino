@@ -46,7 +46,7 @@ export class MetroDropdownButton extends LitElement {
         width: 12px;
         height: 12px;
         margin-inline-start: var(--metro-spacing-sm, 8px);
-        transition: transform var(--metro-transition-fast, 167ms) ease-out;
+        transition: transform var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) .chevron {
         transform: rotate(180deg);
@@ -58,7 +58,7 @@ export class MetroDropdownButton extends LitElement {
         min-width: 100%;
         border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
         z-index: 1000;
-        animation: menuEnter var(--metro-transition-fast, 167ms) ease-out;
+        animation: menuEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         display: none;
       }
       :host([open]) .dropdown {

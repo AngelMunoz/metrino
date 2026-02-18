@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { focusRing, pressState, disabledState, baseTypography } from "../../styles/shared.ts";
+import { focusRing, pressState, disabledState, baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
   setupButtonRole,
@@ -42,8 +42,8 @@ export class MetroButton extends LitElement {
         user-select: none;
         box-sizing: border-box;
         transition:
-          background-color var(--metro-transition-fast, 167ms) ease-out,
-          border-color var(--metro-transition-fast, 167ms) ease-out;
+          background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
       :host(:hover) {
@@ -70,14 +70,15 @@ export class MetroButton extends LitElement {
       }
 
       :host(.pressed) {
-        background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-        border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
+        border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         color: var(--metro-background, #1f1f1f);
       }
     `,
   ];
 
   #handlers: ButtonEventHandlers;
+  #cleanupTilt?: () => void;
 
   constructor() {
     super();
@@ -93,11 +94,13 @@ export class MetroButton extends LitElement {
     super.connectedCallback();
     setupButtonRole(this, this.disabled);
     bindButtonEvents(this, this.#handlers);
+    this.#cleanupTilt = applyTiltEffect(this);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     unbindButtonEvents(this, this.#handlers);
+    this.#cleanupTilt?.();
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {

@@ -34,7 +34,7 @@ export class MetroContextMenu extends LitElement {
         min-width: 160px;
         max-width: 280px;
         border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-        animation: dropdownEnter var(--metro-transition-fast, 167ms) ease-out;
+        animation: dropdownEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       ::slotted([slot="item"]) {
         display: flex;
@@ -44,7 +44,7 @@ export class MetroContextMenu extends LitElement {
         cursor: pointer;
         color: var(--metro-foreground, #ffffff);
         font-size: var(--metro-font-size-normal, 14px);
-        transition: background-color var(--metro-transition-fast, 167ms) ease-out;
+        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         user-select: none;
       }
       ::slotted([slot="item"]:hover) {

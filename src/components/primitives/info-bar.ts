@@ -63,7 +63,7 @@ export class MetroInfoBar extends LitElement {
       }
       .info-message {
         font-size: var(--metro-font-size-small, 12px);
-        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+        color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
       }
       .close-btn {
         font-size: 16px;
