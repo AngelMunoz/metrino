@@ -31,7 +31,7 @@ export class MetroMessageDialog extends LitElement {
         background: var(--metro-background, #1f1f1f);
         min-width: 280px;
         max-width: 400px;
-        animation: dialogEnter var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        animation: dialogEnter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);

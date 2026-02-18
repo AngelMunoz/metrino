@@ -38,7 +38,7 @@ export class MetroContentDialog extends LitElement {
         max-height: 80vh;
         display: flex;
         flex-direction: column;
-        animation: dialogEnter var(--metro-transition-slow, 333ms)
+        animation: dialogEnter 280ms
           var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .dialog-header {

@@ -26,12 +26,13 @@ export class MetroFlyout extends LitElement {
         background: var(--metro-background, #1f1f1f);
         min-width: 160px;
         opacity: 0;
-        transform: translateY(-8px);
+        transform: perspective(800px) rotateX(-15deg);
         transition: opacity var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)), transform var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        transform-origin: top center;
       }
       :host([open]) .flyout {
         opacity: 1;
-        transform: translateY(0);
+        transform: perspective(800px) rotateX(0deg);
       }
       .backdrop {
         position: fixed;

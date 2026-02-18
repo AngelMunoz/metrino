@@ -282,11 +282,11 @@ export const dialogAnimation = css`
   @keyframes dialogEnter {
     from {
       opacity: 0;
-      transform: scale(0.95) translateY(20px);
+      transform: perspective(1000px) rotateX(90deg);
     }
     to {
       opacity: 1;
-      transform: scale(1) translateY(0);
+      transform: perspective(1000px) rotateX(0deg);
     }
   }
 `;
