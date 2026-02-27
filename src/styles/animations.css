@@ -266,3 +266,125 @@
 .metro-theme-transition {
   animation: metro-theme-wipe 500ms var(--metro-easing) forwards;
 }
+
+@keyframes metro-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes metro-zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+@keyframes metro-semantic-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes metro-semantic-zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2);
+    filter: blur(4px);
+  }
+}
+
+.metro-animate-zoom-in {
+  animation: metro-zoom-in var(--metro-transition-slow, 333ms) var(--metro-easing) forwards;
+}
+
+.metro-animate-zoom-out {
+  animation: metro-zoom-out var(--metro-transition-slow, 333ms) var(--metro-easing) forwards;
+}
+
+.metro-animate-semantic-zoom-in {
+  animation: metro-semantic-zoom-in 400ms var(--metro-easing) forwards;
+}
+
+.metro-animate-semantic-zoom-out {
+  animation: metro-semantic-zoom-out 400ms var(--metro-easing) forwards;
+}
+
+.metro-zoom-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.metro-zoom-layer {
+  position: absolute;
+  inset: 0;
+  transition:
+    transform 400ms var(--metro-easing),
+    opacity 300ms var(--metro-easing),
+    filter 400ms var(--metro-easing);
+  will-change: transform, opacity, filter;
+}
+
+.metro-zoom-layer--active {
+  transform: scale(1);
+  opacity: 1;
+  filter: blur(0);
+  pointer-events: auto;
+}
+
+.metro-zoom-layer--inactive-in {
+  transform: scale(2);
+  opacity: 0;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.metro-zoom-layer--inactive-out {
+  transform: scale(0.5);
+  opacity: 0;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+::view-transition-old(root) {
+  animation-duration: var(--metro-transition-slow, 333ms);
+  animation-timing-function: var(--metro-easing);
+}
+
+::view-transition-new(root) {
+  animation-duration: var(--metro-transition-slow, 333ms);
+  animation-timing-function: var(--metro-easing);
+}
+
+::view-transition-old(semantic-zoom-out) {
+  animation-name: metro-semantic-zoom-out;
+  animation-duration: 400ms;
+  animation-timing-function: var(--metro-easing);
+}
+
+::view-transition-new(semantic-zoom-in) {
+  animation-name: metro-semantic-zoom-in;
+  animation-duration: 400ms;
+  animation-timing-function: var(--metro-easing);
+}

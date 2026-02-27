@@ -1,0 +1,196 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --docs-content-max-width: 1200px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  font-family: var(--metro-font-family);
+  background: var(--metro-background);
+  color: var(--metro-foreground);
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+docs-app {
+  display: block;
+}
+
+.metro-page-title {
+  font-size: var(--metro-font-size-xxlarge, 42px);
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--metro-spacing-md);
+}
+
+.metro-page-description {
+  font-size: var(--metro-font-size-medium, 16px);
+  color: var(--metro-foreground-secondary);
+  margin-bottom: var(--metro-spacing-xxl);
+  max-width: 800px;
+}
+
+.metro-section {
+  margin-bottom: var(--metro-spacing-xxl);
+}
+
+.metro-section-title {
+  font-size: var(--metro-font-size-xlarge, 28px);
+  font-weight: 200;
+  margin-bottom: var(--metro-spacing-lg);
+  color: var(--metro-accent);
+}
+
+.metro-component-card {
+  border: 1px solid var(--metro-border);
+  margin-bottom: var(--metro-spacing-lg);
+}
+
+.metro-component-header {
+  padding: var(--metro-spacing-md) var(--metro-spacing-lg);
+  background: var(--metro-highlight);
+  border-bottom: 1px solid var(--metro-border);
+}
+
+.metro-component-name {
+  font-size: var(--metro-font-size-medium, 16px);
+  font-weight: 500;
+}
+
+.metro-component-desc {
+  font-size: var(--metro-font-size-small, 12px);
+  color: var(--metro-foreground-secondary);
+  margin-top: var(--metro-spacing-xs);
+}
+
+.metro-component-demo {
+  padding: var(--metro-spacing-lg);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--metro-spacing-md);
+  align-items: center;
+}
+
+.metro-code-block {
+  background: var(--metro-highlight);
+  padding: var(--metro-spacing-md);
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: var(--metro-font-size-small);
+  margin: var(--metro-spacing-md) var(--metro-spacing-lg);
+  overflow-x: auto;
+  position: relative;
+}
+
+.metro-code-block pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.metro-copy-btn {
+  position: absolute;
+  top: var(--metro-spacing-sm);
+  right: var(--metro-spacing-sm);
+  padding: var(--metro-spacing-xs) var(--metro-spacing-sm);
+  background: transparent;
+  border: 1px solid var(--metro-border);
+  color: var(--metro-foreground-secondary);
+  cursor: pointer;
+  font-size: var(--metro-font-size-small);
+  font-family: inherit;
+}
+
+.metro-copy-btn:hover {
+  background: var(--metro-accent);
+  border-color: var(--metro-accent);
+  color: white;
+}
+
+.metro-api-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--metro-font-size-small);
+  margin: var(--metro-spacing-md) var(--metro-spacing-lg);
+}
+
+.metro-api-table th,
+.metro-api-table td {
+  padding: var(--metro-spacing-sm) var(--metro-spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--metro-border);
+}
+
+.metro-api-table th {
+  background: var(--metro-highlight);
+  font-weight: 500;
+  color: var(--metro-foreground-secondary);
+}
+
+.metro-api-table td:first-child {
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: var(--metro-accent);
+}
+
+.metro-api-table tr:hover td {
+  background: var(--metro-highlight);
+}
+
+.metro-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--metro-spacing-lg);
+}
+
+.metro-demo-item {
+  padding: var(--metro-spacing-lg);
+  background: var(--metro-highlight);
+}
+
+.metro-demo-label {
+  font-size: var(--metro-font-size-small, 12px);
+  color: var(--metro-foreground-secondary);
+  margin-bottom: var(--metro-spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .metro-component-demo {
+    padding: var(--metro-spacing-md);
+  }
+  
+  .metro-code-block {
+    margin: var(--metro-spacing-md);
+  }
+  
+  .metro-api-table {
+    margin: var(--metro-spacing-md);
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .metro-page-title {
+    font-size: var(--metro-font-size-xlarge, 28px);
+  }
+  
+  .metro-section-title {
+    font-size: var(--metro-font-size-large, 20px);
+  }
+}

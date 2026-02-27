@@ -64,16 +64,22 @@ suite("metro-semantic-zoom", () => {
 
   test("dispatches zoomchanged event", async () => {
     const el = await createZoom();
-    let eventDetail: { zoomed: string } | null = null;
-    
-    el.addEventListener("zoomchanged", ((e: CustomEvent) => {
-      eventDetail = e.detail;
+    interface ZoomEventDetail {
+      zoomed: string;
+      previous: string;
+    }
+    let capturedDetail: ZoomEventDetail | undefined;
+
+    el.addEventListener("zoomchanged", ((e: CustomEvent<ZoomEventDetail>) => {
+      capturedDetail = e.detail;
     }) as EventListener);
-    
+
     const toggleBtn = el.shadowRoot?.querySelector(".zoom-hint") as HTMLElement;
     toggleBtn.click();
     await el.updateComplete;
-    
-    assert.deepEqual(eventDetail, { zoomed: "out" });
+
+    assert.isDefined(capturedDetail);
+    assert.equal(capturedDetail!.zoomed, "out");
+    assert.equal(capturedDetail!.previous, "in");
   });
 });
