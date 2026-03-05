@@ -540,8 +540,10 @@
   "files": ["dist", "README.md", "LICENSE"],
   "sideEffects": ["**/*.css"],
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode demo",
+    "dev:lib": "vite",
     "build": "vite build && tsc -p tsconfig.build.json",
+    "build:demo": "vite build --mode demo",
     "build:vite": "vite build",
     "build:types": "tsc -p tsconfig.build.json",
     "preview": "vite preview",

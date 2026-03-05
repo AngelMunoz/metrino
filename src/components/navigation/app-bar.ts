@@ -1,6 +1,5 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
 
 export class MetroAppBar extends LitElement {
   static properties = {
@@ -68,7 +67,8 @@ export class MetroAppBar extends LitElement {
         font-size: 20px;
         font-weight: bold;
         letter-spacing: 3px;
-        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        transition: background-color var(--metro-transition-fast, 167ms)
+          var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .ellipsis-btn:hover {
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
@@ -78,11 +78,12 @@ export class MetroAppBar extends LitElement {
         flex-direction: column;
         padding: 0 var(--metro-spacing-md, 12px) var(--metro-spacing-sm, 8px);
       }
-      :host([placement="top"]) .menu-panel {
-        animation: menuSlideDown var(--metro-transition-normal, 250ms)
+      :host([expanded]) .menu-panel {
+        display: flex;
+        animation: menuSlide var(--metro-transition-normal, 250ms)
           var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
-      @keyframes menuSlideUp {
+      @keyframes menuSlide {
         from {
           opacity: 0;
           transform: translateY(10px);
@@ -91,25 +92,6 @@ export class MetroAppBar extends LitElement {
           opacity: 1;
           transform: translateY(0);
         }
-      }
-      @keyframes menuSlideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      :host([expanded]) .menu-panel {
-        display: flex;
-      }
-      ::slotted(metro-app-bar-button) {
-        --button-label-hidden: 1;
-      }
-      :host([expanded]) ::slotted(metro-app-bar-button) {
-        --button-label-hidden: 0;
       }
     `,
   ];
@@ -144,30 +126,7 @@ export class MetroAppBar extends LitElement {
 
   #toggleMenu(): void {
     this.expanded = !this.expanded;
-    this.dispatchEvent(
-      new CustomEvent("menu-toggle", {
-        detail: { expanded: this.expanded },
-        bubbles: true,
-        composed: true,
-      }),
-    );
   }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    document.addEventListener("click", this.#handleDocumentClick);
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    document.removeEventListener("click", this.#handleDocumentClick);
-  }
-
-  #handleDocumentClick = (e: MouseEvent): void => {
-    if (!this.contains(e.target as Node) && this.expanded) {
-      this.expanded = false;
-    }
-  };
 }
 
 customElements.define("metro-app-bar", MetroAppBar);

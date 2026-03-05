@@ -68,6 +68,15 @@ suite("metro-content-dialog", () => {
     closeBtn.click();
     await el.updateComplete;
     
+    assert.isTrue(el.closing);
+    assert.isTrue(el.open);
+    
+    const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
+    await new Promise<void>(resolve => {
+      dialog.addEventListener("animationend", () => resolve(), { once: true });
+    });
+    
+    assert.isFalse(el.closing);
     assert.isFalse(el.open);
   });
 
@@ -80,6 +89,15 @@ suite("metro-content-dialog", () => {
     backdrop.click();
     await el.updateComplete;
     
+    assert.isTrue(el.closing);
+    assert.isTrue(el.open);
+    
+    const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
+    await new Promise<void>(resolve => {
+      dialog.addEventListener("animationend", () => resolve(), { once: true });
+    });
+    
+    assert.isFalse(el.closing);
     assert.isFalse(el.open);
   });
 

@@ -25,22 +25,28 @@ export class MetroTileGrid extends LitElement {
     }
     ::slotted(metro-flip-tile[size="small"]),
     ::slotted(metro-cycle-tile[size="small"]),
-    ::slotted(metro-iconic-tile[size="small"]) {
+    ::slotted(metro-iconic-tile[size="small"]),
+    ::slotted([data-size="small"]) {
       grid-column: span 1;
       grid-row: span 1;
     }
     ::slotted(metro-flip-tile[size="medium"]),
     ::slotted(metro-cycle-tile[size="medium"]),
-    ::slotted(metro-iconic-tile[size="medium"]) {
+    ::slotted(metro-iconic-tile[size="medium"]),
+    ::slotted([data-size="medium"]) {
       grid-column: span 2;
       grid-row: span 2;
     }
     ::slotted(metro-flip-tile[size="wide"]),
-    ::slotted(metro-cycle-tile[size="wide"]) {
+    ::slotted(metro-cycle-tile[size="wide"]),
+    ::slotted(metro-iconic-tile[size="wide"]),
+    ::slotted(metro-live-tile[size="wide"]),
+    ::slotted([data-size="wide"]) {
       grid-column: span 4;
       grid-row: span 2;
     }
-    ::slotted(metro-flip-tile[size="large"]) {
+    ::slotted(metro-flip-tile[size="large"]),
+    ::slotted([data-size="large"]) {
       grid-column: span 4;
       grid-row: span 4;
     }

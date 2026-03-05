@@ -3,7 +3,7 @@ import { baseTypography } from "../../styles/shared.ts";
 import {
   supportsViewTransitions,
   viewTransitionStyles,
-  type TransitionOptions
+  type TransitionOptions,
 } from "../../utils/animations.ts";
 
 export type ZoomState = "in" | "out";
@@ -16,7 +16,7 @@ export class MetroSemanticZoom extends LitElement {
   static properties = {
     zoomed: { type: String, reflect: true },
     transitionDuration: { type: Number, attribute: "transition-duration" },
-    viewTransition: { type: Boolean, attribute: "view-transition" }
+    viewTransition: { type: Boolean, attribute: "view-transition" },
   };
 
   declare zoomed: ZoomState;
@@ -32,33 +32,40 @@ export class MetroSemanticZoom extends LitElement {
         position: relative;
         overflow: hidden;
         touch-action: none;
+        min-height: 200px;
+        height: 100%;
+        background: var(--metro-background, transparent);
       }
       .zoom-container {
+        position: relative;
         width: 100%;
         height: 100%;
-        position: relative;
+        min-height: inherit;
       }
       .zoomed-in,
       .zoomed-out {
         position: absolute;
-        width: 100%;
-        height: 100%;
+        inset: 0;
+        background: var(--metro-background, transparent);
         transition:
-          transform var(--metro-zoom-duration, 400ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
-          opacity calc(var(--metro-zoom-duration, 400ms) * 0.75) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
-          filter var(--metro-zoom-duration, 400ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-        will-change: transform, opacity, filter;
+          transform var(--metro-transition-slow, 333ms)
+            var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          opacity var(--metro-transition-fast, 167ms)
+            var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        overflow: auto;
       }
       .zoomed-in {
         transform: scale(1);
         opacity: 1;
         filter: blur(0);
+        z-index: 1;
       }
       .zoomed-out {
         transform: scale(0.5);
         opacity: 0;
         filter: blur(4px);
         pointer-events: none;
+        z-index: 0;
       }
       :host([zoomed="out"]) .zoomed-in {
         transform: scale(2);
@@ -71,6 +78,7 @@ export class MetroSemanticZoom extends LitElement {
         opacity: 1;
         filter: blur(0);
         pointer-events: auto;
+        z-index: 1;
       }
       .zoom-hint {
         position: absolute;
@@ -82,9 +90,9 @@ export class MetroSemanticZoom extends LitElement {
         font-size: var(--metro-font-size-small, 12px);
         cursor: pointer;
         border: none;
-        font-family: inherit;
+        z-index: 10;
       }
-    `
+    `,
   ];
 
   #pinchStartDistance = 0;
@@ -98,7 +106,10 @@ export class MetroSemanticZoom extends LitElement {
     this.viewTransition = false;
   }
 
-  setZoomedState(state: ZoomState, options?: SemanticZoomTransitionOptions): Promise<void> {
+  setZoomedState(
+    state: ZoomState,
+    options?: SemanticZoomTransitionOptions,
+  ): Promise<void> {
     if (this.#isTransitioning || this.zoomed === state) {
       return Promise.resolve();
     }
@@ -107,12 +118,16 @@ export class MetroSemanticZoom extends LitElement {
     const duration = options?.duration ?? this.transitionDuration;
     const easing = options?.easing;
 
-    return this.#performTransition(state, { duration, easing, useViewTransition });
+    return this.#performTransition(state, {
+      duration,
+      easing,
+      useViewTransition,
+    });
   }
 
   async #performTransition(
     targetState: ZoomState,
-    options: SemanticZoomTransitionOptions
+    options: SemanticZoomTransitionOptions,
   ): Promise<void> {
     this.#isTransitioning = true;
     const previousState = this.zoomed;
@@ -128,7 +143,10 @@ export class MetroSemanticZoom extends LitElement {
         this.zoomed = previousState;
       }
     } else {
-      this.style.setProperty("--metro-zoom-duration", `${options.duration ?? 400}ms`);
+      this.style.setProperty(
+        "--metro-zoom-duration",
+        `${options.duration ?? 400}ms`,
+      );
       if (options.easing) {
         this.style.setProperty("--metro-easing", options.easing);
       }
@@ -143,8 +161,8 @@ export class MetroSemanticZoom extends LitElement {
     this.dispatchEvent(
       new CustomEvent("zoomchanged", {
         detail: { zoomed: this.zoomed, previous: previousState },
-        bubbles: true
-      })
+        bubbles: true,
+      }),
     );
   }
 
@@ -177,8 +195,8 @@ export class MetroSemanticZoom extends LitElement {
     this.dispatchEvent(
       new CustomEvent("zoomchanged", {
         detail: { zoomed: this.zoomed, previous: previousState },
-        bubbles: true
-      })
+        bubbles: true,
+      }),
     );
   }
 
@@ -190,15 +208,22 @@ export class MetroSemanticZoom extends LitElement {
   }
 
   #handleTouchMove(e: TouchEvent): void {
-    if (!this.#isPinching || e.touches.length !== 2 || this.#isTransitioning) return;
+    if (!this.#isPinching || e.touches.length !== 2 || this.#isTransitioning)
+      return;
 
     const currentDistance = this.#getPinchDistance(e);
     const threshold = 50;
 
-    if (this.zoomed === "in" && currentDistance < this.#pinchStartDistance - threshold) {
+    if (
+      this.zoomed === "in" &&
+      currentDistance < this.#pinchStartDistance - threshold
+    ) {
       this.setZoomedState("out");
       this.#isPinching = false;
-    } else if (this.zoomed === "out" && currentDistance > this.#pinchStartDistance + threshold) {
+    } else if (
+      this.zoomed === "out" &&
+      currentDistance > this.#pinchStartDistance + threshold
+    ) {
       this.setZoomedState("in");
       this.#isPinching = false;
     }

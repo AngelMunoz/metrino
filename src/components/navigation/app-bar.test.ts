@@ -56,21 +56,6 @@ suite("metro-app-bar", () => {
     assert.isFalse(el.expanded);
   });
 
-  test("dispatches menu-toggle event", async () => {
-    const el = await createAppBar();
-    let eventDetail: { expanded: boolean } | null = null;
-    
-    el.addEventListener("menu-toggle", ((e: CustomEvent) => {
-      eventDetail = e.detail;
-    }) as EventListener);
-    
-    const ellipsis = el.shadowRoot?.querySelector(".ellipsis-btn") as HTMLElement;
-    ellipsis.click();
-    await el.updateComplete;
-    
-    assert.deepEqual(eventDetail, { expanded: true });
-  });
-
   test("renders slot for buttons", async () => {
     const el = await createAppBar();
     const slot = el.shadowRoot?.querySelector("slot");

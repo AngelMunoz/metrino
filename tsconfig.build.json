@@ -12,5 +12,6 @@
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": false
   },
-  "exclude": ["**/*.test.ts", "src/demo"]
+  "include": ["src"],
+  "exclude": ["**/*.test.ts"]
 }

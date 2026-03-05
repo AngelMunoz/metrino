@@ -2,7 +2,6 @@ import { LitElement, html, css, type PropertyValues } from "lit";
 import { focusRing, pressState, disabledState, baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
-  setupButtonRole,
   handleDisabledClick,
   handleKeyboardActivation,
   addPressedState,
@@ -31,6 +30,10 @@ export class MetroRepeatButton extends LitElement {
     baseTypography,
     css`
       :host {
+        display: inline-block;
+      }
+
+      .button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -50,27 +53,27 @@ export class MetroRepeatButton extends LitElement {
         transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
-      :host(:hover) {
+      .button:hover {
         background: var(--metro-foreground, #fff);
         color: var(--metro-background, #1f1f1f);
       }
 
-      :host([accent]) {
+      :host([accent]) .button {
         background: var(--metro-accent, #0078d4);
         color: #fff;
       }
 
-      :host([accent]:hover) {
+      :host([accent]) .button:hover {
         background: var(--metro-accent-light, #429ce3);
         color: #fff;
       }
 
-      :host([accent].pressed) {
+      :host([accent]) .button.pressed {
         background: var(--metro-accent-dark, #005a9e);
         color: #fff;
       }
 
-      :host(.pressed) {
+      .button.pressed {
         background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         color: var(--metro-background, #1f1f1f);
       }
@@ -88,33 +91,17 @@ export class MetroRepeatButton extends LitElement {
   }
 
   render() {
-    return html`<slot></slot>`;
+    return html`<button class="button" ?disabled=${this.disabled} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown} @mouseup=${this.#handlePointerUp} @mouseleave=${this.#handlePointerUp} @touchend=${this.#handlePointerUp}><slot></slot></button>`;
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    setupButtonRole(this, this.disabled);
+  protected firstUpdated(): void {
     this.#cleanupTilt = applyTiltEffect(this);
-    this.addEventListener("click", this.#handleClick);
-    this.addEventListener("keydown", this.#handleKeydown);
-    this.addEventListener("mousedown", this.#handlePointerDown);
-    this.addEventListener("touchstart", this.#handlePointerDown);
-    this.addEventListener("mouseup", this.#handlePointerUp);
-    this.addEventListener("mouseleave", this.#handlePointerUp);
-    this.addEventListener("touchend", this.#handlePointerUp);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     stopRepeat(this.#repeatState);
     this.#cleanupTilt?.();
-    this.removeEventListener("click", this.#handleClick);
-    this.removeEventListener("keydown", this.#handleKeydown);
-    this.removeEventListener("mousedown", this.#handlePointerDown);
-    this.removeEventListener("touchstart", this.#handlePointerDown);
-    this.removeEventListener("mouseup", this.#handlePointerUp);
-    this.removeEventListener("mouseleave", this.#handlePointerUp);
-    this.removeEventListener("touchend", this.#handlePointerUp);
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
@@ -133,15 +120,17 @@ export class MetroRepeatButton extends LitElement {
 
   #handlePointerDown = (e: Event): void => {
     if (this.disabled) return;
-    addPressedState(this, this.disabled);
+    const target = e.currentTarget as HTMLElement;
+    addPressedState(target, this.disabled);
     if (e.type === "mousedown" || e.type === "touchstart") {
       startRepeat(this.#repeatState, this.delay, this.interval, () => this.click());
     }
   };
 
-  #handlePointerUp = (): void => {
+  #handlePointerUp = (e: Event): void => {
     stopRepeat(this.#repeatState);
-    this.classList.remove("pressed");
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove("pressed");
   };
 }
 

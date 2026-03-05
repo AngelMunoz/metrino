@@ -48,7 +48,8 @@ export class MetroRichEditBox extends LitElement {
         cursor: pointer;
         font-size: var(--metro-font-size-normal, 14px);
         font-weight: 600;
-        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        transition: background-color var(--metro-transition-fast, 167ms)
+          var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .toolbar-btn:focus {
         outline: 2px solid var(--metro-accent, #0078d4);
@@ -71,13 +72,13 @@ export class MetroRichEditBox extends LitElement {
         min-height: 100px;
         padding: var(--metro-spacing-md, 12px);
         font-size: var(--metro-font-size-normal, 14px);
-        font-family: inherit;
         line-height: 1.4;
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
         border: 2px solid transparent;
         color: var(--metro-foreground, #ffffff);
         outline: none;
-        transition: border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        transition: border-color var(--metro-transition-fast, 167ms)
+          var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         box-sizing: border-box;
         overflow: auto;
       }
@@ -118,7 +119,9 @@ export class MetroRichEditBox extends LitElement {
           @click=${() => this.#execCommand("bold")}
           title="Bold"
           aria-label="Bold"
-        >B</button>
+        >
+          B
+        </button>
         <button
           class="toolbar-btn"
           type="button"
@@ -126,7 +129,9 @@ export class MetroRichEditBox extends LitElement {
           title="Italic"
           aria-label="Italic"
           style="font-style: italic;"
-        >I</button>
+        >
+          I
+        </button>
         <button
           class="toolbar-btn"
           type="button"
@@ -134,7 +139,9 @@ export class MetroRichEditBox extends LitElement {
           title="Underline"
           aria-label="Underline"
           style="text-decoration: underline;"
-        >U</button>
+        >
+          U
+        </button>
         <button
           class="toolbar-btn"
           type="button"
@@ -142,7 +149,9 @@ export class MetroRichEditBox extends LitElement {
           title="Strikethrough"
           aria-label="Strikethrough"
           style="text-decoration: line-through;"
-        >S</button>
+        >
+          S
+        </button>
       </div>
       <div class="editor-container">
         <div

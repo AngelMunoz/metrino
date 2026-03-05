@@ -5,11 +5,13 @@ import "../primitives/icon.ts";
 export class MetroContentDialog extends LitElement {
   static properties = {
     open: { type: Boolean, reflect: true },
+    closing: { type: Boolean, reflect: true },
     title: { type: String, reflect: true },
     closable: { type: Boolean, reflect: true },
   };
 
   declare open: boolean;
+  declare closing: boolean;
   declare title: string;
   declare closable: boolean;
 
@@ -20,15 +22,24 @@ export class MetroContentDialog extends LitElement {
     closeButton,
     css`
       :host {
-        display: none;
         position: fixed;
         inset: 0;
         z-index: 1000;
+        display: flex;
         align-items: center;
         justify-content: center;
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0ms linear 280ms, opacity 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([open]) {
-        display: flex;
+        visibility: visible;
+        opacity: 1;
+        transition-delay: 0ms;
+      }
+      :host([closing]) {
+        visibility: visible;
+        opacity: 0;
       }
       .dialog {
         position: relative;
@@ -38,8 +49,10 @@ export class MetroContentDialog extends LitElement {
         max-height: 80vh;
         display: flex;
         flex-direction: column;
-        animation: dialogEnter 280ms
-          var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        animation: dialogEnter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      :host([closing]) .dialog {
+        animation: dialogExit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);
@@ -74,6 +87,7 @@ export class MetroContentDialog extends LitElement {
   constructor() {
     super();
     this.open = false;
+    this.closing = false;
     this.title = "";
     this.closable = true;
   }
@@ -81,7 +95,7 @@ export class MetroContentDialog extends LitElement {
   render() {
     return html`
       <div class="backdrop" @click=${this.#handleBackdropClick}></div>
-      <div class="dialog" role="dialog" aria-modal="true">
+      <div class="dialog" role="dialog" aria-modal="true" @animationend=${this.#handleAnimationEnd}>
         ${this.closable
           ? html`<button class="close-btn" @click=${this.#close}>
               <metro-icon icon="close" size="medium"></metro-icon>
@@ -100,6 +114,13 @@ export class MetroContentDialog extends LitElement {
     `;
   }
 
+  #handleAnimationEnd(e: AnimationEvent): void {
+    if (e.animationName === "dialogExit" && this.closing) {
+      this.closing = false;
+      this.open = false;
+    }
+  }
+
   #handleBackdropClick(e: Event): void {
     if (this.closable) {
       this.#close();
@@ -108,13 +129,19 @@ export class MetroContentDialog extends LitElement {
   }
 
   #close(): void {
-    this.open = false;
+    if (!this.open || this.closing) return;
+    this.closing = true;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
   }
 
   show(): void {
+    this.closing = false;
     this.open = true;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+  }
+
+  hide(): void {
+    this.#close();
   }
 }
 

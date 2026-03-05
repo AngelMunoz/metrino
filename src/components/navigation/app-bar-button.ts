@@ -1,5 +1,4 @@
 import { LitElement, html, css } from "lit";
-import type { PropertyValues } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
@@ -74,7 +73,7 @@ export class MetroAppBarButton extends LitElement {
           opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
           margin-top var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
-      :host([data-expanded]) .label {
+      :host-context(metro-app-bar[expanded]) .label {
         max-height: 20px;
         opacity: 1;
         margin-top: var(--metro-spacing-xs, 4px);
@@ -105,8 +104,6 @@ export class MetroAppBarButton extends LitElement {
     `,
   ];
 
-  #observer: MutationObserver | null = null;
-
   constructor() {
     super();
     this.icon = "";
@@ -122,50 +119,6 @@ export class MetroAppBarButton extends LitElement {
       </div>
       ${this.label ? html`<div class="label">${this.label}</div>` : ""}
     `;
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.#setupObserver();
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this.#observer) {
-      this.#observer.disconnect();
-      this.#observer = null;
-    }
-  }
-
-  #setupObserver(): void {
-    const appBar = this.closest("metro-app-bar");
-    if (!appBar) return;
-
-    this.#observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === "attributes" && mutation.attributeName === "expanded") {
-          this.#updateExpandedState(appBar);
-        }
-      }
-    });
-
-    this.#observer.observe(appBar, { attributes: true, attributeFilter: ["expanded"] });
-    this.#updateExpandedState(appBar);
-  }
-
-  #updateExpandedState(appBar: Element): void {
-    const isExpanded = appBar.hasAttribute("expanded");
-    this.toggleAttribute("data-expanded", isExpanded);
-  }
-
-  protected updated(changedProperties: PropertyValues<this>): void {
-    super.updated(changedProperties);
-    if (changedProperties.has("icon") || changedProperties.has("label")) {
-      const appBar = this.closest("metro-app-bar");
-      if (appBar) {
-        this.#updateExpandedState(appBar);
-      }
-    }
   }
 }
 

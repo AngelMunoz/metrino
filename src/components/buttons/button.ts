@@ -2,11 +2,9 @@ import { LitElement, html, css, type PropertyValues } from "lit";
 import { focusRing, pressState, disabledState, baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
-  setupButtonRole,
-  createButtonHandlers,
-  bindButtonEvents,
-  unbindButtonEvents,
-  type ButtonEventHandlers,
+  handleDisabledClick,
+  handleKeyboardActivation,
+  addPressedState,
 } from "./shared.ts";
 
 export class MetroButton extends LitElement {
@@ -25,6 +23,10 @@ export class MetroButton extends LitElement {
     baseTypography,
     css`
       :host {
+        display: inline-block;
+      }
+
+      .button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -46,30 +48,30 @@ export class MetroButton extends LitElement {
           border-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
-      :host(:hover) {
+      .button:hover {
         background: var(--metro-foreground, #fff);
         color: var(--metro-background, #1f1f1f);
       }
 
-      :host([accent]) {
+      :host([accent]) .button {
         background: var(--metro-accent, #0078d4);
         border-color: var(--metro-accent, #0078d4);
         color: #fff;
       }
 
-      :host([accent]:hover) {
+      :host([accent]) .button:hover {
         background: var(--metro-accent-light, #429ce3);
         border-color: var(--metro-accent-light, #429ce3);
         color: #fff;
       }
 
-      :host([accent].pressed) {
+      :host([accent]) .button.pressed {
         background: var(--metro-accent-dark, #005a9e);
         border-color: var(--metro-accent-dark, #005a9e);
         color: #fff;
       }
 
-      :host(.pressed) {
+      .button.pressed {
         background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
         color: var(--metro-background, #1f1f1f);
@@ -77,29 +79,23 @@ export class MetroButton extends LitElement {
     `,
   ];
 
-  #handlers: ButtonEventHandlers;
   #cleanupTilt?: () => void;
 
   constructor() {
     super();
     this.disabled = false;
-    this.#handlers = createButtonHandlers(this);
   }
 
   render() {
-    return html`<slot></slot>`;
+    return html`<button class="button" role="button" ?disabled=${this.disabled} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></button>`;
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    setupButtonRole(this, this.disabled);
-    bindButtonEvents(this, this.#handlers);
+  protected firstUpdated(): void {
     this.#cleanupTilt = applyTiltEffect(this);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    unbindButtonEvents(this, this.#handlers);
     this.#cleanupTilt?.();
   }
 
@@ -108,6 +104,19 @@ export class MetroButton extends LitElement {
       updateAriaDisabled(this, this.disabled);
     }
   }
+
+  #handleClick = (e: Event): void => {
+    handleDisabledClick(e, this.disabled);
+  };
+
+  #handleKeydown = (e: KeyboardEvent): void => {
+    handleKeyboardActivation(e, this.disabled, () => this.click());
+  };
+
+  #handlePointerDown = (e: Event): void => {
+    const target = e.currentTarget as HTMLElement;
+    addPressedState(target, this.disabled);
+  };
 }
 
 customElements.define("metro-button", MetroButton);

@@ -89,8 +89,8 @@ export class MetroListBox extends LitElement {
 
   render() {
     return html`
-      <div class="list-container" role="listbox" ?aria-disabled=${this.disabled} ?aria-multiselectable=${this.selectionMode !== "single"}>
-        <slot @slotchange=${this.#setupItems}></slot>
+      <div class="list-container" role="listbox" ?aria-disabled=${this.disabled} ?aria-multiselectable=${this.selectionMode !== "single"} @click=${this.#handleItemClick} @slotchange=${this.#setupItems}>
+        <slot></slot>
       </div>
     `;
   }
@@ -99,12 +99,18 @@ export class MetroListBox extends LitElement {
     const items = this.querySelectorAll(".list-item");
     items.forEach((item, index) => {
       item.setAttribute("data-index", String(index));
-      item.addEventListener("click", (e) => this.#handleItemClick(e, index));
     });
   }
 
-  #handleItemClick(e: Event, index: number): void {
+  #handleItemClick(e: Event): void {
     if (this.disabled) return;
+    
+    const target = e.target as HTMLElement;
+    const item = target.closest(".list-item") as HTMLElement | null;
+    if (!item) return;
+    
+    const index = parseInt(item.getAttribute("data-index") || "-1", 10);
+    if (index < 0) return;
     
     const isCtrlClick = (e as MouseEvent).ctrlKey || (e as MouseEvent).metaKey;
     const isShiftClick = (e as MouseEvent).shiftKey;

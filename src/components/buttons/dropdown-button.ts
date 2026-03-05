@@ -2,11 +2,8 @@ import { LitElement, html, css, type PropertyValues } from "lit";
 import { focusRing, pressState, disabledState, baseTypography, buttonBase, menuItemStyles } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
-  setupButtonRole,
-  createButtonHandlers,
-  bindButtonEvents,
-  unbindButtonEvents,
-  type ButtonEventHandlers,
+  handleKeyboardActivation,
+  addPressedState,
 } from "./shared.ts";
 
 type DropdownPlacement = "top" | "bottom";
@@ -88,7 +85,6 @@ export class MetroDropdownButton extends LitElement {
     `,
   ];
 
-  #handlers: ButtonEventHandlers;
   #boundDocumentClick: (e: Event) => void;
 
   constructor() {
@@ -97,13 +93,12 @@ export class MetroDropdownButton extends LitElement {
     this.disabled = false;
     this.placement = "bottom";
     this.open = false;
-    this.#handlers = createButtonHandlers(this);
     this.#boundDocumentClick = this.#handleDocumentClick.bind(this);
   }
 
   render() {
     return html`
-      <div class="button-content" @click=${this.#toggleDropdown}>
+      <div class="button-content" role="button" tabindex=${this.disabled ? -1 : 0} ?aria-disabled=${this.disabled} aria-haspopup="menu" aria-expanded=${this.open} @click=${this.#handleButtonClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}>
         ${this.icon ? html`<span class="icon">${this.icon}</span>` : ""}
         <span class="label">${this.label}</span>
         <svg class="chevron" viewBox="0 0 12 12" fill="currentColor">
@@ -118,16 +113,11 @@ export class MetroDropdownButton extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    setupButtonRole(this, this.disabled);
-    this.setAttribute("aria-haspopup", "menu");
-    this.setAttribute("aria-expanded", String(this.open));
-    bindButtonEvents(this, this.#handlers);
     document.addEventListener("click", this.#boundDocumentClick, true);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    unbindButtonEvents(this, this.#handlers);
     document.removeEventListener("click", this.#boundDocumentClick, true);
   }
 
@@ -143,8 +133,25 @@ export class MetroDropdownButton extends LitElement {
     }
   }
 
+  #handleButtonClick(e: Event): void {
+    if (this.disabled) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
+    this.#toggleDropdown(e);
+  }
+
+  #handleKeydown(e: KeyboardEvent): void {
+    handleKeyboardActivation(e, this.disabled, () => this.click());
+  }
+
+  #handlePointerDown(e: Event): void {
+    const target = e.currentTarget as HTMLElement;
+    addPressedState(target, this.disabled);
+  }
+
   #toggleDropdown(e: Event): void {
-    if (this.disabled) return;
     e.stopPropagation();
     this.open = !this.open;
     if (this.open) {
@@ -156,7 +163,6 @@ export class MetroDropdownButton extends LitElement {
 
   #handleDocumentClick(e: Event): void {
     if (!this.open) return;
-    // Don't close if clicking inside the dropdown or button
     const path = e.composedPath();
     if (path.includes(this)) return;
     this.open = false;

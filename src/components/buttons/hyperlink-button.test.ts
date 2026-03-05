@@ -4,11 +4,13 @@ import { MetroHyperlinkButton } from "./hyperlink-button.ts";
 
 suite("metro-hyperlink-button", () => {
   let button: MetroHyperlinkButton;
+  let innerButton: HTMLElement | null;
 
   setup(async () => {
     button = document.createElement("metro-hyperlink-button") as MetroHyperlinkButton;
     document.body.appendChild(button);
     await button.updateComplete;
+    innerButton = button.shadowRoot?.querySelector(".button") ?? null;
   });
 
   teardown(() => {
@@ -20,12 +22,36 @@ suite("metro-hyperlink-button", () => {
     assert.instanceOf(button, MetroHyperlinkButton);
   });
 
-  test("has default role of button", () => {
-    assert.equal(button.getAttribute("role"), "button");
+  test("inner element has role of button by default", () => {
+    assert.equal(innerButton?.getAttribute("role"), "button");
+  });
+
+  test("inner element has tabindex 0 by default", () => {
+    assert.equal((innerButton as HTMLAnchorElement)?.tabIndex, 0);
+  });
+
+  test("inner element has tabindex -1 when disabled", async () => {
+    button.disabled = true;
+    await button.updateComplete;
+    assert.equal((innerButton as HTMLAnchorElement)?.tabIndex, -1);
+  });
+
+  test("inner element has tabindex 0 when not disabled", async () => {
+    button.disabled = true;
+    await button.updateComplete;
+    button.disabled = false;
+    await button.updateComplete;
+    assert.equal((innerButton as HTMLAnchorElement)?.tabIndex, 0);
+  });
+
+  test("href property sets role to link", async () => {
+    button.href = "https://example.com";
+    await button.updateComplete;
+    assert.equal(innerButton?.getAttribute("role"), "link");
   });
 
   test("has default tabindex of 0", () => {
-    assert.equal(button.getAttribute("tabindex"), "0");
+    assert.equal(innerButton?.getAttribute("tabindex"), "0");
   });
 
   test("disabled property sets attribute", async () => {
@@ -33,13 +59,13 @@ suite("metro-hyperlink-button", () => {
     await button.updateComplete;
     assert.isTrue(button.hasAttribute("disabled"));
     assert.equal(button.getAttribute("aria-disabled"), "true");
-    assert.equal(button.getAttribute("tabindex"), "-1");
+    assert.equal(innerButton?.getAttribute("tabindex"), "-1");
   });
 
   test("href property sets role to link", async () => {
     button.href = "https://example.com";
     await button.updateComplete;
-    assert.equal(button.getAttribute("role"), "link");
+    assert.equal(innerButton?.getAttribute("role"), "link");
   });
 
   test("target property is stored", async () => {
@@ -53,23 +79,23 @@ suite("metro-hyperlink-button", () => {
     button.addEventListener("click", () => { clicked = true; });
     button.disabled = true;
     await button.updateComplete;
-    button.click();
+    innerButton?.click();
     assert.isFalse(clicked);
   });
 
   test("Space key triggers click", () => {
     let clicked = false;
     button.addEventListener("click", () => { clicked = true; });
-    const event = new KeyboardEvent("keydown", { key: " " });
-    button.dispatchEvent(event);
+    const event = new KeyboardEvent("keydown", { key: " ", bubbles: true });
+    innerButton?.dispatchEvent(event);
     assert.isTrue(clicked);
   });
 
   test("Enter key triggers click", () => {
     let clicked = false;
     button.addEventListener("click", () => { clicked = true; });
-    const event = new KeyboardEvent("keydown", { key: "Enter" });
-    button.dispatchEvent(event);
+    const event = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
+    innerButton?.dispatchEvent(event);
     assert.isTrue(clicked);
   });
 });

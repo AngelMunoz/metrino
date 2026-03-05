@@ -30,6 +30,7 @@ export class MetroContextMenu extends LitElement {
         background: transparent;
       }
       .context-menu {
+        position: fixed;
         background: var(--metro-background, #1f1f1f);
         min-width: 160px;
         max-width: 280px;
@@ -66,6 +67,7 @@ export class MetroContextMenu extends LitElement {
   #boundPointerDown: (e: PointerEvent) => void;
   #boundPointerUp: () => void;
   #boundPointerLeave: () => void;
+  #boundContextMenu: (e: MouseEvent) => void;
   #boundBackdropClick: () => void;
   #boundHandleKeyDown: (e: KeyboardEvent) => void;
 
@@ -77,6 +79,7 @@ export class MetroContextMenu extends LitElement {
     this.#boundPointerDown = this.#handlePointerDown.bind(this);
     this.#boundPointerUp = this.#handlePointerUp.bind(this);
     this.#boundPointerLeave = this.#handlePointerLeave.bind(this);
+    this.#boundContextMenu = this.#handleContextMenu.bind(this);
     this.#boundBackdropClick = this.#handleBackdropClick.bind(this);
     this.#boundHandleKeyDown = this.#handleKeyDown.bind(this);
   }
@@ -116,6 +119,7 @@ export class MetroContextMenu extends LitElement {
     this.#targetElement.addEventListener("pointerdown", this.#boundPointerDown as EventListener);
     this.#targetElement.addEventListener("pointerup", this.#boundPointerUp as EventListener);
     this.#targetElement.addEventListener("pointerleave", this.#boundPointerLeave as EventListener);
+    this.#targetElement.addEventListener("contextmenu", this.#boundContextMenu as EventListener);
   }
 
   #detachFromTarget(): void {
@@ -124,6 +128,7 @@ export class MetroContextMenu extends LitElement {
     this.#targetElement.removeEventListener("pointerdown", this.#boundPointerDown as EventListener);
     this.#targetElement.removeEventListener("pointerup", this.#boundPointerUp as EventListener);
     this.#targetElement.removeEventListener("pointerleave", this.#boundPointerLeave as EventListener);
+    this.#targetElement.removeEventListener("contextmenu", this.#boundContextMenu as EventListener);
     this.#targetElement = null;
   }
 
@@ -143,6 +148,12 @@ export class MetroContextMenu extends LitElement {
     this.#clearTimer();
   }
 
+  #handleContextMenu(e: MouseEvent): void {
+    e.preventDefault();
+    this.#clearTimer();
+    this.#showMenuAt(e.clientX, e.clientY);
+  }
+
   #clearTimer(): void {
     if (this.#longPressTimer !== null) {
       clearTimeout(this.#longPressTimer);
@@ -151,9 +162,13 @@ export class MetroContextMenu extends LitElement {
   }
 
   #showMenu(e: PointerEvent): void {
+    this.#showMenuAt(e.clientX, e.clientY);
+  }
+
+  #showMenuAt(x: number, y: number): void {
     if (!this.#targetElement) return;
     this.open = true;
-    this.updateComplete.then(() => this.#positionMenu(e.clientX, e.clientY));
+    this.updateComplete.then(() => this.#positionMenu(x, y));
     this.dispatchEvent(new CustomEvent("show", { bubbles: true, composed: true }));
   }
 

@@ -33,6 +33,10 @@ export class MetroHyperlinkButton extends LitElement {
     baseTypography,
     css`
       :host {
+        display: inline-block;
+      }
+
+      .button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -53,11 +57,11 @@ export class MetroHyperlinkButton extends LitElement {
         transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
-      :host(:hover) {
+      .button:hover {
         text-decoration: underline;
       }
 
-      :host(.pressed) {
+      .button.pressed {
         opacity: 0.7;
       }
     `,
@@ -71,45 +75,21 @@ export class MetroHyperlinkButton extends LitElement {
   }
 
   render() {
-    return html`<slot></slot>`;
+    return html`<a class="button" role=${this.href ? "link" : "button"} href=${this.href || ""} target=${this.target || ""} ?aria-disabled=${this.disabled} tabindex=${this.disabled ? -1 : 0} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></a>`;
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.#setupRole();
+  protected firstUpdated(): void {
     this.#cleanupTilt = applyTiltEffect(this);
-    this.addEventListener("click", this.#handleClick);
-    this.addEventListener("keydown", this.#handleKeydown);
-    this.addEventListener("mousedown", this.#handlePointerDown);
-    this.addEventListener("touchstart", this.#handlePointerDown);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#cleanupTilt?.();
-    this.removeEventListener("click", this.#handleClick);
-    this.removeEventListener("keydown", this.#handleKeydown);
-    this.removeEventListener("mousedown", this.#handlePointerDown);
-    this.removeEventListener("touchstart", this.#handlePointerDown);
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("disabled")) {
       updateAriaDisabled(this, this.disabled);
-    }
-    if (changedProperties.has("href")) {
-      this.#setupRole();
-    }
-  }
-
-  #setupRole(): void {
-    if (!this.hasAttribute("role")) {
-      this.setAttribute("role", this.href ? "link" : "button");
-    } else {
-      this.setAttribute("role", this.href ? "link" : "button");
-    }
-    if (!this.disabled && !this.hasAttribute("tabindex")) {
-      this.setAttribute("tabindex", "0");
     }
   }
 
@@ -131,8 +111,9 @@ export class MetroHyperlinkButton extends LitElement {
     });
   };
 
-  #handlePointerDown = (): void => {
-    addPressedState(this, this.disabled);
+  #handlePointerDown = (e: Event): void => {
+    const target = e.currentTarget as HTMLElement;
+    addPressedState(target, this.disabled);
   };
 }
 
