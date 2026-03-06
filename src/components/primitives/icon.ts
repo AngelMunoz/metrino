@@ -119,7 +119,11 @@ import {
   mdiCheckCircle,
 } from "@mdi/js";
 
-const iconMap: Record<string, string> = {
+/**
+ * Mapping of icon names to their SVG path data from @mdi/js.
+ * This map provides semantic names for commonly used icons in Metro applications.
+ */
+const iconMap = {
   home: mdiHome,
   back: mdiArrowLeft,
   forward: mdiArrowRight,
@@ -253,9 +257,43 @@ const iconMap: Record<string, string> = {
   success: mdiCheckCircle,
 };
 
+/**
+ * Metro Icon Component
+ *
+ * A component for displaying Material Design Icons using the @mdi/js library.
+ * Supports multiple sizes and automatically scales to the current font size.
+ *
+ * Features:
+ * - 100+ semantic icon names mapped to Material Design Icons
+ * - Five size variants: small (12px), normal (16px), medium (20px), large (24px), xlarge (32px)
+ * - SVG-based icons that scale with the current font size
+ * - Inherits color from parent via currentColor
+ * - Empty SVG rendered for unknown icon names
+ *
+ * The icon component uses SVG paths from @mdi/js and renders them in a 24x24
+ * viewBox that scales proportionally to the component's font size.
+ *
+ * @cssprop font-size - Controls icon size via the size attribute or CSS
+ *
+ * @csspart svg - The SVG element containing the icon path
+ */
 export class MetroIcon extends LitElement {
   static properties = {
+    /**
+     * The name of the icon to display. Use semantic names like "home", "search",
+     * "settings", etc. See iconMap for all available names.
+     * @default ""
+     */
     icon: { type: String, reflect: true },
+    /**
+     * Size variant of the icon.
+     * - "small": 12px
+     * - "normal": 16px (default)
+     * - "medium": 20px
+     * - "large": 24px
+     * - "xlarge": 32px
+     * @default "normal"
+     */
     size: { type: String, reflect: true },
   };
 

@@ -2,13 +2,23 @@ import { LitElement, html, css } from "lit";
 import { baseTypography, closeButton } from "../../styles/shared.ts";
 import "./icon.ts";
 
+/**
+ * Options for showing a toast notification.
+ */
 interface ToastOptions {
+  /** Optional title displayed above the message */
   title?: string;
+  /** Main message content of the toast */
   message: string;
+  /** Visual severity level affecting border/icon color */
   severity?: "informational" | "success" | "warning" | "error";
+  /** Duration in milliseconds before auto-dismiss (0 for persistent) */
   duration?: number;
 }
 
+/**
+ * Icon mapping for each toast severity level.
+ */
 const severityIcons: Record<string, string> = {
   informational: "info",
   success: "check",
@@ -16,6 +26,46 @@ const severityIcons: Record<string, string> = {
   error: "close",
 };
 
+/**
+ * Metro Toast Component
+ *
+ * A notification container that displays toast messages at the top of the screen.
+ * Supports multiple severity levels with distinct colors, auto-dismiss, and manual close.
+ *
+ * Features:
+ * - Four severity levels: informational, success, warning, error
+ * - Auto-dismiss with configurable duration
+ * - Manual close button on each toast
+ * - Slide-down enter and slide-up exit animations
+ * - Color-coded border and icon for each severity
+ * - Stacking multiple toasts vertically
+ * - Clear all functionality
+ *
+ * The component is typically used via the exported showToast() function for
+ * simple global toast notifications, or instantiated directly for more control.
+ *
+ * @fires toastshown - Fired when a toast is displayed
+ * @fires toashidden - Fired when a toast is dismissed
+ *
+ * @cssprop --metro-background - Toast background color (default: #1f1f1f)
+ * @cssprop --metro-accent - Default border and icon color (default: #0078d4)
+ * @cssprop --metro-foreground - Title text color (default: #ffffff)
+ * @cssprop --metro-foreground-secondary - Message text color (default: rgba(255, 255, 255, 0.6))
+ * @cssprop --metro-spacing-md - Medium spacing (default: 12px)
+ * @cssprop --metro-spacing-lg - Large spacing (default: 16px)
+ * @cssprop --metro-spacing-sm - Small spacing (default: 8px)
+ * @cssprop --metro-transition-slow - Animation duration (default: 333ms)
+ * @cssprop --metro-easing - Easing curve (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-font-size-normal - Title font size (default: 14px)
+ * @cssprop --metro-font-size-small - Message font size (default: 12px)
+ *
+ * @csspart toast - Individual toast element
+ * @csspart toast-icon - The severity icon element
+ * @csspart toast-content - Content wrapper for title and message
+ * @csspart toast-title - The title element
+ * @csspart toast-message - The message element
+ * @csspart close-btn - The close button element
+ */
 export class MetroToast extends LitElement {
   static styles = [
     baseTypography,
@@ -124,6 +174,11 @@ export class MetroToast extends LitElement {
     return html`<slot></slot>`;
   }
 
+  /**
+   * Shows a new toast notification.
+   * @param options - Toast configuration options
+   * @returns string - The unique ID of the created toast
+   */
   show(options: ToastOptions): string {
     const id = `toast-${++this.#toastId}`;
     const severity = options.severity || "informational";
@@ -169,6 +224,11 @@ export class MetroToast extends LitElement {
     return id;
   }
 
+  /**
+   * Hides a specific toast by ID with exit animation.
+   * @param id - The toast ID to hide
+   * @returns void
+   */
   hide(id: string): void {
     const toast = this.#toasts.get(id);
     if (!toast) return;
@@ -178,6 +238,10 @@ export class MetroToast extends LitElement {
     this.#toasts.delete(id);
   }
 
+  /**
+   * Hides all currently displayed toasts.
+   * @returns void
+   */
   clearAll(): void {
     this.#toasts.forEach((_, id) => this.hide(id));
   }
@@ -187,6 +251,12 @@ customElements.define("metro-toast", MetroToast);
 
 let globalToast: MetroToast | null = null;
 
+/**
+ * Shows a toast notification using the global toast instance.
+ * Creates the global instance on first call.
+ * @param options - Toast configuration options
+ * @returns string - The unique ID of the created toast
+ */
 export function showToast(options: ToastOptions): string {
   if (!globalToast) {
     globalToast = document.createElement("metro-toast") as MetroToast;
@@ -195,6 +265,11 @@ export function showToast(options: ToastOptions): string {
   return globalToast.show(options);
 }
 
+/**
+ * Hides a specific toast by ID from the global toast instance.
+ * @param id - The toast ID to hide
+ * @returns void
+ */
 export function hideToast(id: string): void {
   globalToast?.hide(id);
 }

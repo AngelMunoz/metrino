@@ -1,13 +1,64 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { toggleControlBase } from "../../styles/shared.ts";
 
+/**
+ * Metro Check Box Component
+ *
+ * A form-associated checkbox component with Metro styling. Features a custom
+ * visual design with animated checkmark and accent color fill. Implements the
+ * ElementInternals API for form participation.
+ *
+ * Features:
+ * - Custom checkbox design with animated checkmark
+ * - Accent color fill for checked state
+ * - Form association via ElementInternals API
+ * - Disabled state support
+ * - Name and value attributes for form submission
+ * - Custom change event with checked state
+ * - ARIA checkbox role support
+ * - Form reset callback support
+ * - Form disabled callback support
+ *
+ * Use for boolean options that users can toggle on/off, such as
+ * preferences, agreements, or feature selections.
+ *
+ * @fires change - Fired when the checked state changes (bubbles: true, composed: true)
+ *   Detail: { checked: boolean }
+ *
+ * @cssprop --metro-accent - Checked state background and border color (default: #0078d4)
+ * @cssprop --metro-foreground-secondary - Unchecked border color (default: rgba(255, 255, 255, 0.6))
+ * @cssprop --metro-transition-fast - Transition duration (default: 167ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ *
+ * @slot - Default slot for checkbox label text
+ *
+ * @csspart checkbox - The checkbox box element
+ * @csspart checkmark - The checkmark element
+ */
 export class MetroCheckBox extends LitElement {
   static formAssociated = true;
 
   static properties = {
+    /**
+     * The checked state of the checkbox.
+     * When true, the checkbox displays a checkmark and accent fill.
+     * @default false
+     */
     checked: { type: Boolean, reflect: true },
+    /**
+     * When true, the checkbox is disabled and cannot be toggled.
+     * @default false
+     */
     disabled: { type: Boolean, reflect: true },
+    /**
+     * Name attribute for form submission.
+     * @default ""
+     */
     name: { type: String, reflect: true },
+    /**
+     * Value submitted with the form when checked.
+     * @default "on"
+     */
     value: { type: String, reflect: true },
   };
 
@@ -80,20 +131,39 @@ export class MetroCheckBox extends LitElement {
     `;
   }
 
+  /**
+   * Called on first update to set initial form value.
+   * @returns void
+   */
   firstUpdated(): void {
     this.#updateFormValue();
   }
 
+  /**
+   * Updates form value when the checked property changes.
+   * @param changedProperties - Map of changed properties
+   * @returns void
+   */
   updated(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("checked")) {
       this.#updateFormValue();
     }
   }
 
+  /**
+   * Updates the internal form value based on checked state.
+   * Sets value when checked, null when unchecked.
+   * @returns void
+   */
   #updateFormValue(): void {
     this.#internals.setFormValue(this.checked ? this.value : null);
   }
 
+  /**
+   * Toggles the checked state and dispatches change event.
+   * Does nothing if the checkbox is disabled.
+   * @returns void
+   */
   #toggle(): void {
     if (this.disabled) return;
     this.checked = !this.checked;
@@ -105,10 +175,19 @@ export class MetroCheckBox extends LitElement {
     }));
   }
 
+  /**
+   * Called when the form is disabled/enabled.
+   * @param disabled - Whether the form is now disabled
+   * @returns void
+   */
   formDisabledCallback(disabled: boolean): void {
     this.disabled = disabled;
   }
 
+  /**
+   * Called when the form is reset. Unchecks the checkbox.
+   * @returns void
+   */
   formResetCallback(): void {
     this.checked = false;
     this.#updateFormValue();

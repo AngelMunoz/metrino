@@ -1,15 +1,72 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, disabledState } from "../../styles/shared.ts";
 
+/**
+ * Metro Slider Component
+ *
+ * A form-associated range slider component with Metro styling. Features a custom
+ * track with fill indicator and draggable thumb. Implements the ElementInternals
+ * API for form participation.
+ *
+ * Features:
+ * - Custom slider with accent-colored fill track
+ * - Draggable thumb with pointer cursor
+ * - Configurable min, max, and step values
+ * - Form association via ElementInternals API
+ * - Disabled state support
+ * - Custom change event with value detail
+ * - Form reset callback support
+ * - Form disabled callback support
+ *
+ * Use for selecting numeric values within a range, such as volume control,
+ * brightness adjustment, or any continuous or stepped value selection.
+ *
+ * @fires change - Fired when the slider value changes (bubbles: true, composed: true)
+ *   Detail: { value: number }
+ *
+ * @cssprop --metro-accent - Fill track color (default: #0078d4)
+ * @cssprop --metro-foreground-secondary - Empty track color (default: rgba(255, 255, 255, 0.4))
+ * @cssprop --metro-spacing-sm - Small spacing unit (default: 8px)
+ *
+ * @csspart slider-container - The slider container element
+ * @csspart track - The track background element
+ * @csspart fill - The filled portion of the track
+ * @csspart thumb - The draggable thumb element
+ * @csspart input - The native range input element (hidden)
+ */
 export class MetroSlider extends LitElement {
   static formAssociated = true;
 
   static properties = {
+    /**
+     * The current value of the slider.
+     * @default 0
+     */
     value: { type: Number, reflect: true },
+    /**
+     * Minimum value of the slider range.
+     * @default 0
+     */
     min: { type: Number },
+    /**
+     * Maximum value of the slider range.
+     * @default 100
+     */
     max: { type: Number },
+    /**
+     * Step increment for the slider value.
+     * @default 1
+     */
     step: { type: Number },
+    /**
+     * When true, the slider is disabled and cannot be dragged.
+     * @default false
+     */
     disabled: { type: Boolean, reflect: true },
+    /**
+     * Name attribute for form submission.
+     * @default ""
+     */
     name: { type: String, reflect: true },
   };
 
@@ -100,20 +157,39 @@ export class MetroSlider extends LitElement {
     `;
   }
 
+  /**
+   * Called on first update to set initial form value.
+   * @returns void
+   */
   firstUpdated(): void {
     this.#updateFormValue();
   }
 
+  /**
+   * Updates form value when the value property changes.
+   * @param changedProperties - Map of changed properties
+   * @returns void
+   */
   updated(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("value")) {
       this.#updateFormValue();
     }
   }
 
+  /**
+   * Updates the internal form value for form submission.
+   * @returns void
+   */
   #updateFormValue(): void {
     this.#internals.setFormValue(String(this.value));
   }
 
+  /**
+   * Handles input events from the native range input.
+   * Updates the value and dispatches change event.
+   * @param e - The input event
+   * @returns void
+   */
   #handleInput(e: InputEvent): void {
     const target = e.target as HTMLInputElement;
     this.value = parseFloat(target.value);
@@ -125,10 +201,19 @@ export class MetroSlider extends LitElement {
     }));
   }
 
+  /**
+   * Called when the form is disabled/enabled.
+   * @param disabled - Whether the form is now disabled
+   * @returns void
+   */
   formDisabledCallback(disabled: boolean): void {
     this.disabled = disabled;
   }
 
+  /**
+   * Called when the form is reset. Resets value to minimum.
+   * @returns void
+   */
   formResetCallback(): void {
     this.value = this.min;
     this.#updateFormValue();

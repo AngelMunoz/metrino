@@ -2,11 +2,75 @@ import { LitElement, html, css } from "lit";
 import { baseTypography, modalBackdrop, dialogAnimation, closeButton } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
+/**
+ * Metro Content Dialog Component
+ *
+ * A customizable modal dialog for displaying content with optional title,
+ * content area, and button slot. Features smooth enter/exit animations and
+ * backdrop dimming. Suitable for forms, confirmations, or any custom content.
+ *
+ * Features:
+ * - Optional title header with border separator
+ * - Scrollable content area for long content
+ * - Dedicated button slot for action buttons
+ * - Optional close button (can be disabled for required dialogs)
+ * - Smooth enter/exit animations
+ * - Backdrop click to close (when closable)
+ * - ARIA dialog role with modal support
+ * - Programmatic show/hide API
+ *
+ * Use for custom modal content that requires user interaction or attention.
+ * For simple message dialogs, consider MetroMessageDialog instead.
+ *
+ * @fires show - Fired when the dialog opens (bubbles: true)
+ * @fires close - Fired when the dialog closes (bubbles: true)
+ *
+ * @cssprop --metro-background - Dialog background color (default: #1f1f1f)
+ * @cssprop --metro-foreground - Title text color (default: #ffffff)
+ * @cssprop --metro-foreground-secondary - Content text color (default: rgba(255, 255, 255, 0.6))
+ * @cssprop --metro-border - Border color for separators (default: rgba(255, 255, 255, 0.1))
+ * @cssprop --metro-spacing-lg - Large spacing unit (default: 16px)
+ * @cssprop --metro-spacing-md - Medium spacing unit (default: 12px)
+ * @cssprop --metro-font-size-large - Title font size (default: 20px)
+ * @cssprop --metro-font-size-normal - Content font size (default: 14px)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ *
+ * @slot - Default slot for dialog content
+ * @slot buttons - Slot for action buttons displayed in the footer
+ *
+ * @csspart dialog - The main dialog container element
+ * @csspart dialog-header - The title header section
+ * @csspart dialog-content - The scrollable content area
+ * @csspart dialog-buttons - The button footer section
+ * @csspart close-btn - The close button element
+ * @csspart backdrop - The backdrop overlay element
+ */
 export class MetroContentDialog extends LitElement {
   static properties = {
+    /**
+     * Controls the visibility of the dialog. When true, the dialog is displayed
+     * with enter animation. Use show() and hide() methods for proper event dispatching.
+     * @default false
+     */
     open: { type: Boolean, reflect: true },
+    /**
+     * Set internally during exit animation. When true, the dialog is visible
+     * but fading out. Do not set directly.
+     * @default false
+     */
     closing: { type: Boolean, reflect: true },
+    /**
+     * Title text displayed in the dialog header. If not provided, no header
+     * is rendered.
+     * @default ""
+     */
     title: { type: String, reflect: true },
+    /**
+     * When true, displays a close button in the top-right corner and allows
+     * closing via backdrop click. When false, the dialog can only be closed
+     * programmatically.
+     * @default true
+     */
     closable: { type: Boolean, reflect: true },
   };
 
@@ -114,6 +178,11 @@ export class MetroContentDialog extends LitElement {
     `;
   }
 
+  /**
+   * Handles animation end events to fully close the dialog after exit animation completes.
+   * @param e - The animation event
+   * @returns void
+   */
   #handleAnimationEnd(e: AnimationEvent): void {
     if (e.animationName === "dialogExit" && this.closing) {
       this.closing = false;
@@ -121,6 +190,11 @@ export class MetroContentDialog extends LitElement {
     }
   }
 
+  /**
+   * Handles backdrop click to close the dialog when closable is true.
+   * @param e - The click event
+   * @returns void
+   */
   #handleBackdropClick(e: Event): void {
     if (this.closable) {
       this.#close();
@@ -128,18 +202,30 @@ export class MetroContentDialog extends LitElement {
     e.stopPropagation();
   }
 
+  /**
+   * Initiates the close sequence with exit animation and dispatches close event.
+   * @returns void
+   */
   #close(): void {
     if (!this.open || this.closing) return;
     this.closing = true;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
   }
 
+  /**
+   * Opens the dialog with enter animation and dispatches show event.
+   * @returns void
+   */
   show(): void {
     this.closing = false;
     this.open = true;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
   }
 
+  /**
+   * Closes the dialog with exit animation and dispatches close event.
+   * @returns void
+   */
   hide(): void {
     this.#close();
   }

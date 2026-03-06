@@ -3,12 +3,73 @@ import type { PropertyValues } from "lit";
 import { baseTypography, disabledState, hoverHighlight } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
+/**
+ * Metro App Bar Toggle Button Component
+ *
+ * A toggle button for use within the Metro App Bar. Functions as a checkbox
+ * with visual checked state using accent color fill. Supports the same
+ * circular icon design as the standard AppBarButton.
+ *
+ * Features:
+ * - Toggle/checkbox behavior with checked state
+ * - Circular icon container with accent fill when checked
+ * - Hover color inversion effect
+ * - Optional text label that appears when app bar is expanded
+ * - Support for both regular and menu item modes
+ * - ARIA checkbox role support
+ *
+ * Use within metro-app-bar for toggle actions like pinning, favoriting,
+ * or any on/off state that needs to be visually prominent.
+ *
+ * @fires change - Fired when the checked state changes.
+ *   Detail: { checked: boolean }
+ *
+ * @cssprop --metro-foreground - Icon and border color (default: #ffffff)
+ * @cssprop --metro-background - Inverted background color on hover (default: #1f1f1f)
+ * @cssprop --metro-accent - Checked state background (default: #0078d4)
+ * @cssprop --metro-accent-light - Hover state when checked (default: #429ce3)
+ * @cssprop --metro-spacing-xs - Extra small spacing (default: 4px)
+ * @cssprop --metro-spacing-md - Medium spacing (default: 12px)
+ * @cssprop --metro-spacing-lg - Large spacing (default: 16px)
+ * @cssprop --metro-transition-fast - Transition duration (default: 167ms)
+ * @cssprop --metro-easing - Easing curve (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-font-size-small - Font size for label (default: 12px)
+ *
+ * @slot - Default slot for custom content (used when no icon is specified)
+ *
+ * @csspart icon-circle - The circular container for the icon
+ * @csspart label - The text label element
+ */
 export class MetroAppBarToggleButton extends LitElement {
   static properties = {
+    /**
+     * The name of the Metro icon to display. See metro-icon for available icons.
+     * @default ""
+     */
     icon: { type: String, reflect: true },
+    /**
+     * Text label displayed below the icon. Only visible when the parent
+     * metro-app-bar has the "expanded" attribute set.
+     * @default ""
+     */
     label: { type: String, reflect: true },
+    /**
+     * The checked/toggled state of the button. When true, the icon circle
+     * is filled with the accent color.
+     * @default false
+     */
     checked: { type: Boolean, reflect: true },
+    /**
+     * When true, the button is disabled and cannot be toggled.
+     * @default false
+     */
     disabled: { type: Boolean, reflect: true },
+    /**
+     * When true, renders the button in menu item mode (row layout with
+     * smaller icon and always-visible label). Set automatically when
+     * used in the app bar's menu panel.
+     * @default false
+     */
     menuItem: { type: Boolean, attribute: "menu-item", reflect: true },
   };
 
@@ -143,6 +204,11 @@ export class MetroAppBarToggleButton extends LitElement {
     `;
   }
 
+  /**
+   * Handles click events to toggle the checked state.
+   * @param e - The mouse event
+   * @returns void
+   */
   #handleClick(e: MouseEvent): void {
     if (this.disabled) return;
     e.stopPropagation();
@@ -156,6 +222,11 @@ export class MetroAppBarToggleButton extends LitElement {
     );
   }
 
+  /**
+   * Handles keyboard events (Enter/Space) to toggle the checked state.
+   * @param e - The keyboard event
+   * @returns void
+   */
   #handleKeyDown(e: KeyboardEvent): void {
     if (this.disabled) return;
     if (e.key === "Enter" || e.key === " ") {
@@ -171,11 +242,19 @@ export class MetroAppBarToggleButton extends LitElement {
     }
   }
 
+  /**
+   * Sets up the mutation observer to watch for parent app bar expanded state.
+   * @returns void
+   */
   connectedCallback(): void {
     super.connectedCallback();
     this.#setupObserver();
   }
 
+  /**
+   * Cleans up the mutation observer when disconnected.
+   * @returns void
+   */
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this.#observer) {
@@ -184,6 +263,10 @@ export class MetroAppBarToggleButton extends LitElement {
     }
   }
 
+  /**
+   * Sets up a mutation observer to watch the parent app bar's expanded attribute.
+   * @returns void
+   */
   #setupObserver(): void {
     const appBar = this.closest("metro-app-bar");
     if (!appBar) return;
@@ -200,11 +283,21 @@ export class MetroAppBarToggleButton extends LitElement {
     this.#updateExpandedState(appBar);
   }
 
+  /**
+   * Updates the data-expanded attribute based on parent app bar state.
+   * @param appBar - The parent metro-app-bar element
+   * @returns void
+   */
   #updateExpandedState(appBar: Element): void {
     const isExpanded = appBar.hasAttribute("expanded");
     this.toggleAttribute("data-expanded", isExpanded);
   }
 
+  /**
+   * Re-sets up observer when icon or label changes (in case parent changed).
+   * @param changedProperties - Map of changed properties
+   * @returns void
+   */
   protected updated(changedProperties: PropertyValues<this>): void {
     super.updated(changedProperties);
     if (changedProperties.has("icon") || changedProperties.has("label")) {

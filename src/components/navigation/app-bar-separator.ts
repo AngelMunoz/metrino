@@ -1,8 +1,33 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 
+/**
+ * Metro App Bar Separator Component
+ *
+ * A visual separator line for use within the Metro App Bar. Creates a
+ * vertical line between buttons or groups of buttons to visually
+ * distinguish different sections of the app bar.
+ *
+ * Features:
+ * - Vertical line separator with standard dimensions
+ * - Configurable visibility (can be hidden while preserving layout)
+ * - Standard spacing margins on both sides
+ * - Semi-transparent styling to blend with Metro design
+ *
+ * Use within metro-app-bar to separate groups of related buttons.
+ *
+ * @cssprop --metro-foreground - Foreground color for the separator line (default: #ffffff)
+ * @cssprop --metro-spacing-sm - Spacing on both sides of the separator (default: 8px)
+ *
+ * @csspart separator - The actual separator line element
+ */
 export class MetroAppBarSeparator extends LitElement {
   static properties = {
+    /**
+     * Controls the visibility of the separator. When false, the separator
+     * is hidden but still occupies space in the layout.
+     * @default true
+     */
     visible: { type: Boolean, reflect: true },
   };
 

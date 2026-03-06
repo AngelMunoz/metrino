@@ -1,10 +1,62 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 
+/**
+ * Metro Split View Component
+ *
+ * A navigation component that divides the screen into a pane and content area.
+ * Supports multiple display modes including overlay (slides over content),
+ * inline (pushes content), and compact (shrunken pane that expands).
+ *
+ * Features:
+ * - Three display modes: overlay, inline, compact
+ * - Configurable pane placement (left or right)
+ * - Smooth slide/width animations when opening/closing
+ * - Backdrop overlay in overlay mode
+ * - Backdrop click to close in overlay mode
+ * - Programmatic API for show/hide/toggle
+ *
+ * Use SplitView for master-detail layouts, navigation drawers, or any UI
+ * that requires a collapsible side panel alongside main content.
+ *
+ * @fires paneopened - Fired when the pane opens (bubbles: true)
+ * @fires paneclosed - Fired when the pane closes (bubbles: true)
+ *
+ * @cssprop --metro-background - Background color for pane and content (default: #1f1f1f)
+ * @cssprop --metro-border - Border color for pane separator (default: rgba(255, 255, 255, 0.2))
+ * @cssprop --metro-transition-slow - Transition duration for animations (default: 333ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ *
+ * @slot pane - Slot for navigation/content in the side pane
+ * @slot - Default slot for main content area
+ *
+ * @csspart split-pane - The side pane container
+ * @csspart pane-content - The content area within the pane
+ * @csspart content - The main content area
+ * @csspart backdrop - The backdrop overlay (overlay mode only)
+ */
 export class MetroSplitView extends LitElement {
   static properties = {
+    /**
+     * Controls the visibility of the pane. When true, the pane is displayed.
+     * In overlay mode, this also shows the backdrop.
+     * @default false
+     */
     open: { type: Boolean, reflect: true },
+    /**
+     * Display mode for the pane:
+     * - "overlay": Pane slides over content (default)
+     * - "inline": Pane pushes content (width animation)
+     * - "compact": Pane shows as narrow strip, expands on open
+     * @default "overlay"
+     */
     displayMode: { type: String, reflect: true, attribute: "display-mode" },
+    /**
+     * Placement of the pane:
+     * - "left": Pane on the left side (default)
+     * - "right": Pane on the right side
+     * @default "left"
+     */
     panePlacement: { type: String, reflect: true, attribute: "pane-placement" },
   };
 
@@ -149,6 +201,10 @@ export class MetroSplitView extends LitElement {
     `;
   }
 
+  /**
+   * Handles backdrop click in overlay mode to close the pane.
+   * @returns void
+   */
   #handleBackdropClick(): void {
     if (this.displayMode === "overlay") {
       this.open = false;
@@ -156,11 +212,19 @@ export class MetroSplitView extends LitElement {
     }
   }
 
+  /**
+   * Toggles the pane open/closed state and dispatches appropriate event.
+   * @returns void
+   */
   toggle(): void {
     this.open = !this.open;
     this.dispatchEvent(new CustomEvent(this.open ? "paneopened" : "paneclosed", { bubbles: true }));
   }
 
+  /**
+   * Opens the pane if closed and dispatches the "paneopened" event.
+   * @returns void
+   */
   show(): void {
     if (!this.open) {
       this.open = true;
@@ -168,6 +232,10 @@ export class MetroSplitView extends LitElement {
     }
   }
 
+  /**
+   * Closes the pane if open and dispatches the "paneclosed" event.
+   * @returns void
+   */
   hide(): void {
     if (this.open) {
       this.open = false;

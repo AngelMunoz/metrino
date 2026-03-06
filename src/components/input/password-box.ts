@@ -2,16 +2,86 @@ import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
+/**
+ * Metro Password Box Component
+ *
+ * A form-associated password input with a reveal button to toggle between
+ * masked and plain text display. Implements the ElementInternals API for
+ * form participation.
+ *
+ * Features:
+ * - Password masking with toggle button to reveal text
+ * - Metro icon integration for eye/eye-off icons
+ * - Form association via ElementInternals API
+ * - Optional label support
+ * - Placeholder support (defaults to "Password")
+ * - Disabled state support
+ * - Required validation support
+ * - Custom input and change events
+ * - Form reset and disabled callbacks
+ *
+ * Use for password entry fields where users may want to verify their input
+ * by temporarily revealing the text.
+ *
+ * @fires input - Fired when the input value changes (bubbles: true, composed: true)
+ *   Detail: { value: string }
+ * @fires change - Fired when the input loses focus and value changed (bubbles: true, composed: true)
+ *   Detail: { value: string }
+ *
+ * @cssprop --metro-foreground - Input text color
+ * @cssprop --metro-foreground-secondary - Placeholder and icon color
+ * @cssprop --metro-background - Input background color
+ * @cssprop --metro-accent - Focus border color
+ * @cssprop --metro-border - Input border color
+ * @cssprop --metro-spacing-xs - Extra small spacing
+ * @cssprop --metro-spacing-sm - Small spacing
+ * @cssprop --metro-transition-fast - Transition duration
+ * @cssprop --metro-easing - Easing curve
+ *
+ * @csspart input - The password input element
+ * @csspart label - The label element
+ * @csspart reveal-btn - The reveal toggle button
+ * @csspart input-wrapper - The input wrapper containing input and button
+ */
 export class MetroPasswordBox extends LitElement {
   static formAssociated = true;
 
   static properties = {
+    /**
+     * The current value of the password input.
+     * @default ""
+     */
     value: { type: String, reflect: true },
+    /**
+     * Placeholder text displayed when the input is empty.
+     * @default "Password"
+     */
     placeholder: { type: String, reflect: true },
+    /**
+     * When true, the input is disabled and cannot be interacted with.
+     * @default false
+     */
     disabled: { type: Boolean, reflect: true },
+    /**
+     * Label text displayed above the input field.
+     * @default ""
+     */
     label: { type: String, reflect: true },
+    /**
+     * Name attribute for form submission.
+     * @default ""
+     */
     name: { type: String, reflect: true },
+    /**
+     * When true, the input is required for form submission.
+     * @default false
+     */
     required: { type: Boolean, reflect: true },
+    /**
+     * Internal state tracking whether the password is revealed.
+     * Toggles input type between "password" and "text".
+     * @default false
+     */
     revealed: { type: Boolean, state: true },
   };
 
@@ -111,20 +181,38 @@ export class MetroPasswordBox extends LitElement {
     `;
   }
 
+  /**
+   * Called on first update to set initial form value.
+   * @returns void
+   */
   firstUpdated(): void {
     this.#updateFormValue();
   }
 
+  /**
+   * Updates form value when the value property changes.
+   * @param changedProperties - Map of changed properties
+   * @returns void
+   */
   updated(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("value")) {
       this.#updateFormValue();
     }
   }
 
+  /**
+   * Updates the internal form value for form submission.
+   * @returns void
+   */
   #updateFormValue(): void {
     this.#internals.setFormValue(this.value);
   }
 
+  /**
+   * Handles input events, updating the value and dispatching custom input event.
+   * @param e - The input event
+   * @returns void
+   */
   #handleInput(e: InputEvent): void {
     const target = e.target as HTMLInputElement;
     this.value = target.value;
@@ -138,6 +226,11 @@ export class MetroPasswordBox extends LitElement {
     );
   }
 
+  /**
+   * Handles change events, updating the value and dispatching custom change event.
+   * @param e - The change event
+   * @returns void
+   */
   #handleChange(e: Event): void {
     const target = e.target as HTMLInputElement;
     this.value = target.value;
@@ -151,14 +244,27 @@ export class MetroPasswordBox extends LitElement {
     );
   }
 
+  /**
+   * Toggles the password reveal state between masked and plain text.
+   * @returns void
+   */
   #toggleReveal(): void {
     this.revealed = !this.revealed;
   }
 
+  /**
+   * Called when the form is disabled/enabled.
+   * @param disabled - Whether the form is now disabled
+   * @returns void
+   */
   formDisabledCallback(disabled: boolean): void {
     this.disabled = disabled;
   }
 
+  /**
+   * Called when the form is reset. Clears the value to empty string.
+   * @returns void
+   */
   formResetCallback(): void {
     this.value = "";
     this.#updateFormValue();

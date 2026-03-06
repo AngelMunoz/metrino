@@ -6,14 +6,75 @@ import {
   addPressedState,
 } from "./shared.ts";
 
+/**
+ * Dropdown placement options for the dropdown menu.
+ */
 type DropdownPlacement = "top" | "bottom";
 
+/**
+ * Metro Dropdown Button Component
+ *
+ * A button that reveals a dropdown menu when clicked. Supports labeled buttons
+ * with optional icons and configurable menu placement. Items in the dropdown
+ * should use the CSS class "menu-item" on their root element.
+ *
+ * Features:
+ * - Labeled button with optional icon
+ * - Configurable dropdown placement (top/bottom)
+ * - Animated chevron rotation when opened
+ * - Menu enter/exit animations
+ * - Click outside to close
+ * - Keyboard navigation support
+ * - ARIA attributes for accessibility (menu, expanded state)
+ *
+ * Use for action menus, filter options, or any UI requiring a collapsible list
+ * of selectable items attached to a button trigger.
+ *
+ * @fires show - Fired when the dropdown menu opens
+ * @fires hide - Fired when the dropdown menu closes
+ *
+ * @cssprop --metro-background - Dropdown menu background color (default: #1f1f1f)
+ * @cssprop --metro-border - Border color for dropdown menu (default: rgba(255, 255, 255, 0.2))
+ * @cssprop --metro-spacing-sm - Small spacing unit (default: 8px)
+ * @cssprop --metro-spacing-md - Medium spacing unit (default: 12px)
+ * @cssprop --metro-transition-normal - Normal transition duration (default: 250ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ *
+ * @slot - Default slot for dropdown menu items (use CSS class "menu-item" on items)
+ *
+ * @csspart button-content - The clickable button area containing label, icon, and chevron
+ * @csspart dropdown - The dropdown menu container
+ */
 export class MetroDropdownButton extends LitElement {
   static properties = {
+    /**
+     * Text label displayed on the button. Shows an empty button if not set.
+     * @default ""
+     */
     label: { type: String },
+    /**
+     * Optional icon displayed before the label. Use the icon name from the Metro icon set.
+     * @default undefined
+     */
     icon: { type: String },
+    /**
+     * When true, the button is disabled and cannot be interacted with.
+     * Also prevents the dropdown from opening and removes from tab order.
+     * @default false
+     */
     disabled: { type: Boolean, reflect: true },
+    /**
+     * Position of the dropdown menu relative to the button.
+     * "bottom" places the menu below the button (default).
+     * "top" places the menu above the button.
+     * @default "bottom"
+     */
     placement: { type: String, reflect: true },
+    /**
+     * Controls the visibility of the dropdown menu. When true, the menu is displayed.
+     * Can be set programmatically or via the show()/hide() methods.
+     * @default false
+     */
     open: { type: Boolean, reflect: true },
   };
 
@@ -133,6 +194,12 @@ export class MetroDropdownButton extends LitElement {
     }
   }
 
+  /**
+   * Handles button click to toggle the dropdown menu.
+   * Prevents interaction when disabled.
+   * @param e - The click event
+   * @returns void
+   */
   #handleButtonClick(e: Event): void {
     if (this.disabled) {
       e.preventDefault();
@@ -142,15 +209,30 @@ export class MetroDropdownButton extends LitElement {
     this.#toggleDropdown(e);
   }
 
+  /**
+   * Handles keyboard activation (Enter/Space) to toggle the dropdown.
+   * @param e - The keyboard event
+   * @returns void
+   */
   #handleKeydown(e: KeyboardEvent): void {
     handleKeyboardActivation(e, this.disabled, () => this.click());
   }
 
+  /**
+   * Applies pressed state styling when the button is pressed.
+   * @param e - The pointer event
+   * @returns void
+   */
   #handlePointerDown(e: Event): void {
     const target = e.currentTarget as HTMLElement;
     addPressedState(target, this.disabled);
   }
 
+  /**
+   * Toggles the dropdown menu open/closed state and dispatches appropriate events.
+   * @param e - The event that triggered the toggle
+   * @returns void
+   */
   #toggleDropdown(e: Event): void {
     e.stopPropagation();
     this.open = !this.open;
@@ -161,6 +243,11 @@ export class MetroDropdownButton extends LitElement {
     }
   }
 
+  /**
+   * Handles document click events to close the dropdown when clicking outside.
+   * @param e - The document click event
+   * @returns void
+   */
   #handleDocumentClick(e: Event): void {
     if (!this.open) return;
     const path = e.composedPath();
@@ -169,6 +256,11 @@ export class MetroDropdownButton extends LitElement {
     this.dispatchEvent(new CustomEvent("hide", { bubbles: true, composed: true }));
   }
 
+  /**
+   * Handles item click events in the dropdown menu to close it after selection.
+   * @param e - The item click event
+   * @returns void
+   */
   #handleItemClick(e: Event): void {
     const target = e.target as HTMLElement;
     if (target.classList.contains("menu-item") || target.closest(".menu-item")) {
@@ -177,17 +269,31 @@ export class MetroDropdownButton extends LitElement {
     }
   }
 
+  /**
+   * Programmatically triggers a click on the dropdown button, toggling the menu.
+   * Does nothing if the button is disabled.
+   * @returns void
+   */
   click(): void {
     if (this.disabled) return;
     this.#toggleDropdown(new Event("click"));
   }
 
+  /**
+   * Programmatically opens the dropdown menu and dispatches the "show" event.
+   * Does nothing if the button is disabled or already open.
+   * @returns void
+   */
   show(): void {
     if (this.disabled) return;
     this.open = true;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true, composed: true }));
   }
 
+  /**
+   * Programmatically closes the dropdown menu and dispatches the "hide" event.
+   * @returns void
+   */
   hide(): void {
     this.open = false;
     this.dispatchEvent(new CustomEvent("hide", { bubbles: true, composed: true }));

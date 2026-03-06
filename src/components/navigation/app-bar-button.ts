@@ -2,9 +2,51 @@ import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
+/**
+ * Metro App Bar Button Component
+ *
+ * A specialized button designed for use within the Metro App Bar. Features a circular
+ * icon container with hover inversion effects and optional label display. The label
+ * appears only when the parent App Bar is in expanded state.
+ *
+ * Features:
+ * - Circular icon container with border
+ * - Hover color inversion effect (icon becomes dark on light background)
+ * - Optional text label that appears when app bar is expanded
+ * - Support for both regular app bar and menu item modes
+ * - Metro icon integration with size variants
+ *
+ * Use this component within metro-app-bar for navigation and action buttons.
+ * For menu items in the expandable panel, use the "menu-item" attribute.
+ *
+ * @cssprop --metro-foreground - Icon and border color (default: #ffffff)
+ * @cssprop --metro-background - Inverted background color on hover (default: #1f1f1f)
+ * @cssprop --metro-highlight - Hover background color (default: rgba(255, 255, 255, 0.1))
+ * @cssprop --metro-spacing-xs - Extra small spacing unit (default: 4px)
+ * @cssprop --metro-spacing-md - Medium spacing unit (default: 12px)
+ * @cssprop --metro-spacing-lg - Large spacing unit (default: 16px)
+ * @cssprop --metro-transition-fast - Transition duration (default: 167ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-font-size-small - Font size for the label (default: 12px)
+ *
+ * @slot - Default slot for custom content (used when no icon is specified)
+ *
+ * @csspart icon-circle - The circular container for the icon
+ * @csspart label - The text label element
+ */
 export class MetroAppBarButton extends LitElement {
   static properties = {
+    /**
+     * The name of the Metro icon to display. See metro-icon for available icons.
+     * If not provided, the default slot content is rendered instead.
+     * @default ""
+     */
     icon: { type: String, reflect: true },
+    /**
+     * Text label displayed below the icon. Only visible when the parent
+     * metro-app-bar has the "expanded" attribute set.
+     * @default ""
+     */
     label: { type: String, reflect: true },
   };
 

@@ -13,9 +13,48 @@ import {
   type GestureState,
 } from "../../utils/touch-physics.ts";
 
+/**
+ * Metro Panorama Component
+ *
+ * A full-screen, horizontally scrolling view with parallax background effect.
+ * The Panorama is inspired by the Windows Phone Panorama control, providing
+ * an immersive browsing experience with smooth touch-based scrolling and
+ * momentum-based physics.
+ *
+ * Features:
+ * - Full-width horizontal scrolling with momentum/inertia
+ * - Parallax background image effect
+ * - Touch and pointer gesture support with physics-based scrolling
+ * - Spring-back boundary animation when scrolling past edges
+ * - Snap points for each panorama item
+ * - Smooth scroll behavior with optional scroll-snap
+ *
+ * The Panorama is ideal for showcasing featured content, image galleries,
+ * or any full-screen horizontally-navigable content.
+ *
+ * @cssprop --metro-background - Background color (default: #1f1f1f)
+ * @cssprop --metro-foreground - Title text color (default: #ffffff)
+ * @cssprop --metro-spacing-lg - Large spacing unit (default: 16px)
+ * @cssprop --metro-font-size-xxlarge - Font size for title (default: 42px)
+ *
+ * @slot - Default slot for metro-panorama-item children
+ *
+ * @csspart panorama-container - The scrollable container with items
+ * @csspart parallax-bg - The parallax background element
+ * @csspart panorama-title - The title element
+ */
 export class MetroPanorama extends LitElement {
   static properties = {
+    /**
+     * Optional title displayed at the top of the panorama.
+     * @default ""
+     */
     title: { type: String },
+    /**
+     * URL of the background image for the parallax effect.
+     * The image is displayed at 15% opacity and moves at 20% of scroll speed.
+     * @default ""
+     */
     backgroundImage: { type: String, reflect: true, attribute: "background-image" },
   };
 
@@ -96,10 +135,20 @@ export class MetroPanorama extends LitElement {
     `;
   }
 
+  /**
+   * Called when the component is first updated.
+   * Stores a reference to the scroll container element.
+   * @returns void
+   */
   firstUpdated(): void {
     this.#scrollContainer = this.shadowRoot?.querySelector(".panorama-container") || null;
   }
 
+  /**
+   * Handles scroll events to update the parallax background position.
+   * The background moves at 20% of the scroll speed for a subtle effect.
+   * @returns void
+   */
   #handleScroll(): void {
     if (!this.#scrollContainer || !this.backgroundImage) return;
 
@@ -112,6 +161,12 @@ export class MetroPanorama extends LitElement {
     parallaxBg.style.transform = `translateX(-${parallaxOffset}px)`;
   }
 
+  /**
+   * Handles pointer down events to begin gesture tracking.
+   * Only responds to left mouse button or touch pointers.
+   * @param e - The pointer event
+   * @returns void
+   */
   #handlePointerDown(e: PointerEvent): void {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     this.#stopAnimation();
@@ -119,6 +174,12 @@ export class MetroPanorama extends LitElement {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
+  /**
+   * Handles pointer move events for gesture-based scrolling.
+   * Updates scroll position based on drag delta with boundary compression.
+   * @param e - The pointer event
+   * @returns void
+   */
   #handlePointerMove(e: PointerEvent): void {
     if (!this.#gestureState || !this.#scrollContainer) return;
     const info = normalizePointerEvent(e);
@@ -138,6 +199,12 @@ export class MetroPanorama extends LitElement {
     }
   }
 
+  /**
+   * Handles pointer up events to end gestures and apply inertia.
+   * Calculates velocity and applies momentum-based scrolling.
+   * @param _e - The pointer event (unused but required for signature)
+   * @returns void
+   */
   #handlePointerUp(_e: PointerEvent): void {
     if (!this.#gestureState || !this.#scrollContainer) return;
     const result = resolveGesture(this.#gestureState);
@@ -175,6 +242,13 @@ export class MetroPanorama extends LitElement {
     this.#animFrameId = requestAnimationFrame(tick);
   }
 
+  /**
+   * Runs a spring-back animation when scrolling past the container boundaries.
+   * Animates the container back to the valid scroll range with spring physics.
+   * @param container - The scroll container element
+   * @param overscroll - The amount scrolled past the boundary (negative for left, positive for right)
+   * @returns void
+   */
   #runSpringBack(container: HTMLElement, overscroll: number): void {
     let spring = createSpringState(overscroll);
 
@@ -190,6 +264,10 @@ export class MetroPanorama extends LitElement {
     this.#animFrameId = requestAnimationFrame(tick);
   }
 
+  /**
+   * Stops any running animation frame for inertia or spring-back.
+   * @returns void
+   */
   #stopAnimation(): void {
     if (this.#animFrameId) {
       cancelAnimationFrame(this.#animFrameId);
@@ -197,6 +275,10 @@ export class MetroPanorama extends LitElement {
     }
   }
 
+  /**
+   * Cleans up animation when the component is disconnected.
+   * @returns void
+   */
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#stopAnimation();

@@ -3,12 +3,72 @@ import { baseTypography, closeButton } from "../../styles/shared.ts";
 import type { PropertyValueMap } from "lit";
 import "../primitives/icon.ts";
 
+/**
+ * Settings flyout width options.
+ */
 type SettingsFlyoutWidth = "narrow" | "wide";
 
+/**
+ * Metro Settings Flyout Component
+ *
+ * A specialized flyout panel designed for application settings. Slides in
+ * from the right side of the screen with a backdrop overlay. Features focus
+ * management, keyboard support (Escape to close), and restore focus on close.
+ *
+ * Features:
+ * - Slides in from right side of viewport
+ * - Two width options: narrow (346px) and wide (646px)
+ * - Backdrop overlay with click-to-close
+ * - Title header with close button
+ * - Focus management (traps focus, restores on close)
+ * - Keyboard support (Escape key closes)
+ * - Smooth slide animations
+ *
+ * Use for application settings, preferences, or any side panel that
+ * requires user attention and should be dismissible.
+ *
+ * @fires open - Fired when the flyout opens (bubbles: true, composed: true)
+ * @fires close - Fired when the flyout closes (bubbles: true, composed: true)
+ *
+ * @cssprop --metro-background - Flyout background color (default: #1f1f1f)
+ * @cssprop --metro-foreground - Title text color (default: #ffffff)
+ * @cssprop --metro-foreground-secondary - Close button color (default: rgba(255, 255, 255, 0.6))
+ * @cssprop --metro-border - Border color for header separator (default: rgba(255, 255, 255, 0.1))
+ * @cssprop --metro-spacing-lg - Large spacing unit (default: 16px)
+ * @cssprop --metro-spacing-xl - Extra large spacing unit (default: 24px)
+ * @cssprop --metro-transition-slow - Transition duration (default: 333ms)
+ * @cssprop --metro-transition-fast - Fast transition for close button (default: 167ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-font-size-title - Title font size (default: 24px)
+ *
+ * @slot - Default slot for settings content
+ *
+ * @csspart flyout-backdrop - The backdrop overlay element
+ * @csspart flyout-panel - The slide-in panel container
+ * @csspart flyout-header - The header section with title and close button
+ * @csspart flyout-title - The title element
+ * @csspart flyout-content - The scrollable content area
+ * @csspart close-btn - The close button element
+ */
 export class MetroSettingsFlyout extends LitElement {
   static properties = {
+    /**
+     * Title text displayed in the flyout header.
+     * @default ""
+     */
     title: { type: String, reflect: true },
+    /**
+     * Controls the visibility of the flyout. When true, the panel slides in
+     * from the right and the backdrop appears.
+     * @default false
+     */
     open: { type: Boolean, reflect: true },
+    /**
+     * Width variant of the flyout.
+     * - "narrow": 346px width (default)
+     * - "wide": 646px width
+     * @default "narrow"
+     */
     width: { type: String, reflect: true },
   };
 
@@ -103,6 +163,11 @@ export class MetroSettingsFlyout extends LitElement {
     this.width = "narrow";
   }
 
+  /**
+   * Handles open/close state changes to manage focus and keyboard listeners.
+   * @param changedProperties - Map of changed properties
+   * @returns void
+   */
   protected updated(changedProperties: PropertyValueMap<this>): void {
     if (changedProperties.has("open")) {
       if (this.open) {
@@ -130,6 +195,10 @@ export class MetroSettingsFlyout extends LitElement {
     `;
   }
 
+  /**
+   * Called when the flyout opens. Stores previous focus and sets focus to close button.
+   * @returns void
+   */
   #onOpen(): void {
     this.#previousFocus = document.activeElement as Element;
     this.dispatchEvent(
@@ -145,6 +214,10 @@ export class MetroSettingsFlyout extends LitElement {
     document.addEventListener("keydown", this.#handleEscapeKey);
   }
 
+  /**
+   * Called when the flyout closes. Removes keyboard listener and restores focus.
+   * @returns void
+   */
   #onClose(): void {
     document.removeEventListener("keydown", this.#handleEscapeKey);
     this.dispatchEvent(
@@ -158,24 +231,45 @@ export class MetroSettingsFlyout extends LitElement {
     }
   }
 
+  /**
+   * Handles backdrop click to close the flyout.
+   * @returns void
+   */
   #handleBackdropClick(): void {
     this.hide();
   }
 
+  /**
+   * Handles close button click to close the flyout.
+   * @returns void
+   */
   #handleClose(): void {
     this.hide();
   }
 
+  /**
+   * Handles Escape key press to close the flyout.
+   * @param e - The keyboard event
+   * @returns void
+   */
   #handleEscapeKey = (e: KeyboardEvent): void => {
     if (e.key === "Escape") {
       this.hide();
     }
   };
 
+  /**
+   * Opens the flyout, dispatching the "open" event.
+   * @returns void
+   */
   show(): void {
     this.open = true;
   }
 
+  /**
+   * Closes the flyout, dispatching the "close" event.
+   * @returns void
+   */
   hide(): void {
     this.open = false;
   }

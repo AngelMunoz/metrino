@@ -4,8 +4,7 @@ import { defineConfig } from "vite";
 export default defineConfig(({ mode }) => {
   if (mode === "demo") {
     return {
-      root: "demo",
-      publicDir: "../public",
+      publicDir: "public",
       resolve: {
         alias: {
           "@src": resolve(__dirname, "src"),
@@ -16,7 +15,7 @@ export default defineConfig(({ mode }) => {
         open: true,
       },
       build: {
-        outDir: "../dist-demo",
+        outDir: "dist-demo",
         emptyOutDir: true,
       },
     };
@@ -27,10 +26,15 @@ export default defineConfig(({ mode }) => {
       lib: {
         entry: resolve(__dirname, "src/index.ts"),
         name: "Metrino",
-        formats: ["es", "cjs"],
+        formats: ["es"],
       },
       rollupOptions: {
-        external: ["lit", "lit/decorators.js", "lit/directives/*.js", "@mdi/js"],
+        external: [
+          "lit",
+          "lit/decorators.js",
+          "lit/directives/*.js",
+          "@mdi/js",
+        ],
         output: [
           {
             format: "es",

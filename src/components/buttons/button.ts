@@ -7,9 +7,51 @@ import {
   addPressedState,
 } from "./shared.ts";
 
+/**
+ * Metro Button Component
+ *
+ * A standard push button implementing the Metro design language with distinctive
+ * visual feedback and interactions. Features include:
+ * - Color inversion on hover (foreground becomes background)
+ * - Accent color variant for primary actions
+ * - Tilt animation effect on pointer interaction
+ * - Keyboard navigation support (Enter/Space activation)
+ * - Full ARIA accessibility support
+ *
+ * Use this component for standard button actions in forms, toolbars, or any
+ * interactive UI element that triggers an action when clicked.
+ *
+ * @fires click - Fired when the button is clicked or activated via keyboard (Enter/Space)
+ *
+ * @cssprop --metro-foreground - Text and border color of the button in normal state (default: #fff)
+ * @cssprop --metro-foreground-secondary - Pressed state background color (default: rgba(255, 255, 255, 0.6))
+ * @cssprop --metro-background - Background color applied on hover (default: #1f1f1f)
+ * @cssprop --metro-accent - Accent color for primary button variant (default: #0078d4)
+ * @cssprop --metro-accent-light - Lighter accent for accent hover state (default: #429ce3)
+ * @cssprop --metro-accent-dark - Darker accent for accent pressed state (default: #005a9e)
+ * @cssprop --metro-transition-fast - Transition duration for state changes (default: 167ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-font-size-normal - Font size for button text (default: 14px)
+ *
+ * @slot - Default slot for button content (text, icons, or other elements)
+ *
+ * @csspart button - The main button element that receives hover/press states
+ */
 export class MetroButton extends LitElement {
   static properties = {
+    /**
+     * When true, the button is disabled and cannot be interacted with.
+     * Disabled buttons have reduced opacity, no pointer events, and
+     * are removed from the tab navigation order.
+     * @default false
+     */
     disabled: { type: Boolean, reflect: true },
+    /**
+     * Sets the button to use accent color styling. When present, the button
+     * uses the Metro accent color (blue by default) for the background.
+     * Use this for primary actions to make them visually prominent.
+     * @default undefined
+     */
     accent: { type: String, reflect: true },
   };
 
@@ -105,14 +147,29 @@ export class MetroButton extends LitElement {
     }
   }
 
+  /**
+   * Handles click events on the button, preventing interaction when disabled.
+   * @param e - The click event
+   * @returns void
+   */
   #handleClick = (e: Event): void => {
     handleDisabledClick(e, this.disabled);
   };
 
+  /**
+   * Handles keyboard activation (Enter/Space keys) to trigger button action.
+   * @param e - The keyboard event
+   * @returns void
+   */
   #handleKeydown = (e: KeyboardEvent): void => {
     handleKeyboardActivation(e, this.disabled, () => this.click());
   };
 
+  /**
+   * Applies pressed state styling when the button is pressed via mouse or touch.
+   * @param e - The pointer event
+   * @returns void
+   */
   #handlePointerDown = (e: Event): void => {
     const target = e.currentTarget as HTMLElement;
     addPressedState(target, this.disabled);

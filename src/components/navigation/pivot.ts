@@ -1,8 +1,51 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
 
+/**
+ * Metro Pivot Component
+ *
+ * A tab-based navigation component that allows users to switch between different
+ * content sections. Features large, typography-focused headers with smooth animated
+ * transitions between content panes. The Pivot is ideal for organizing related
+ * content into separate views within a single screen.
+ *
+ * Features:
+ * - Large typography-based tab headers with scaling animation
+ * - Horizontal slide animation between content sections
+ * - Scrollable tab list for overflow scenarios
+ * - Active tab indicator (accent-colored underline)
+ * - Smooth opacity and scale transitions for content
+ * - Keyboard and ARIA accessibility support
+ *
+ * Use Pivot when you need to organize related content into separate but
+ * equally important views, such as different sections of a profile or
+ * different views of a data set.
+ *
+ * @fires selectionchanged - Fired when the selected tab changes.
+ *   Detail: { selectedIndex: number }
+ *
+ * @cssprop --metro-border - Border color for tab underline (default: rgba(255, 255, 255, 0.2))
+ * @cssprop --metro-accent - Active tab underline color (default: #0078d4)
+ * @cssprop --metro-foreground - Active tab text color (default: #ffffff)
+ * @cssprop --metro-foreground-secondary - Inactive tab text color (default: rgba(255, 255, 255, 0.5))
+ * @cssprop --metro-spacing-md - Medium spacing unit (default: 12px)
+ * @cssprop --metro-transition-fast - Fast transition duration (default: 167ms)
+ * @cssprop --metro-transition-slow - Slow transition duration for content (default: 333ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-font-size-xxlarge - Font size for tab headers (default: 42px)
+ *
+ * @slot - Default slot for metro-pivot-item children
+ *
+ * @csspart pivot-headers - Container for tab headers
+ * @csspart pivot-content - Container for sliding content panels
+ */
 export class MetroPivot extends LitElement {
   static properties = {
+    /**
+     * Index of the currently selected pivot item (0-based).
+     * Changing this updates the visible content and active tab styling.
+     * @default 0
+     */
     selectedIndex: { type: Number },
   };
 
@@ -106,6 +149,12 @@ export class MetroPivot extends LitElement {
     `;
   }
 
+  /**
+   * Selects a pivot item by index and updates the view.
+   * Dispatches a selectionchanged event with the new index.
+   * @param index - The zero-based index of the item to select
+   * @returns void
+   */
   #selectItem(index: number): void {
     if (index === this.selectedIndex) return;
 
@@ -124,6 +173,10 @@ export class MetroPivot extends LitElement {
     );
   }
 
+  /**
+   * Initializes the first pivot item as active on first render.
+   * @returns void
+   */
   firstUpdated() {
     const items = Array.from(this.querySelectorAll("metro-pivot-item"));
     items.forEach((item, i) => {

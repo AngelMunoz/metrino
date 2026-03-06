@@ -1,9 +1,55 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 
+/**
+ * Metro App Bar Component
+ *
+ * A fixed-position application bar that provides primary navigation and actions.
+ * The App Bar appears at the top or bottom of the screen and supports an expandable
+ * menu panel for additional options. It's designed for mobile and touch-first interfaces.
+ *
+ * Features:
+ * - Fixed positioning at top or bottom of viewport
+ * - Expandable menu panel with slide animation
+ * - Slots for buttons, content, and menu items
+ * - Visual separator between content and button areas
+ * - Smooth height transitions when expanding/collapsing
+ *
+ * The App Bar is commonly used as the primary navigation container in Metro-style
+ * applications, housing navigation buttons, action buttons, and an overflow menu.
+ *
+ * @fires expanded - Fired when the menu panel is expanded (composed: true, bubbles: true)
+ * @fires collapsed - Fired when the menu panel is collapsed (composed: true, bubbles: true)
+ *
+ * @cssprop --metro-background - Background color of the app bar (default: #1f1f1f)
+ * @cssprop --metro-border - Border color for separators (default: rgba(255, 255, 255, 0.2))
+ * @cssprop --metro-spacing-sm - Small spacing unit for padding (default: 8px)
+ * @cssprop --metro-spacing-md - Medium spacing unit (default: 12px)
+ * @cssprop --metro-transition-fast - Fast transition duration (default: 167ms)
+ * @cssprop --metro-transition-slow - Slow transition duration for height changes (default: 333ms)
+ * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ *
+ * @slot - Default slot for app bar buttons (displayed in the button area)
+ * @slot content - Slot for content displayed on the left side of the bar
+ * @slot menu - Slot for menu items displayed in the expandable panel
+ *
+ * @csspart app-bar-content - The main content area of the app bar
+ * @csspart menu-panel - The expandable menu panel container
+ * @csspart ellipsis-btn - The "..." button that toggles the menu panel
+ */
 export class MetroAppBar extends LitElement {
   static properties = {
+    /**
+     * Position of the app bar. "bottom" places it at the bottom of the viewport (default),
+     * "top" places it at the top. Affects border placement and animation direction.
+     * @default "bottom"
+     */
     placement: { type: String, reflect: true },
+    /**
+     * Controls the visibility of the expandable menu panel.
+     * When true, the menu panel is displayed with slide-in animation.
+     * @default false
+     */
     expanded: { type: Boolean, reflect: true },
   };
 
@@ -124,6 +170,11 @@ export class MetroAppBar extends LitElement {
     `;
   }
 
+  /**
+   * Toggles the expandable menu panel open or closed.
+   * Updates the expanded property and dispatches appropriate events.
+   * @returns void
+   */
   #toggleMenu(): void {
     this.expanded = !this.expanded;
   }

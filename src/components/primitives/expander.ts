@@ -2,9 +2,61 @@ import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import "./icon.ts";
 
+/**
+ * Metro Expander Component
+ *
+ * A collapsible content container with a clickable header. Features smooth
+ * height animation when expanding/collapsing and a rotating chevron icon
+ * to indicate state.
+ *
+ * Features:
+ * - Clickable header to toggle expanded state
+ * - Smooth height transition animation (max-height based)
+ * - Rotating chevron icon indicating state
+ * - Optional title attribute or slot for header content
+ * - Highlight background on header hover
+ * - ARIA expanded state support
+ *
+ * Use for collapsible sections of content, FAQ-style layouts, or anywhere
+ * you need to show/hide content while preserving layout space.
+ *
+ * @fires expanded - Fired when the expander state changes
+ *   Detail: { expanded: boolean }
+ *
+ * @cssprop --metro-background - Background color (default: #1f1f1f)
+ * @cssprop --metro-highlight - Header background color (default: rgba(255, 255, 255, 0.1))
+ * @cssprop --metro-highlight-hover - Header hover color (default: rgba(255, 255, 255, 0.15))
+ * @cssprop --metro-foreground - Title text color (default: #ffffff)
+ * @cssprop --metro-foreground-secondary - Icon color (default: rgba(255, 255, 255, 0.6))
+ * @cssprop --metro-spacing-md - Medium spacing (default: 12px)
+ * @cssprop --metro-spacing-lg - Large spacing (default: 16px)
+ * @cssprop --metro-transition-fast - Header transition (default: 167ms)
+ * @cssprop --metro-transition-slow - Content transition (default: 333ms)
+ * @cssprop --metro-easing - Easing curve (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-font-size-normal - Title font size (default: 14px)
+ *
+ * @slot - Default slot for collapsible content
+ * @slot header - Slot for custom header content (used when title attribute not set)
+ *
+ * @csspart expander-header - The clickable header element
+ * @csspart expander-title - The title text element
+ * @csspart expander-icon - The chevron icon element
+ * @csspart expander-content - The collapsible content container
+ * @csspart expander-inner - The inner content wrapper
+ */
 export class MetroExpander extends LitElement {
   static properties = {
+    /**
+     * Controls whether the expander is open (expanded) or closed (collapsed).
+     * When true, the content area is visible with height animation.
+     * @default false
+     */
     expanded: { type: Boolean, reflect: true },
+    /**
+     * Title text displayed in the header. If not provided, the "header" slot
+     * is used instead for custom header content.
+     * @default ""
+     */
     title: { type: String, reflect: true },
   };
 
@@ -80,6 +132,10 @@ export class MetroExpander extends LitElement {
     `;
   }
 
+  /**
+   * Toggles the expanded state and dispatches the expanded event.
+   * @returns void
+   */
   #toggle(): void {
     this.expanded = !this.expanded;
     this.dispatchEvent(
