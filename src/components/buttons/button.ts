@@ -129,7 +129,7 @@ export class MetroButton extends LitElement {
   }
 
   render() {
-    return html`<button class="button" role="button" ?disabled=${this.disabled} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></button>`;
+    return html`<button class="button" role="button" tabindex=${this.disabled ? -1 : 0} ?disabled=${this.disabled} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></button>`;
   }
 
   protected firstUpdated(): void {

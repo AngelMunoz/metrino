@@ -116,30 +116,30 @@ export class MetroSemanticZoom extends LitElement {
     this.#isTransitioning = true;
     const previousState = this.zoomed;
 
-    if ("startViewTransition" in document) {
-      const transition = document.startViewTransition(() => {
-        this.zoomed = targetState;
-      });
-
-      try {
-        await transition.finished;
-      } catch {
-        this.zoomed = previousState;
-      }
-    } else {
-      this.zoomed = targetState;
-      await new Promise((resolve) => {
-        setTimeout(resolve, this.transitionDuration);
-      });
-    }
-
+    this.zoomed = targetState;
     this.#isTransitioning = false;
+
     this.dispatchEvent(
       new CustomEvent("zoomchanged", {
         detail: { zoomed: this.zoomed, previous: previousState },
         bubbles: true,
       }),
     );
+
+    if ("startViewTransition" in document) {
+      try {
+        const transition = document.startViewTransition(() => {
+          return this.updateComplete;
+        });
+        await transition.finished;
+      } catch {
+        // Transition was skipped or failed — state already updated
+      }
+    } else {
+      await new Promise((resolve) => {
+        setTimeout(resolve, this.transitionDuration);
+      });
+    }
   }
 
   render() {

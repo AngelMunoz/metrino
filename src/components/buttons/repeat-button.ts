@@ -146,18 +146,40 @@ export class MetroRepeatButton extends LitElement {
     this.interval = 100;
   }
 
-  render() {
-    return html`<button class="button" ?disabled=${this.disabled} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown} @mouseup=${this.#handlePointerUp} @mouseleave=${this.#handlePointerUp} @touchend=${this.#handlePointerUp}><slot></slot></button>`;
-  }
-
-  protected firstUpdated(): void {
-    this.#cleanupTilt = applyTiltEffect(this);
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.hasAttribute("role")) {
+      this.setAttribute("role", "button");
+    }
+    if (!this.hasAttribute("tabindex")) {
+      this.setAttribute("tabindex", "0");
+    }
+    this.addEventListener("click", this.#handleClick);
+    this.addEventListener("keydown", this.#handleKeydown);
+    this.addEventListener("mousedown", this.#handlePointerDown);
+    this.addEventListener("touchstart", this.#handlePointerDown);
+    this.addEventListener("mouseup", this.#handlePointerUp);
+    this.addEventListener("mouseleave", this.#handlePointerUp);
+    this.addEventListener("touchend", this.#handlePointerUp);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     stopRepeat(this.#repeatState);
     this.#cleanupTilt?.();
+  }
+
+  click(): void {
+    if (this.disabled) return;
+    super.click();
+  }
+
+  render() {
+    return html`<button class="button" ?disabled=${this.disabled}><slot></slot></button>`;
+  }
+
+  protected firstUpdated(): void {
+    this.#cleanupTilt = applyTiltEffect(this);
   }
 
   protected willUpdate(changedProperties: PropertyValues<this>): void {
