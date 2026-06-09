@@ -19,6 +19,17 @@ The following S (Small) and M (Medium) effort fixes have been completed:
 - Live tile pseudo-random interval (6-10s)
 - Panorama parallax ratio (0.2:1)
 - Tilt effect applied to buttons
+- Keyboard accessibility for toggle-switch, check-box, radio-button (tabindex, Enter/Space activation)
+- Focus trap and Escape key handling in content-dialog, message-dialog, flyout
+- ARIA roles for list-view (role="listbox"), grid-view (role="grid"), panorama (role="region")
+- App bar Escape key to close menu, aria-controls linking
+- Tilt effects applied to tiles (flip-tile, live-tile, cycle-tile, iconic-tile) and app-bar-button
+- Hover/press states for toggle-switch, check-box, flip-tile
+- Fixed TypeScript errors in test files (test-helpers.ts, dropdown-button.test.ts)
+- Fixed implicit any type in icon.ts
+- View Transition API for route changes (demo), pivot tab switching, semantic-zoom
+- Removed fallback patterns — View Transition API used directly (no polyfill)
+- Turnstile animations for ::view-transition-old(root) and ::view-transition-new(root)
 
 ---
 

@@ -338,7 +338,7 @@ export class MetroIcon extends LitElement {
   }
 
   render() {
-    const path = iconMap[this.icon];
+    const path = (iconMap as Record<string, string>)[this.icon];
     if (!path) {
       return html`<svg viewBox="0 0 24 24"></svg>`;
     }

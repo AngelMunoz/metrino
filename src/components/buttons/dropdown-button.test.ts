@@ -1,19 +1,14 @@
 import { assert } from "chai";
 import "./dropdown-button.ts";
 import { MetroDropdownButton } from "./dropdown-button.ts";
-
 import { createButton } from "./test-helpers.ts";
-
-import { MetroDropdownButton } from "./dropdown-button.ts";
 
 suite("metro-dropdown-button", () => {
   let container: HTMLDivElement;
+  let el: MetroDropdownButton;
+  let buttonContent: HTMLElement | null;
 
-    let el: MetroDropdownButton;
-
-    let buttonContent: HTMLElement | null;
-
-    setup(async () => {
+  setup(async () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     el = await createButton("Menu");
@@ -24,7 +19,7 @@ suite("metro-dropdown-button", () => {
     container.remove();
   });
 
-  test("is defined", async () => {
+  test("is defined", () => {
     assert.instanceOf(el, HTMLElement);
     assert.instanceOf(el, MetroDropdownButton);
   });
@@ -69,23 +64,22 @@ suite("metro-dropdown-button", () => {
     assert.equal(slotted.length, 2);
   });
 
-  suite("attributes", () => {
-    test("button-content has aria-haspopup=menu", async () => {
-    const buttonContent = el.shadowRoot?.querySelector(".button-content");
-    assert.equal(buttonContent?.getAttribute("aria-haspopup"), "menu");
+  test("button-content has aria-haspopup=menu", async () => {
+    const btn = el.shadowRoot?.querySelector(".button-content");
+    assert.equal(btn?.getAttribute("aria-haspopup"), "menu");
   });
 
-    test("button-content has role=button", async () => {
-    const buttonContent = el.shadowRoot?.querySelector(".button-content");
-    assert.equal(buttonContent?.getAttribute("role"), "button");
+  test("button-content has role=button", async () => {
+    const btn = el.shadowRoot?.querySelector(".button-content");
+    assert.equal(btn?.getAttribute("role"), "button");
   });
 
-    test("button-content has tabindex 0", async () => {
-    buttonContent = el.shadowRoot?.querySelector(".button-content") as HTMLElement;
-    assert.equal(buttonContent.tabIndex, 0);
+  test("button-content has tabindex 0", async () => {
+    const btn = el.shadowRoot?.querySelector(".button-content") as HTMLElement;
+    assert.equal(btn.tabIndex, 0);
   });
 
-    test("host has aria-expanded=false by default", async () => {
+  test("host has aria-expanded=false by default", async () => {
     assert.equal(el.getAttribute("aria-expanded"), "false");
   });
 
@@ -99,7 +93,6 @@ suite("metro-dropdown-button", () => {
     el.placement = "bottom";
     el.open = true;
     await el.updateComplete;
-    assert.isTrue(el.hasAttribute("placement"));
     assert.equal(el.getAttribute("placement"), "bottom");
   });
 
@@ -109,8 +102,8 @@ suite("metro-dropdown-button", () => {
     await el.updateComplete;
     assert.equal(el.getAttribute("placement"), "top");
   });
-  suite("click interaction", () => {
-    test("click toggles dropdown open", async () => {
+
+  test("click toggles dropdown open", async () => {
     assert.isFalse(el.open);
     buttonContent?.click();
     await el.updateComplete;
@@ -121,7 +114,7 @@ suite("metro-dropdown-button", () => {
     el.open = true;
     await el.updateComplete;
     buttonContent?.click();
-    await el.updateComplete
+    await el.updateComplete;
     assert.isFalse(el.open);
   });
 
@@ -129,11 +122,11 @@ suite("metro-dropdown-button", () => {
     el.disabled = true;
     await el.updateComplete;
     buttonContent?.click();
-    await el.updateComplete
+    await el.updateComplete;
     assert.isFalse(el.open);
   });
-  suite("document click", () => {
-    test("clicking outside closes dropdown", async () => {
+
+  test("clicking outside closes dropdown", async () => {
     el.open = true;
     await el.updateComplete;
     assert.isTrue(el.open);
@@ -142,7 +135,7 @@ suite("metro-dropdown-button", () => {
     assert.isFalse(el.open);
   });
 
-  test("clicking inside dropdown does not close", async () => {
+  test("clicking menu-item closes dropdown", async () => {
     el.open = true;
     el.innerHTML = `
       <div class="menu-item" data-value="1">Option 1</div>
@@ -153,22 +146,12 @@ suite("metro-dropdown-button", () => {
     await el.updateComplete;
     assert.isFalse(el.open);
   });
-  suite("menu item click", () => {
-    test("clicking menu-item with class closes dropdown", async () => {
-    el.open = true;
-    el.innerHTML = `
-      <div class="menu-item" data-value="1">Option 1</div>
-    `;
-    await el.updateComplete
-    const menuItem = el.querySelector(".menu-item") as HTMLElement;
-    menuItem?.click();
-    await el.updateComplete
-    assert.isFalse(el.open);
-  });
-  suite("events", () => {
-    test("dispatches show event when opening", async () => {
+
+  test("dispatches show event when opening", async () => {
     let showFired = false;
-    el.addEventListener("show", () => { showFired = true; });
+    el.addEventListener("show", () => {
+      showFired = true;
+    });
     buttonContent?.click();
     await el.updateComplete;
     assert.isTrue(showFired);
@@ -178,13 +161,15 @@ suite("metro-dropdown-button", () => {
     el.open = true;
     await el.updateComplete;
     let hideFired = false;
-    el.addEventListener("hide", () => { hideFired = true; });
-    buttonContent?.click()
+    el.addEventListener("hide", () => {
+      hideFired = true;
+    });
+    buttonContent?.click();
     await el.updateComplete;
     assert.isTrue(hideFired);
   });
-  suite("programmatic API", () => {
-    test("show() opens dropdown", async () => {
+
+  test("show() opens dropdown", async () => {
     el.show();
     await el.updateComplete;
     assert.isTrue(el.open);
@@ -211,16 +196,15 @@ suite("metro-dropdown-button", () => {
     el.disabled = true;
     await el.updateComplete;
     el.show();
-    await el.updateComplete
+    await el.updateComplete;
     assert.isFalse(el.open);
   });
-  suite("chevron rotation", () => {
-    test("chevron has rotated class when open", async () => {
+
+  test("chevron rotates when open", async () => {
     el.open = true;
-    await el.updateComplete
+    await el.updateComplete;
     const chevron = el.shadowRoot?.querySelector(".chevron") as HTMLElement;
     const transform = getComputedStyle(chevron).transform;
     assert.include(transform, "matrix");
-    });
   });
 });

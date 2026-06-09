@@ -77,6 +77,22 @@ interface CEMSchema {
   modules: CEMModule[];
 }
 
+let manifestCache: CEMSchema | null = null;
+let manifestPromise: Promise<CEMSchema | null> | null = null;
+
+async function getManifest(): Promise<CEMSchema | null> {
+  if (manifestCache) return manifestCache;
+  if (manifestPromise) return manifestPromise;
+  manifestPromise = fetch("/custom-elements.json")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      manifestCache = data;
+      return data;
+    })
+    .catch(() => null);
+  return manifestPromise;
+}
+
 export class ApiDocs extends LitElement {
   static styles = css`
     :host {
@@ -95,6 +111,7 @@ export class ApiDocs extends LitElement {
     .api-container {
       border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
       background: var(--metro-background-alt, #2d2d2d);
+      min-height: 48px;
     }
 
     .api-header {
@@ -238,14 +255,7 @@ export class ApiDocs extends LitElement {
   }
 
   async #loadManifest(): Promise<void> {
-    try {
-      const response = await fetch("/custom-elements.json");
-      if (response.ok) {
-        this._manifest = await response.json();
-      }
-    } catch (error) {
-      console.error("Failed to load CEM manifest:", error);
-    }
+    this._manifest = await getManifest();
   }
 
   private get declaration(): CEMDeclaration | undefined {

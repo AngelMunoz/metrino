@@ -97,10 +97,22 @@ export class MetroFlyout extends LitElement {
   render() {
     return html`
       <div class="backdrop" @click=${this.#close}></div>
-      <div class="flyout">
+      <div class="flyout" @keydown=${this.#handleKeydown}>
         <slot></slot>
       </div>
     `;
+  }
+
+  /**
+   * Handles keyboard events for Escape key to close the flyout.
+   * @param e - The keyboard event
+   * @returns void
+   */
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      this.hide();
+    }
   }
 
   /**

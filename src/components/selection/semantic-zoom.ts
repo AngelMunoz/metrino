@@ -1,27 +1,20 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import {
-  supportsViewTransitions,
   viewTransitionStyles,
   type TransitionOptions,
 } from "../../utils/animations.ts";
 
 export type ZoomState = "in" | "out";
 
-export interface SemanticZoomTransitionOptions extends TransitionOptions {
-  useViewTransition?: boolean;
-}
-
 export class MetroSemanticZoom extends LitElement {
   static properties = {
     zoomed: { type: String, reflect: true },
     transitionDuration: { type: Number, attribute: "transition-duration" },
-    viewTransition: { type: Boolean, attribute: "view-transition" },
   };
 
   declare zoomed: ZoomState;
   declare transitionDuration: number;
-  declare viewTransition: boolean;
 
   static styles = [
     baseTypography,
@@ -103,37 +96,28 @@ export class MetroSemanticZoom extends LitElement {
     super();
     this.zoomed = "in";
     this.transitionDuration = 400;
-    this.viewTransition = false;
   }
 
   setZoomedState(
     state: ZoomState,
-    options?: SemanticZoomTransitionOptions,
+    options?: TransitionOptions,
   ): Promise<void> {
     if (this.#isTransitioning || this.zoomed === state) {
       return Promise.resolve();
     }
 
-    const useViewTransition = options?.useViewTransition ?? this.viewTransition;
-    const duration = options?.duration ?? this.transitionDuration;
-    const easing = options?.easing;
-
-    return this.#performTransition(state, {
-      duration,
-      easing,
-      useViewTransition,
-    });
+    return this.#performTransition(state, options ?? {});
   }
 
   async #performTransition(
     targetState: ZoomState,
-    options: SemanticZoomTransitionOptions,
+    _options: TransitionOptions,
   ): Promise<void> {
     this.#isTransitioning = true;
     const previousState = this.zoomed;
 
-    if (options.useViewTransition && supportsViewTransitions()) {
-      const transition = document.startViewTransition!(() => {
+    if ("startViewTransition" in document) {
+      const transition = document.startViewTransition(() => {
         this.zoomed = targetState;
       });
 
@@ -143,17 +127,9 @@ export class MetroSemanticZoom extends LitElement {
         this.zoomed = previousState;
       }
     } else {
-      this.style.setProperty(
-        "--metro-zoom-duration",
-        `${options.duration ?? 400}ms`,
-      );
-      if (options.easing) {
-        this.style.setProperty("--metro-easing", options.easing);
-      }
       this.zoomed = targetState;
-
       await new Promise((resolve) => {
-        setTimeout(resolve, options.duration ?? 400);
+        setTimeout(resolve, this.transitionDuration);
       });
     }
 
@@ -190,14 +166,7 @@ export class MetroSemanticZoom extends LitElement {
 
   #toggleZoom(): void {
     const targetState: ZoomState = this.zoomed === "in" ? "out" : "in";
-    const previousState = this.zoomed;
-    this.zoomed = targetState;
-    this.dispatchEvent(
-      new CustomEvent("zoomchanged", {
-        detail: { zoomed: this.zoomed, previous: previousState },
-        bubbles: true,
-      }),
-    );
+    void this.setZoomedState(targetState);
   }
 
   #handleTouchStart(e: TouchEvent): void {

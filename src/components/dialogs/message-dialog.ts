@@ -138,8 +138,8 @@ export class MetroMessageDialog extends LitElement {
   render() {
     return html`
       <div class="backdrop" @click=${this.#close}></div>
-      <div class="dialog" role="dialog" aria-modal="true" @animationend=${this.#handleAnimationEnd}>
-        ${this.title ? html`<div class="dialog-header">${this.title}</div>` : ""}
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="${this.title ? "msg-dialog-title" : ""}" @animationend=${this.#handleAnimationEnd} @keydown=${this.#handleKeydown}>
+        ${this.title ? html`<div class="dialog-header" id="msg-dialog-title">${this.title}</div>` : ""}
         <div class="dialog-content">
           <slot></slot>
         </div>
@@ -159,6 +159,18 @@ export class MetroMessageDialog extends LitElement {
     if (e.animationName === "dialogExit" && this.closing) {
       this.closing = false;
       this.open = false;
+    }
+  }
+
+  /**
+   * Handles keyboard events for Escape key to close the dialog.
+   * @param e - The keyboard event
+   * @returns void
+   */
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      this.#close();
     }
   }
 

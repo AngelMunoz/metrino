@@ -7,11 +7,9 @@
     "emitDeclarationOnly": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "moduleResolution": "nodenext",
-    "module": "nodenext",
     "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": false
+    "erasableSyntaxOnly": false,
   },
   "include": ["src"],
-  "exclude": ["**/*.test.ts"]
+  "exclude": ["**/*.test.ts"],
 }

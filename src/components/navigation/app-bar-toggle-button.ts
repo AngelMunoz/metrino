@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import type { PropertyValues } from "lit";
-import { baseTypography, disabledState, hoverHighlight } from "../../styles/shared.ts";
+import { baseTypography, disabledState, hoverHighlight, applyTiltEffect } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
 /**
@@ -183,6 +183,7 @@ export class MetroAppBarToggleButton extends LitElement {
   ];
 
   #observer: MutationObserver | null = null;
+  #cleanupTilt?: () => void;
 
   constructor() {
     super();
@@ -191,6 +192,10 @@ export class MetroAppBarToggleButton extends LitElement {
     this.checked = false;
     this.disabled = false;
     this.menuItem = false;
+  }
+
+  firstUpdated(): void {
+    this.#cleanupTilt = applyTiltEffect(this);
   }
 
   render() {
@@ -257,6 +262,7 @@ export class MetroAppBarToggleButton extends LitElement {
    */
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.#cleanupTilt?.();
     if (this.#observer) {
       this.#observer.disconnect();
       this.#observer = null;

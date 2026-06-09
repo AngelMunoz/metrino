@@ -10,28 +10,28 @@ Metrino is a lit Web Component library implementing the Windows Phone / Windows 
 
 ```bash
 # Development server with hot reload
-bun dev
+pnpm dev
 
 # Type check and build for production
-bun run build
+pnpm run build
 
 # Preview production build locally
-bun run preview
+pnpm run preview
 
 # Type check only (no emit)
-bunx tsc --noEmit
+pnpx tsc --noEmit
 
 # Run type check on a single file
-bunx tsc --noEmit src/components/button.ts
+pnpx tsc --noEmit src/components/button.ts
 
 # Run tests in real browsers (Chromium, Firefox, WebKit)
-bun test
+pnpm test
 
 # Run tests in watch mode
-bun test:watch
+pnpm test:watch
 
 # Run specific test file
-bunx web-test-runner src/components/button.test.ts --node-resolve
+pnpx web-test-runner src/components/button.test.ts --node-resolve
 ```
 
 ## Testing

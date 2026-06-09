@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { tileBase, tileSizes, tileBadge } from "../../styles/shared.ts";
+import { tileBase, tileSizes, tileBadge, applyTiltEffect } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
 type TileSize = "small" | "medium" | "large";
@@ -57,6 +57,8 @@ export class MetroIconicTile extends LitElement {
     `,
   ];
 
+  #cleanupTilt?: () => void;
+
   constructor() {
     super();
     this.size = "medium";
@@ -64,6 +66,15 @@ export class MetroIconicTile extends LitElement {
     this.title = "";
     this.count = 0;
     this.badge = "";
+  }
+
+  firstUpdated(): void {
+    this.#cleanupTilt = applyTiltEffect(this);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#cleanupTilt?.();
   }
 
   render() {

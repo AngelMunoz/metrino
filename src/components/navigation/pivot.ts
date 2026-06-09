@@ -158,19 +158,38 @@ export class MetroPivot extends LitElement {
   #selectItem(index: number): void {
     if (index === this.selectedIndex) return;
 
-    const items = Array.from(this.querySelectorAll("metro-pivot-item"));
-    items.forEach((item, i) => {
-      item.toggleAttribute("active", i === index);
-    });
+    const update = () => {
+      const items = Array.from(this.querySelectorAll("metro-pivot-item"));
+      items.forEach((item, i) => {
+        item.toggleAttribute("active", i === index);
+      });
+      this.selectedIndex = index;
+    };
 
-    this.selectedIndex = index;
-    this.dispatchEvent(
-      new CustomEvent("selectionchanged", {
-        detail: { selectedIndex: index },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    if ("startViewTransition" in document) {
+      const transition = document.startViewTransition(() => {
+        update();
+        return this.updateComplete;
+      });
+      transition.finished.then(() => {
+        this.dispatchEvent(
+          new CustomEvent("selectionchanged", {
+            detail: { selectedIndex: index },
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      });
+    } else {
+      update();
+      this.dispatchEvent(
+        new CustomEvent("selectionchanged", {
+          detail: { selectedIndex: index },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    }
   }
 
   /**

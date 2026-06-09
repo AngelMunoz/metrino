@@ -103,6 +103,16 @@ export class MetroCheckBox extends LitElement {
         opacity: 1;
         transform: scale(1);
       }
+      .checkbox:hover {
+        border-color: var(--metro-foreground, #ffffff);
+      }
+      .checkbox:active {
+        background: var(--metro-highlight-active, rgba(255, 255, 255, 0.08));
+      }
+      .checkbox:focus-visible {
+        outline: 2px solid var(--metro-accent, #0078d4);
+        outline-offset: 2px;
+      }
     `,
   ];
 
@@ -123,7 +133,9 @@ export class MetroCheckBox extends LitElement {
         class="checkbox ${this.checked ? "checked" : ""}"
         role="checkbox"
         aria-checked="${this.checked}"
+        tabindex="${this.disabled ? -1 : 0}"
         @click=${this.#toggle}
+        @keydown=${this.#handleKeydown}
       >
         <span class="checkmark">&#x2713;</span>
       </div>
@@ -173,6 +185,13 @@ export class MetroCheckBox extends LitElement {
       bubbles: true,
       composed: true,
     }));
+  }
+
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      this.#toggle();
+    }
   }
 
   /**

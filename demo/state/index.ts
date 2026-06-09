@@ -45,8 +45,12 @@ export type AccentColor =
   | "mango" | "cobalt" | "indigo" | "violet" | "crimson"
   | "emerald" | "mauve" | "sienna" | "olive" | "steel" | "taupe";
 
+function getSystemTheme(): Theme {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 const internalThemeState = writable<Theme>(
-  (localStorage.getItem(THEME_KEY) as Theme) || "dark"
+  (localStorage.getItem(THEME_KEY) as Theme) || getSystemTheme()
 );
 
 const internalAccentState = writable<AccentColor>(
@@ -66,23 +70,35 @@ export const accentState: Readable<AccentColor> = {
 export function setTheme(theme: Theme): void {
   internalThemeState.set(theme);
   localStorage.setItem(THEME_KEY, theme);
-  document.body.dataset.theme = theme;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
 }
 
 export function setAccent(accent: AccentColor): void {
   internalAccentState.set(accent);
   localStorage.setItem(ACCENT_KEY, accent);
   if (accent === "blue") {
-    document.body.removeAttribute("accent");
+    document.documentElement.removeAttribute("accent");
   } else {
-    document.body.setAttribute("accent", accent);
+    document.documentElement.setAttribute("accent", accent);
   }
 }
 
 export function initTheme(): void {
-  document.body.dataset.theme = internalThemeState.get();
+  const theme = internalThemeState.get();
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
   const accent = internalAccentState.get();
   if (accent !== "blue") {
-    document.body.setAttribute("accent", accent);
+    document.documentElement.setAttribute("accent", accent);
   }
+
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+    if (!localStorage.getItem(THEME_KEY)) {
+      const newTheme: Theme = e.matches ? "dark" : "light";
+      internalThemeState.set(newTheme);
+      document.documentElement.dataset.theme = newTheme;
+      document.documentElement.style.colorScheme = newTheme;
+    }
+  });
 }

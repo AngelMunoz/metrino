@@ -160,4 +160,48 @@ suite("metro-radio-button", () => {
     
     assert.isFalse(el.checked);
   });
+
+  test("radio is focusable via tabindex", async () => {
+    const el = await createRadio();
+    const radio = el.shadowRoot?.querySelector(".radio");
+    assert.equal(radio?.getAttribute("tabindex"), "0");
+  });
+
+  test("radio has tabindex -1 when disabled", async () => {
+    const el = await createRadio({ disabled: "" });
+    const radio = el.shadowRoot?.querySelector(".radio");
+    assert.equal(radio?.getAttribute("tabindex"), "-1");
+  });
+
+  test("Enter key selects radio", async () => {
+    const el = await createRadio({ name: "test", value: "opt" });
+    const radio = el.shadowRoot?.querySelector(".radio") as HTMLElement;
+    radio.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await el.updateComplete;
+    assert.isTrue(el.checked);
+  });
+
+  test("Space key selects radio", async () => {
+    const el = await createRadio({ name: "test", value: "opt" });
+    const radio = el.shadowRoot?.querySelector(".radio") as HTMLElement;
+    radio.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    await el.updateComplete;
+    assert.isTrue(el.checked);
+  });
+
+  test("disabled radio ignores Enter key", async () => {
+    const el = await createRadio({ disabled: "", name: "test" });
+    const radio = el.shadowRoot?.querySelector(".radio") as HTMLElement;
+    radio.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await el.updateComplete;
+    assert.isFalse(el.checked);
+  });
+
+  test("disabled radio ignores Space key", async () => {
+    const el = await createRadio({ disabled: "", name: "test" });
+    const radio = el.shadowRoot?.querySelector(".radio") as HTMLElement;
+    radio.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    await el.updateComplete;
+    assert.isFalse(el.checked);
+  });
 });

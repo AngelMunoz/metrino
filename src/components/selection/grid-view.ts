@@ -129,7 +129,7 @@ export class MetroGridView extends LitElement {
   render() {
     if (this.items.length === 0) {
       return html`
-        <div class="grid-container">
+        <div class="grid-container" role="grid">
           <div class="empty-message">No items</div>
         </div>
       `;
@@ -148,7 +148,7 @@ export class MetroGridView extends LitElement {
     );
 
     return html`
-      <div class="grid-container" @scroll=${this.#onScroll}>
+      <div class="grid-container" role="grid" @scroll=${this.#onScroll}>
         <div class="viewport" style="height: ${totalHeight}px; width: ${totalWidth}px;">
           <div
             class="grid-layout"

@@ -48,6 +48,10 @@ export class MetroRadioButton extends LitElement {
       .radio.checked .dot {
         opacity: 1;
       }
+      .radio:focus-visible {
+        outline: 2px solid var(--metro-accent, #0078d4);
+        outline-offset: 2px;
+      }
     `,
   ];
 
@@ -68,7 +72,9 @@ export class MetroRadioButton extends LitElement {
         class="radio ${this.checked ? "checked" : ""}"
         role="radio"
         aria-checked="${this.checked}"
+        tabindex="${this.disabled ? -1 : 0}"
         @click=${this.#select}
+        @keydown=${this.#handleKeydown}
       >
         <div class="dot"></div>
       </div>
@@ -107,6 +113,13 @@ export class MetroRadioButton extends LitElement {
           rb.checked = false;
         }
       });
+    }
+  }
+
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      this.#select();
     }
   }
 

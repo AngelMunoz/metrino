@@ -124,6 +124,9 @@ export class MetroPanorama extends LitElement {
       ${this.title ? html`<h2 class="panorama-title">${this.title}</h2>` : ""}
       <div
         class="panorama-container scrollbar-hidden"
+        role="region"
+        aria-label="Panorama"
+        aria-roledescription="panorama"
         @scroll=${this.#handleScroll}
         @pointerdown=${this.#handlePointerDown}
         @pointermove=${this.#handlePointerMove}

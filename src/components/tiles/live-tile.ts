@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { tileBase, tileSizes, tileBadge } from "../../styles/shared.ts";
+import { tileBase, tileSizes, tileBadge, applyTiltEffect } from "../../styles/shared.ts";
 
 type TileSize = "small" | "medium" | "wide" | "large";
 
@@ -77,11 +77,16 @@ export class MetroLiveTile extends LitElement {
   #timer: number | null = null;
   #currentIndex = 0;
   #items: LiveTileItem[] = [];
+  #cleanupTilt?: () => void;
 
   constructor() {
     super();
     this.size = "medium";
     this.interval = 0;
+  }
+
+  firstUpdated(): void {
+    this.#cleanupTilt = applyTiltEffect(this);
   }
 
   render() {
@@ -163,6 +168,7 @@ export class MetroLiveTile extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.#cleanupTilt?.();
     this.#stopCycle();
   }
 }

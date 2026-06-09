@@ -1,5 +1,5 @@
 {
-  "name": "metrino",
+  "name": "@angelmunoz/metrino",
   "version": "0.1.0",
   "description": "Windows Phone 8 / Windows 8 Metro design system web components",
   "license": "MIT",
@@ -10,6 +10,10 @@
   },
   "bugs": "https://github.com/AngelMunoz/metrino/issues",
   "homepage": "https://github.com/AngelMunoz/metrino#readme",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "packageManager": "pnpm@11.5.2",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

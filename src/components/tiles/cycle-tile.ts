@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { tileBase, tileSizes } from "../../styles/shared.ts";
+import { tileBase, tileSizes, applyTiltEffect } from "../../styles/shared.ts";
 
 type TileSize = "medium" | "wide";
 
@@ -51,6 +51,7 @@ export class MetroCycleTile extends LitElement {
   #currentIndex = 0;
   #timer: number | null = null;
   #items: Element[] = [];
+  #cleanupTilt?: () => void;
 
   constructor() {
     super();
@@ -64,6 +65,7 @@ export class MetroCycleTile extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.#cleanupTilt?.();
     this.#stopCycle();
   }
 
@@ -76,7 +78,8 @@ export class MetroCycleTile extends LitElement {
     `;
   }
 
-  firstUpdated() {
+  firstUpdated(): void {
+    this.#cleanupTilt = applyTiltEffect(this);
     this.#items = Array.from(this.querySelectorAll('[slot="cycle"]'));
     if (this.#items.length > 0) {
       this.#items.forEach(item => item.classList.add("cycle-content"));

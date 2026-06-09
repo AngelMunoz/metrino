@@ -150,7 +150,7 @@ export class MetroAppBar extends LitElement {
 
   render() {
     return html`
-      <div class="menu-panel" role="menu">
+      <div class="menu-panel" role="menu" id="menu-panel">
         <slot name="menu"></slot>
       </div>
       <div class="app-bar-content">
@@ -161,8 +161,10 @@ export class MetroAppBar extends LitElement {
         <button
           class="ellipsis-btn"
           @click=${this.#toggleMenu}
+          @keydown=${this.#handleKeydown}
           aria-label="More options"
           aria-expanded=${this.expanded}
+          aria-controls="menu-panel"
         >
           ...
         </button>
@@ -177,6 +179,18 @@ export class MetroAppBar extends LitElement {
    */
   #toggleMenu(): void {
     this.expanded = !this.expanded;
+  }
+
+  /**
+   * Handles keyboard events for Escape key to close the menu.
+   * @param e - The keyboard event
+   * @returns void
+   */
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Escape" && this.expanded) {
+      e.preventDefault();
+      this.expanded = false;
+    }
   }
 }
 

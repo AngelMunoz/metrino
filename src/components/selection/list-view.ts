@@ -98,14 +98,16 @@ export class MetroListView extends LitElement {
 
     if (this.items.length === 0) {
       return html`
-        <div class="list-container">
+        <div class="list-container" role="listbox">
           <div class="empty-message">No items</div>
         </div>
       `;
     }
 
+    const ariaMultiselectable = this.selectionMode === "multiple" || this.selectionMode === "extended";
+
     return html`
-      <div class="list-container" @scroll=${this.#onScroll}>
+      <div class="list-container" role="listbox" aria-multiselectable=${ariaMultiselectable} @scroll=${this.#onScroll}>
         <div class="viewport" style="height: ${this.#totalHeight}px;">
           ${hasGroups ? this.#renderGroupedContent() : this.#renderFlatContent()}
         </div>

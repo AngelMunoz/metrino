@@ -61,7 +61,7 @@ function handleHashChange(): void {
     params["__fragment"] = fragment;
   }
 
-  currentPath = path;
+  currentPath = path.startsWith("/") ? path : `/${path}`;
   currentParams = params;
 
   const route = matchRoute(path);
@@ -115,5 +115,6 @@ export function link(path: string): string {
 
 // Navigate to a specific component within a page
 export function navigateToComponent(page: string, componentId: string): void {
-  window.location.hash = `${page}#${componentId}`;
+  const normalizedPage = page.startsWith("/") ? page : `/${page}`;
+  window.location.hash = `${normalizedPage}#${componentId}`;
 }

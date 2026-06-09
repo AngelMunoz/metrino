@@ -148,6 +148,8 @@ export class MetroContentDialog extends LitElement {
     `,
   ];
 
+  #previousFocus: HTMLElement | null = null;
+
   constructor() {
     super();
     this.open = false;
@@ -159,14 +161,14 @@ export class MetroContentDialog extends LitElement {
   render() {
     return html`
       <div class="backdrop" @click=${this.#handleBackdropClick}></div>
-      <div class="dialog" role="dialog" aria-modal="true" @animationend=${this.#handleAnimationEnd}>
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="${this.title ? "dialog-title" : ""}" @animationend=${this.#handleAnimationEnd} @keydown=${this.#handleKeydown}>
         ${this.closable
-          ? html`<button class="close-btn" @click=${this.#close}>
+          ? html`<button class="close-btn" @click=${this.#close} aria-label="Close">
               <metro-icon icon="close" size="medium"></metro-icon>
             </button>`
           : ""}
         ${this.title
-          ? html`<div class="dialog-header">${this.title}</div>`
+          ? html`<div class="dialog-header" id="dialog-title">${this.title}</div>`
           : ""}
         <div class="dialog-content">
           <slot></slot>
@@ -187,6 +189,78 @@ export class MetroContentDialog extends LitElement {
     if (e.animationName === "dialogExit" && this.closing) {
       this.closing = false;
       this.open = false;
+      this.#restoreFocus();
+    }
+  }
+
+  /**
+   * Handles keyboard events for Escape key to close the dialog.
+   * @param e - The keyboard event
+   * @returns void
+   */
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Escape" && this.closable) {
+      e.preventDefault();
+      this.#close();
+    }
+    if (e.key === "Tab") {
+      this.#trapFocus(e);
+    }
+  }
+
+  /**
+   * Traps focus within the dialog when Tab is pressed.
+   * @param e - The keyboard event
+   * @returns void
+   */
+  #trapFocus(e: KeyboardEvent): void {
+    const dialog = this.shadowRoot?.querySelector(".dialog");
+    if (!dialog) return;
+
+    const focusable = dialog.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  /**
+   * Saves the currently focused element and focuses the dialog.
+   * @returns void
+   */
+  #saveFocus(): void {
+    this.#previousFocus = document.activeElement as HTMLElement;
+    requestAnimationFrame(() => {
+      const dialog = this.shadowRoot?.querySelector(".dialog");
+      if (dialog) {
+        const firstFocusable = dialog.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (firstFocusable) {
+          firstFocusable.focus();
+        }
+      }
+    });
+  }
+
+  /**
+   * Restores focus to the element that was focused before the dialog opened.
+   * @returns void
+   */
+  #restoreFocus(): void {
+    if (this.#previousFocus) {
+      this.#previousFocus.focus();
+      this.#previousFocus = null;
     }
   }
 
@@ -219,6 +293,7 @@ export class MetroContentDialog extends LitElement {
   show(): void {
     this.closing = false;
     this.open = true;
+    this.#saveFocus();
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
   }
 

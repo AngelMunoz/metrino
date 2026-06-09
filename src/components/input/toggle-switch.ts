@@ -105,6 +105,16 @@ export class MetroToggleSwitch extends LitElement {
         transform: translateX(22px);
         background: #ffffff;
       }
+      .switch:hover {
+        border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.8));
+      }
+      .switch:active {
+        background: var(--metro-highlight-active, rgba(255, 255, 255, 0.08));
+      }
+      .switch:focus-visible {
+        outline: 2px solid var(--metro-accent, #0078d4);
+        outline-offset: 2px;
+      }
     `,
   ];
 
@@ -125,7 +135,9 @@ export class MetroToggleSwitch extends LitElement {
         class="switch ${this.on ? "checked" : ""}"
         role="switch"
         aria-checked="${this.on}"
+        tabindex="${this.disabled ? -1 : 0}"
         @click=${this.#toggle}
+        @keydown=${this.#handleKeydown}
       >
         <div class="thumb"></div>
       </div>
@@ -177,6 +189,13 @@ export class MetroToggleSwitch extends LitElement {
         composed: true,
       }),
     );
+  }
+
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      this.#toggle();
+    }
   }
 
   /**

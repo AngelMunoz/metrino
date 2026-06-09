@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { baseTypography } from "../../styles/shared.ts";
+import { baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
 /**
@@ -146,10 +146,21 @@ export class MetroAppBarButton extends LitElement {
     `,
   ];
 
+  #cleanupTilt?: () => void;
+
   constructor() {
     super();
     this.icon = "";
     this.label = "";
+  }
+
+  firstUpdated(): void {
+    this.#cleanupTilt = applyTiltEffect(this);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#cleanupTilt?.();
   }
 
   render() {

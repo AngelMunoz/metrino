@@ -136,4 +136,56 @@ suite("metro-toggle-switch", () => {
     
     assert.isFalse(el.on);
   });
+
+  test("switch is focusable via tabindex", async () => {
+    const el = await createToggle();
+    const switchEl = el.shadowRoot?.querySelector(".switch");
+    assert.equal(switchEl?.getAttribute("tabindex"), "0");
+  });
+
+  test("switch has tabindex -1 when disabled", async () => {
+    const el = await createToggle({ disabled: "" });
+    const switchEl = el.shadowRoot?.querySelector(".switch");
+    assert.equal(switchEl?.getAttribute("tabindex"), "-1");
+  });
+
+  test("Enter key toggles switch on", async () => {
+    const el = await createToggle();
+    const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
+    switchEl.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await el.updateComplete;
+    assert.isTrue(el.on);
+  });
+
+  test("Space key toggles switch on", async () => {
+    const el = await createToggle();
+    const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
+    switchEl.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    await el.updateComplete;
+    assert.isTrue(el.on);
+  });
+
+  test("Enter key toggles switch off", async () => {
+    const el = await createToggle({ on: "" });
+    const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
+    switchEl.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await el.updateComplete;
+    assert.isFalse(el.on);
+  });
+
+  test("disabled switch ignores keyboard", async () => {
+    const el = await createToggle({ disabled: "" });
+    const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
+    switchEl.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await el.updateComplete;
+    assert.isFalse(el.on);
+  });
+
+  test("disabled switch ignores Space key", async () => {
+    const el = await createToggle({ disabled: "" });
+    const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
+    switchEl.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    await el.updateComplete;
+    assert.isFalse(el.on);
+  });
 });

@@ -163,10 +163,17 @@ export class MetrinoApp extends LitElement {
     }
 
     const handler = getRouteHandler();
-    if (handler) {
-      this.routeContent = handler(state.params);
+    const newContent = handler
+      ? handler(state.params)
+      : html`<div style="padding: 24px;">Not Found</div>`;
+
+    if ("startViewTransition" in document) {
+      document.startViewTransition(() => {
+        this.routeContent = newContent;
+        return this.updateComplete;
+      });
     } else {
-      this.routeContent = html`<div style="padding: 24px;">Not Found</div>`;
+      this.routeContent = newContent;
     }
   }
 

@@ -152,4 +152,48 @@ suite("metro-check-box", () => {
     
     assert.isFalse(el.checked);
   });
+
+  test("checkbox is focusable via tabindex", async () => {
+    const el = await createCheckBox();
+    const checkbox = el.shadowRoot?.querySelector(".checkbox");
+    assert.equal(checkbox?.getAttribute("tabindex"), "0");
+  });
+
+  test("checkbox has tabindex -1 when disabled", async () => {
+    const el = await createCheckBox({ disabled: "" });
+    const checkbox = el.shadowRoot?.querySelector(".checkbox");
+    assert.equal(checkbox?.getAttribute("tabindex"), "-1");
+  });
+
+  test("Enter key toggles checkbox", async () => {
+    const el = await createCheckBox();
+    const checkbox = el.shadowRoot?.querySelector(".checkbox") as HTMLElement;
+    checkbox.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await el.updateComplete;
+    assert.isTrue(el.checked);
+  });
+
+  test("Space key toggles checkbox", async () => {
+    const el = await createCheckBox();
+    const checkbox = el.shadowRoot?.querySelector(".checkbox") as HTMLElement;
+    checkbox.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    await el.updateComplete;
+    assert.isTrue(el.checked);
+  });
+
+  test("disabled checkbox ignores Enter key", async () => {
+    const el = await createCheckBox({ disabled: "" });
+    const checkbox = el.shadowRoot?.querySelector(".checkbox") as HTMLElement;
+    checkbox.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await el.updateComplete;
+    assert.isFalse(el.checked);
+  });
+
+  test("disabled checkbox ignores Space key", async () => {
+    const el = await createCheckBox({ disabled: "" });
+    const checkbox = el.shadowRoot?.querySelector(".checkbox") as HTMLElement;
+    checkbox.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    await el.updateComplete;
+    assert.isFalse(el.checked);
+  });
 });

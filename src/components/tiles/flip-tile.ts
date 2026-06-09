@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { tileBase, tileSizes } from "../../styles/shared.ts";
+import { tileBase, tileSizes, applyTiltEffect } from "../../styles/shared.ts";
 
 type TileSize = "small" | "medium" | "wide" | "large";
 
@@ -50,13 +50,30 @@ export class MetroFlipTile extends LitElement {
         color: var(--metro-foreground, #ffffff);
         transform: rotateY(180deg);
       }
+      :host(:hover) {
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+      }
+      :host(:active) {
+        background: var(--metro-highlight-active, rgba(255, 255, 255, 0.08));
+      }
     `,
   ];
+
+  #cleanupTilt?: () => void;
 
   constructor() {
     super();
     this.size = "medium";
     this.flipped = false;
+  }
+
+  firstUpdated(): void {
+    this.#cleanupTilt = applyTiltEffect(this);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#cleanupTilt?.();
   }
 
   render() {

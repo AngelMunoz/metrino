@@ -126,4 +126,64 @@ suite("metro-content-dialog", () => {
     
     assert.isTrue(closed);
   });
+
+  test("Escape key closes dialog when closable", async () => {
+    const el = await createDialog();
+    el.show();
+    await el.updateComplete;
+    
+    const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
+    dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await el.updateComplete;
+    
+    assert.isTrue(el.closing);
+  });
+
+  test("Escape key does nothing when not closable", async () => {
+    const el = document.createElement("metro-content-dialog") as MetroContentDialog;
+    el.closable = false;
+    el.textContent = "Dialog content";
+    container.appendChild(el);
+    await el.updateComplete;
+    
+    el.show();
+    await el.updateComplete;
+    
+    const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
+    dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await el.updateComplete;
+    
+    assert.isTrue(el.open);
+    assert.isFalse(el.closing);
+  });
+
+  test("close button has aria-label", async () => {
+    const el = await createDialog();
+    el.show();
+    await el.updateComplete;
+    
+    const closeBtn = el.shadowRoot?.querySelector(".close-btn");
+    assert.equal(closeBtn?.getAttribute("aria-label"), "Close");
+  });
+
+  test("dialog has aria-labelledby when title provided", async () => {
+    const el = await createDialog({ title: "My Title" });
+    el.show();
+    await el.updateComplete;
+    
+    const dialog = el.shadowRoot?.querySelector(".dialog");
+    const header = el.shadowRoot?.querySelector(".dialog-header");
+    
+    assert.equal(dialog?.getAttribute("aria-labelledby"), "dialog-title");
+    assert.equal(header?.id, "dialog-title");
+  });
+
+  test("dialog has empty aria-labelledby when no title", async () => {
+    const el = await createDialog();
+    el.show();
+    await el.updateComplete;
+    
+    const dialog = el.shadowRoot?.querySelector(".dialog");
+    assert.equal(dialog?.getAttribute("aria-labelledby"), "");
+  });
 });
