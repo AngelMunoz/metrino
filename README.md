@@ -4,14 +4,28 @@ A Lit Web Component library implementing the Windows Phone / Windows 8 Metro des
 
 ## Installation
 
+Metrino is published to [GitHub Packages](https://github.com/AngelMunoz/metrino/packages). Configure the registry first:
+
 ```bash
-npm install metrino
+npm config set @angelmunoz:registry https://npm.pkg.github.com
+```
+
+Or add to your project's `.npmrc`:
+
+```
+@angelmunoz:registry=https://npm.pkg.github.com
+```
+
+Then install:
+
+```bash
+npm install @angelmunoz/metrino
 # or
-yarn add metrino
+pnpm add @angelmunoz/metrino
 # or
-pnpm add metrino
+yarn add @angelmunoz/metrino
 # or
-bun add metrino
+bun add @angelmunoz/metrino
 ```
 
 ### Peer Dependencies
@@ -29,7 +43,7 @@ npm install lit
 Import all components at once:
 
 ```typescript
-import 'metrino';
+import '@angelmunoz/metrino';
 ```
 
 ```html
@@ -45,16 +59,16 @@ import 'metrino';
 Import only the components you need for smaller bundle sizes:
 
 ```typescript
-import 'metrino/button';
-import 'metrino/pivot';
-import 'metrino/pivot-item';
-import 'metrino/flip-tile';
+import '@angelmunoz/metrino/button';
+import '@angelmunoz/metrino/pivot';
+import '@angelmunoz/metrino/pivot-item';
+import '@angelmunoz/metrino/flip-tile';
 ```
 
 ### Import Classes for TypeScript
 
 ```typescript
-import { MetroButton, MetroPivot } from 'metrino';
+import { MetroButton, MetroPivot } from '@angelmunoz/metrino';
 
 // Use for type annotations or subclassing
 const button: MetroButton = document.querySelector('metro-button');
@@ -65,7 +79,7 @@ const button: MetroButton = document.querySelector('metro-button');
 If you only need the CSS custom properties (without components):
 
 ```typescript
-import 'metrino/styles.css';
+import '@angelmunoz/metrino/styles.css';
 ```
 
 ## Components
