@@ -4,6 +4,7 @@ import {
   viewTransitionStyles,
   type TransitionOptions,
 } from "../../utils/animations.ts";
+import { withViewTransition } from "../../utils/view-transition.ts";
 
 export type ZoomState = "in" | "out";
 
@@ -126,20 +127,7 @@ export class MetroSemanticZoom extends LitElement {
       }),
     );
 
-    if ("startViewTransition" in document) {
-      try {
-        const transition = document.startViewTransition(() => {
-          return this.updateComplete;
-        });
-        await transition.finished;
-      } catch {
-        // Transition was skipped or failed — state already updated
-      }
-    } else {
-      await new Promise((resolve) => {
-        setTimeout(resolve, this.transitionDuration);
-      });
-    }
+    await withViewTransition(() => this.updateComplete);
   }
 
   render() {

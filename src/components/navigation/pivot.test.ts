@@ -2,16 +2,19 @@ import { assert } from "chai";
 import "./pivot.ts";
 import "./pivot-item.ts";
 import { MetroPivot } from "./pivot.ts";
+import { mockViewTransitions, restoreViewTransitions } from "../../test-helpers.ts";
 
 suite("metro-pivot", () => {
   let container: HTMLDivElement;
 
   setup(() => {
+    mockViewTransitions();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
 
   teardown(() => {
+    restoreViewTransitions();
     container.remove();
   });
 

@@ -1,16 +1,19 @@
 import { assert } from "chai";
 import "./semantic-zoom.ts";
 import { MetroSemanticZoom } from "./semantic-zoom.ts";
+import { mockViewTransitions, restoreViewTransitions } from "../../test-helpers.ts";
 
 suite("metro-semantic-zoom", () => {
   let container: HTMLDivElement;
 
   setup(() => {
+    mockViewTransitions();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
 
   teardown(() => {
+    restoreViewTransitions();
     container.remove();
   });
 

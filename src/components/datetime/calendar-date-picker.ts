@@ -225,7 +225,7 @@ export class MetroCalendarDatePicker extends LitElement {
   }
 
   #handleDocumentClick = (e: MouseEvent): void => {
-    if (!this.contains(e.target as Node)) {
+    if (!e.composedPath().includes(this)) {
       this.open = false;
     }
   };

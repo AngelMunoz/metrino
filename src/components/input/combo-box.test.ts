@@ -146,4 +146,26 @@ suite("metro-combo-box", () => {
     
     form.remove();
   });
+
+  test("clicking inside stays open when nested in shadow DOM", async () => {
+    // Simulate nested shadow DOM like the demo app
+    const outerHost = document.createElement("div");
+    container.appendChild(outerHost);
+    const outerShadow = outerHost.attachShadow({ mode: "open" });
+    
+    const innerHost = document.createElement("div");
+    outerShadow.appendChild(innerHost);
+    const innerShadow = innerHost.attachShadow({ mode: "open" });
+    
+    const el = document.createElement("metro-combo-box") as MetroComboBox;
+    el.setOptions(["A", "B", "C"]);
+    innerShadow.appendChild(el);
+    await el.updateComplete;
+    
+    const input = el.shadowRoot?.querySelector("input") as HTMLInputElement;
+    input.click();
+    await el.updateComplete;
+    
+    assert.isTrue(el.open, "should be open after clicking input");
+  });
 });
