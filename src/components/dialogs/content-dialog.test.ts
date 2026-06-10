@@ -36,15 +36,13 @@ suite("metro-content-dialog", () => {
 
   test("show() opens dialog", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
+    await el.show();
     assert.isTrue(el.open);
   });
 
   test("title is displayed", async () => {
     const el = await createDialog({ title: "Dialog Title" });
-    el.show();
-    await el.updateComplete;
+    await el.show();
     
     const title = el.shadowRoot?.querySelector(".dialog-header");
     assert.equal(title?.textContent, "Dialog Title");
@@ -52,8 +50,7 @@ suite("metro-content-dialog", () => {
 
   test("closable shows close button by default", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
+    await el.show();
     
     const closeBtn = el.shadowRoot?.querySelector(".close-btn");
     assert.exists(closeBtn);
@@ -61,43 +58,47 @@ suite("metro-content-dialog", () => {
 
   test("clicking close button closes dialog", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
-    
+    await el.show();
+
+    assert.isTrue(el.open);
+
     const closeBtn = el.shadowRoot?.querySelector(".close-btn") as HTMLElement;
     closeBtn.click();
-    await el.updateComplete;
-    
-    assert.isTrue(el.closing);
-    assert.isTrue(el.open);
-    
-    const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
-    await new Promise<void>(resolve => {
-      dialog.addEventListener("animationend", () => resolve(), { once: true });
+    // hide() uses startViewTransition which sets open=false in callback
+    // In headless, fallback path sets open=false directly
+    await new Promise<void>((resolve) => {
+      const check = (): void => {
+        if (!el.open) {
+          void el.updateComplete.then(() => resolve());
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      requestAnimationFrame(check);
     });
-    
-    assert.isFalse(el.closing);
+
     assert.isFalse(el.open);
   });
 
   test("clicking backdrop closes dialog when closable", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
-    
+    await el.show();
+
+    assert.isTrue(el.open);
+
     const backdrop = el.shadowRoot?.querySelector(".backdrop") as HTMLElement;
     backdrop.click();
-    await el.updateComplete;
-    
-    assert.isTrue(el.closing);
-    assert.isTrue(el.open);
-    
-    const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
-    await new Promise<void>(resolve => {
-      dialog.addEventListener("animationend", () => resolve(), { once: true });
+    await new Promise<void>((resolve) => {
+      const check = (): void => {
+        if (!el.open) {
+          void el.updateComplete.then(() => resolve());
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      requestAnimationFrame(check);
     });
-    
-    assert.isFalse(el.closing);
+
     assert.isFalse(el.open);
   });
 
@@ -106,37 +107,42 @@ suite("metro-content-dialog", () => {
     let shown = false;
     el.addEventListener("show", () => { shown = true; });
     
-    el.show();
-    await el.updateComplete;
+    await el.show();
     
     assert.isTrue(shown);
   });
 
   test("dispatches close event", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
-    
+    await el.show();
+
     let closed = false;
     el.addEventListener("close", () => { closed = true; });
-    
+
     const closeBtn = el.shadowRoot?.querySelector(".close-btn") as HTMLElement;
     closeBtn.click();
-    await el.updateComplete;
-    
+
     assert.isTrue(closed);
   });
 
   test("Escape key closes dialog when closable", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
-    
+    await el.show();
+
     const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
     dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    await el.updateComplete;
-    
-    assert.isTrue(el.closing);
+    await new Promise<void>((resolve) => {
+      const check = (): void => {
+        if (!el.open) {
+          void el.updateComplete.then(() => resolve());
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      requestAnimationFrame(check);
+    });
+
+    assert.isFalse(el.open);
   });
 
   test("Escape key does nothing when not closable", async () => {
@@ -145,22 +151,19 @@ suite("metro-content-dialog", () => {
     el.textContent = "Dialog content";
     container.appendChild(el);
     await el.updateComplete;
-    
-    el.show();
-    await el.updateComplete;
-    
+
+    await el.show();
+
     const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
     dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     await el.updateComplete;
-    
+
     assert.isTrue(el.open);
-    assert.isFalse(el.closing);
   });
 
   test("close button has aria-label", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
+    await el.show();
     
     const closeBtn = el.shadowRoot?.querySelector(".close-btn");
     assert.equal(closeBtn?.getAttribute("aria-label"), "Close");
@@ -168,8 +171,7 @@ suite("metro-content-dialog", () => {
 
   test("dialog has aria-labelledby when title provided", async () => {
     const el = await createDialog({ title: "My Title" });
-    el.show();
-    await el.updateComplete;
+    await el.show();
     
     const dialog = el.shadowRoot?.querySelector(".dialog");
     const header = el.shadowRoot?.querySelector(".dialog-header");
@@ -180,8 +182,7 @@ suite("metro-content-dialog", () => {
 
   test("dialog has empty aria-labelledby when no title", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
+    await el.show();
     
     const dialog = el.shadowRoot?.querySelector(".dialog");
     assert.equal(dialog?.getAttribute("aria-labelledby"), "");
