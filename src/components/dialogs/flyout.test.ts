@@ -47,8 +47,7 @@ suite("metro-flyout", () => {
 
   test("show() makes flyout visible", async () => {
     const { flyout, trigger } = await createFlyout();
-    flyout.show(trigger);
-    await flyout.updateComplete;
+    await flyout.show(trigger);
     
     await new Promise(resolve => requestAnimationFrame(resolve));
     await new Promise(resolve => requestAnimationFrame(resolve));
@@ -59,8 +58,7 @@ suite("metro-flyout", () => {
 
   test("show() positions flyout relative to target", async () => {
     const { flyout, trigger } = await createFlyout();
-    flyout.show(trigger);
-    await flyout.updateComplete;
+    await flyout.show(trigger);
     
     await new Promise(resolve => requestAnimationFrame(resolve));
     await new Promise(resolve => requestAnimationFrame(resolve));
@@ -79,8 +77,7 @@ suite("metro-flyout", () => {
   test("bottom placement positions flyout below target", async () => {
     const { flyout, trigger } = await createFlyout();
     flyout.placement = "bottom";
-    flyout.show(trigger);
-    await flyout.updateComplete;
+    await flyout.show(trigger);
     
     await new Promise(resolve => requestAnimationFrame(resolve));
     await new Promise(resolve => requestAnimationFrame(resolve));
@@ -94,11 +91,9 @@ suite("metro-flyout", () => {
 
   test("hide() hides flyout", async () => {
     const { flyout, trigger } = await createFlyout();
-    flyout.show(trigger);
-    await flyout.updateComplete;
+    await flyout.show(trigger);
     
-    flyout.hide();
-    await flyout.updateComplete;
+    await flyout.hide();
     
     const style = getComputedStyle(flyout);
     assert.equal(style.display, "none");
@@ -106,12 +101,20 @@ suite("metro-flyout", () => {
 
   test("clicking backdrop closes flyout", async () => {
     const { flyout, trigger } = await createFlyout();
-    flyout.show(trigger);
-    await flyout.updateComplete;
+    await flyout.show(trigger);
     
     const backdrop = flyout.shadowRoot?.querySelector(".backdrop") as HTMLElement;
     backdrop.click();
-    await flyout.updateComplete;
+    await new Promise<void>((resolve) => {
+      const check = (): void => {
+        if (!flyout.open) {
+          void flyout.updateComplete.then(() => resolve());
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      requestAnimationFrame(check);
+    });
     
     assert.isFalse(flyout.open);
   });
@@ -135,22 +138,19 @@ suite("metro-flyout", () => {
     let shown = false;
     flyout.addEventListener("show", () => { shown = true; });
     
-    flyout.show(trigger);
-    await flyout.updateComplete;
+    await flyout.show(trigger);
     
     assert.isTrue(shown);
   });
 
   test("dispatches close event", async () => {
     const { flyout, trigger } = await createFlyout();
-    flyout.show(trigger);
-    await flyout.updateComplete;
+    await flyout.show(trigger);
     
     let closed = false;
     flyout.addEventListener("close", () => { closed = true; });
     
-    flyout.hide();
-    await flyout.updateComplete;
+    await flyout.hide();
     
     assert.isTrue(closed);
   });

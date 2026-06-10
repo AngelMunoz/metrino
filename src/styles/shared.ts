@@ -281,29 +281,6 @@ export const dropdownAnimation = css`
   }
 `;
 
-export const dialogAnimation = css`
-  @keyframes dialogEnter {
-    from {
-      opacity: 0;
-      transform: perspective(1000px) rotateX(90deg);
-    }
-    to {
-      opacity: 1;
-      transform: perspective(1000px) rotateX(0deg);
-    }
-  }
-  @keyframes dialogExit {
-    from {
-      opacity: 1;
-      transform: perspective(1000px) rotateX(0deg);
-    }
-    to {
-      opacity: 0;
-      transform: perspective(1000px) rotateX(90deg);
-    }
-  }
-`;
-
 export const modalBackdrop = css`
   .backdrop {
     position: fixed;

@@ -106,36 +106,45 @@ export class MetroSemanticZoom extends LitElement {
     this.#isTransitioning = true;
     const previousState = this.zoomed;
 
-    // Set the reactive property — this schedules a Lit update but does NOT
-    // change the DOM synchronously. The VT API captures the old DOM state
-    // before the Lit render runs, so the old snapshot is still correct.
-    this.zoomed = targetState;
-    this.#isTransitioning = false;
-
-    this.dispatchEvent(
-      new CustomEvent("zoomchanged", {
-        detail: { zoomed: this.zoomed, previous: previousState },
-        bubbles: true,
-      }),
-    );
+    const applyChange = (): void => {
+      this.zoomed = targetState;
+      this.dispatchEvent(
+        new CustomEvent("zoomchanged", {
+          detail: { zoomed: this.zoomed, previous: previousState },
+          bubbles: true,
+        }),
+      );
+    };
 
     if ("startViewTransition" in document) {
+      let applied = false;
       try {
         const transition = document.startViewTransition({
-          update: () => this.updateComplete,
+          update: () => {
+            applyChange();
+            applied = true;
+            return this.updateComplete;
+          },
           types: ["semantic-zoom"],
         });
-        // Suppress the animation AbortError immediately — don't wait for it.
         transition.finished.catch(() => {});
         await transition.updateCallbackDone;
       } catch {
-        // VT was skipped before the callback ran. The Lit update from the
-        // property set above is still pending — just wait for it.
+        // VT was skipped before or during the callback.
+      }
+      // Ensure the change is applied even if the callback never ran
+      // (e.g., headless browsers where the transition is skipped
+      // before the update callback executes).
+      if (!applied) {
+        applyChange();
         await this.updateComplete;
       }
     } else {
+      applyChange();
       await this.updateComplete;
     }
+
+    this.#isTransitioning = false;
   }
 
   render() {

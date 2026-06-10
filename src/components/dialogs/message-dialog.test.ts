@@ -41,8 +41,7 @@ suite("metro-message-dialog", () => {
 
   test("title is displayed when dialog is open", async () => {
     const el = await createDialog({ title: "Alert" });
-    el.show();
-    await el.updateComplete;
+    await el.show();
     
     const title = el.shadowRoot?.querySelector(".dialog-header");
     assert.equal(title?.textContent, "Alert");
@@ -50,29 +49,29 @@ suite("metro-message-dialog", () => {
 
   test("show() opens dialog", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
+    await el.show();
     assert.isTrue(el.open);
   });
 
   test("clicking backdrop closes dialog", async () => {
     const el = await createDialog();
-    el.show();
-    await el.updateComplete;
-    
+    await el.show();
+
+    assert.isTrue(el.open);
+
     const backdrop = el.shadowRoot?.querySelector(".backdrop") as HTMLElement;
     backdrop.click();
-    await el.updateComplete;
-    
-    assert.isTrue(el.closing);
-    assert.isTrue(el.open);
-    
-    const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
-    await new Promise<void>(resolve => {
-      dialog.addEventListener("animationend", () => resolve(), { once: true });
+    await new Promise<void>((resolve) => {
+      const check = (): void => {
+        if (!el.open) {
+          void el.updateComplete.then(() => resolve());
+        } else {
+          requestAnimationFrame(check);
+        }
+      };
+      requestAnimationFrame(check);
     });
-    
-    assert.isFalse(el.closing);
+
     assert.isFalse(el.open);
   });
 

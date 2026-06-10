@@ -16,13 +16,12 @@ type SettingsFlyoutWidth = "narrow" | "wide";
  * management, keyboard support (Escape to close), and restore focus on close.
  *
  * Features:
- * - Slides in from right side of viewport
+ * - Slides in from right side of viewport via View Transitions
  * - Two width options: narrow (346px) and wide (646px)
  * - Backdrop overlay with click-to-close
  * - Title header with close button
  * - Focus management (traps focus, restores on close)
  * - Keyboard support (Escape key closes)
- * - Smooth slide animations
  *
  * Use for application settings, preferences, or any side panel that
  * requires user attention and should be dismissible.
@@ -83,6 +82,9 @@ export class MetroSettingsFlyout extends LitElement {
       :host {
         display: block;
       }
+      :host(:active-view-transition) {
+        view-transition-name: none;
+      }
       .flyout-backdrop {
         position: fixed;
         inset: 0;
@@ -92,6 +94,7 @@ export class MetroSettingsFlyout extends LitElement {
         transition: opacity var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
           visibility var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         z-index: 1000;
+        view-transition-name: settings-flyout-backdrop;
       }
       :host([open]) .flyout-backdrop {
         opacity: 1;
@@ -110,12 +113,43 @@ export class MetroSettingsFlyout extends LitElement {
         z-index: 1001;
         display: flex;
         flex-direction: column;
+        view-transition-name: settings-flyout-panel;
       }
       :host([open]) .flyout-panel {
         transform: translateX(0);
       }
       :host([width="wide"]) .flyout-panel {
         width: 646px;
+      }
+      @keyframes settingsPanelSlideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+      }
+      @keyframes settingsPanelSlideOut {
+        from { transform: translateX(0); }
+        to { transform: translateX(100%); }
+      }
+      @keyframes settingsBackdropFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes settingsBackdropFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      ::view-transition-new(settings-flyout-panel) {
+        animation: settingsPanelSlideIn var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      ::view-transition-old(settings-flyout-panel) {
+        animation: settingsPanelSlideOut var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        animation-fill-mode: both;
+      }
+      ::view-transition-new(settings-flyout-backdrop) {
+        animation: settingsBackdropFadeIn var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      ::view-transition-old(settings-flyout-backdrop) {
+        animation: settingsBackdropFadeOut var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        animation-fill-mode: both;
       }
       .flyout-header {
         display: flex;
@@ -165,8 +199,6 @@ export class MetroSettingsFlyout extends LitElement {
 
   /**
    * Handles open/close state changes to manage focus and keyboard listeners.
-   * @param changedProperties - Map of changed properties
-   * @returns void
    */
   protected updated(changedProperties: PropertyValueMap<this>): void {
     if (changedProperties.has("open")) {
@@ -195,10 +227,6 @@ export class MetroSettingsFlyout extends LitElement {
     `;
   }
 
-  /**
-   * Called when the flyout opens. Stores previous focus and sets focus to close button.
-   * @returns void
-   */
   #onOpen(): void {
     this.#previousFocus = document.activeElement as Element;
     this.dispatchEvent(
@@ -214,10 +242,6 @@ export class MetroSettingsFlyout extends LitElement {
     document.addEventListener("keydown", this.#handleEscapeKey);
   }
 
-  /**
-   * Called when the flyout closes. Removes keyboard listener and restores focus.
-   * @returns void
-   */
   #onClose(): void {
     document.removeEventListener("keydown", this.#handleEscapeKey);
     this.dispatchEvent(
@@ -231,47 +255,74 @@ export class MetroSettingsFlyout extends LitElement {
     }
   }
 
-  /**
-   * Handles backdrop click to close the flyout.
-   * @returns void
-   */
   #handleBackdropClick(): void {
-    this.hide();
+    void this.hide();
   }
 
-  /**
-   * Handles close button click to close the flyout.
-   * @returns void
-   */
   #handleClose(): void {
-    this.hide();
+    void this.hide();
   }
 
-  /**
-   * Handles Escape key press to close the flyout.
-   * @param e - The keyboard event
-   * @returns void
-   */
   #handleEscapeKey = (e: KeyboardEvent): void => {
     if (e.key === "Escape") {
-      this.hide();
+      void this.hide();
     }
   };
 
   /**
-   * Opens the flyout, dispatching the "open" event.
-   * @returns void
+   * Applies a property change via View Transitions with headless fallback.
    */
-  show(): void {
-    this.open = true;
+  async #applyChange(setter: () => void): Promise<void> {
+    if ("startViewTransition" in document) {
+      let applied = false;
+      try {
+        const transition = document.startViewTransition({
+          update: () => {
+            setter();
+            applied = true;
+            return this.updateComplete;
+          },
+          types: ["settings-flyout"],
+        });
+        try {
+          await transition.updateCallbackDone;
+        } catch {
+          // updateCallbackDone rejected — transition was skipped
+        }
+        try {
+          await transition.finished;
+        } catch {
+          // finished rejected — transition was skipped
+        }
+      } catch {
+        // startViewTransition threw synchronously
+      }
+      if (!applied) {
+        setter();
+        await this.updateComplete;
+      }
+    } else {
+      setter();
+      await this.updateComplete;
+    }
   }
 
   /**
-   * Closes the flyout, dispatching the "close" event.
-   * @returns void
+   * Opens the flyout with slide-in animation via View Transitions.
+   * @returns Promise that resolves when the flyout is fully open.
    */
-  hide(): void {
-    this.open = false;
+  async show(): Promise<void> {
+    if (this.open) return;
+    await this.#applyChange(() => { this.open = true; });
+  }
+
+  /**
+   * Closes the flyout with slide-out animation via View Transitions.
+   * @returns Promise that resolves when the flyout is fully closed.
+   */
+  async hide(): Promise<void> {
+    if (!this.open) return;
+    await this.#applyChange(() => { this.open = false; });
   }
 }
 

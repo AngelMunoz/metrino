@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { baseTypography, modalBackdrop, dialogAnimation } from "../../styles/shared.ts";
+import { baseTypography, modalBackdrop } from "../../styles/shared.ts";
 
 /**
  * Metro Message Dialog Component
@@ -13,7 +13,7 @@ import { baseTypography, modalBackdrop, dialogAnimation } from "../../styles/sha
  * - Optional title header with border separator
  * - Content area for message text
  * - Dedicated button slot for action buttons (OK, Cancel, etc.)
- * - Smooth enter/exit animations
+ * - View Transition animations for enter/exit
  * - Backdrop click to close
  * - ARIA dialog role with modal support
  * - Programmatic show/hide API
@@ -54,12 +54,6 @@ export class MetroMessageDialog extends LitElement {
      */
     open: { type: Boolean, reflect: true },
     /**
-     * Set internally during exit animation. When true, the dialog is visible
-     * but fading out. Do not set directly.
-     * @default false
-     */
-    closing: { type: Boolean, reflect: true },
-    /**
      * Title text displayed in the dialog header. If not provided, no header
      * is rendered.
      * @default ""
@@ -68,13 +62,11 @@ export class MetroMessageDialog extends LitElement {
   };
 
   declare open: boolean;
-  declare closing: boolean;
   declare title: string;
 
   static styles = [
     baseTypography,
     modalBackdrop,
-    dialogAnimation,
     css`
       :host {
         position: fixed;
@@ -92,19 +84,60 @@ export class MetroMessageDialog extends LitElement {
         opacity: 1;
         transition-delay: 0ms;
       }
-      :host([closing]) {
-        visibility: visible;
-        opacity: 0;
+      :host(:active-view-transition) {
+        view-transition-name: none;
+      }
+      .backdrop {
+        view-transition-name: msg-dialog-backdrop;
       }
       .dialog {
         position: relative;
         background: var(--metro-background, #1f1f1f);
         min-width: 280px;
         max-width: 400px;
-        animation: dialogEnter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        view-transition-name: msg-dialog-content;
       }
-      :host([closing]) .dialog {
-        animation: dialogExit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      @keyframes dialogMsgEnter {
+        from {
+          opacity: 0;
+          transform: perspective(1000px) rotateX(90deg);
+        }
+        to {
+          opacity: 1;
+          transform: perspective(1000px) rotateX(0deg);
+        }
+      }
+      @keyframes dialogMsgExit {
+        from {
+          opacity: 1;
+          transform: perspective(1000px) rotateX(0deg);
+        }
+        to {
+          opacity: 0;
+          transform: perspective(1000px) rotateX(90deg);
+        }
+      }
+      @keyframes backdropMsgFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes backdropMsgfadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      ::view-transition-new(msg-dialog-content) {
+        animation: dialogMsgEnter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      ::view-transition-old(msg-dialog-content) {
+        animation: dialogMsgExit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        animation-fill-mode: both;
+      }
+      ::view-transition-new(msg-dialog-backdrop) {
+        animation: backdropMsgFadeIn 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      ::view-transition-old(msg-dialog-backdrop) {
+        animation: backdropMsgfadeOut 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        animation-fill-mode: both;
       }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);
@@ -131,14 +164,13 @@ export class MetroMessageDialog extends LitElement {
   constructor() {
     super();
     this.open = false;
-    this.closing = false;
     this.title = "";
   }
 
   render() {
     return html`
       <div class="backdrop" @click=${this.#close}></div>
-      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="${this.title ? "msg-dialog-title" : ""}" @animationend=${this.#handleAnimationEnd} @keydown=${this.#handleKeydown}>
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="${this.title ? "msg-dialog-title" : ""}" @keydown=${this.#handleKeydown}>
         ${this.title ? html`<div class="dialog-header" id="msg-dialog-title">${this.title}</div>` : ""}
         <div class="dialog-content">
           <slot></slot>
@@ -148,18 +180,6 @@ export class MetroMessageDialog extends LitElement {
         </div>
       </div>
     `;
-  }
-
-  /**
-   * Handles animation end events to fully close the dialog after exit animation completes.
-   * @param e - The animation event
-   * @returns void
-   */
-  #handleAnimationEnd(e: AnimationEvent): void {
-    if (e.animationName === "dialogExit" && this.closing) {
-      this.closing = false;
-      this.open = false;
-    }
   }
 
   /**
@@ -174,32 +194,69 @@ export class MetroMessageDialog extends LitElement {
     }
   }
 
-  /**
-   * Initiates the close sequence with exit animation and dispatches close event.
-   * @returns void
-   */
   #close(): void {
-    if (!this.open || this.closing) return;
-    this.closing = true;
-    this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    if (!this.open) return;
+    void this.hide();
+  }
+
+  /**
+   * Applies a property change via View Transitions with headless fallback.
+   * Awaits both updateCallbackDone and finished to properly clean up
+   * the transition before returning.
+   */
+  async #applyChange(setter: () => void): Promise<void> {
+    if ("startViewTransition" in document) {
+      let applied = false;
+      try {
+        const transition = document.startViewTransition({
+          update: () => {
+            setter();
+            applied = true;
+            return this.updateComplete;
+          },
+          types: ["message-dialog"],
+        });
+        try {
+          await transition.updateCallbackDone;
+        } catch {
+          // updateCallbackDone rejected — transition was skipped
+        }
+        try {
+          await transition.finished;
+        } catch {
+          // finished rejected — transition was skipped
+        }
+      } catch {
+        // startViewTransition threw synchronously
+      }
+      if (!applied) {
+        setter();
+        await this.updateComplete;
+      }
+    } else {
+      setter();
+      await this.updateComplete;
+    }
   }
 
   /**
    * Opens the dialog with enter animation and dispatches show event.
-   * @returns void
+   * @returns Promise that resolves when the dialog is fully open.
    */
-  show(): void {
-    this.closing = false;
-    this.open = true;
+  async show(): Promise<void> {
+    if (this.open) return;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+    await this.#applyChange(() => { this.open = true; });
   }
 
   /**
    * Closes the dialog with exit animation and dispatches close event.
-   * @returns void
+   * @returns Promise that resolves when the dialog is fully closed.
    */
-  hide(): void {
-    this.#close();
+  async hide(): Promise<void> {
+    if (!this.open) return;
+    this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    await this.#applyChange(() => { this.open = false; });
   }
 }
 

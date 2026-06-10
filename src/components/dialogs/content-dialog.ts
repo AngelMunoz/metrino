@@ -1,20 +1,21 @@
 import { LitElement, html, css } from "lit";
-import { baseTypography, modalBackdrop, dialogAnimation, closeButton } from "../../styles/shared.ts";
+import { baseTypography, modalBackdrop, closeButton } from "../../styles/shared.ts";
 import "../primitives/icon.ts";
 
 /**
  * Metro Content Dialog Component
  *
  * A customizable modal dialog for displaying content with optional title,
- * content area, and button slot. Features smooth enter/exit animations and
- * backdrop dimming. Suitable for forms, confirmations, or any custom content.
+ * content area, and button slot. Uses the View Transitions API for smooth
+ * coordinated enter/exit animations of the dialog and backdrop. Suitable
+ * for forms, confirmations, or any custom content.
  *
  * Features:
  * - Optional title header with border separator
  * - Scrollable content area for long content
  * - Dedicated button slot for action buttons
  * - Optional close button (can be disabled for required dialogs)
- * - Smooth enter/exit animations
+ * - View Transition-powered enter/exit animations
  * - Backdrop click to close (when closable)
  * - ARIA dialog role with modal support
  * - Programmatic show/hide API
@@ -31,6 +32,7 @@ import "../primitives/icon.ts";
  * @cssprop --metro-border - Border color for separators (default: rgba(255, 255, 255, 0.1))
  * @cssprop --metro-spacing-lg - Large spacing unit (default: 16px)
  * @cssprop --metro-spacing-md - Medium spacing unit (default: 12px)
+ * @cssprop --metro-spacing-sm - Small spacing unit (default: 8px)
  * @cssprop --metro-font-size-large - Title font size (default: 20px)
  * @cssprop --metro-font-size-normal - Content font size (default: 14px)
  * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
@@ -54,12 +56,6 @@ export class MetroContentDialog extends LitElement {
      */
     open: { type: Boolean, reflect: true },
     /**
-     * Set internally during exit animation. When true, the dialog is visible
-     * but fading out. Do not set directly.
-     * @default false
-     */
-    closing: { type: Boolean, reflect: true },
-    /**
      * Title text displayed in the dialog header. If not provided, no header
      * is rendered.
      * @default ""
@@ -75,14 +71,12 @@ export class MetroContentDialog extends LitElement {
   };
 
   declare open: boolean;
-  declare closing: boolean;
   declare title: string;
   declare closable: boolean;
 
   static styles = [
     baseTypography,
     modalBackdrop,
-    dialogAnimation,
     closeButton,
     css`
       :host {
@@ -101,9 +95,9 @@ export class MetroContentDialog extends LitElement {
         opacity: 1;
         transition-delay: 0ms;
       }
-      :host([closing]) {
-        visibility: visible;
-        opacity: 0;
+      /* Prevent the host from being captured during a dialog transition */
+      :host(:active-view-transition) {
+        view-transition-name: none;
       }
       .dialog {
         position: relative;
@@ -113,10 +107,32 @@ export class MetroContentDialog extends LitElement {
         max-height: 80vh;
         display: flex;
         flex-direction: column;
+        view-transition-name: dialog-content;
+      }
+      .backdrop {
+        view-transition-name: dialog-backdrop;
+      }
+      /* Enter animations: no old snapshot, animate the new one in */
+      :host(:active-view-transition)::view-transition-new(dialog-content) {
         animation: dialogEnter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
-      :host([closing]) .dialog {
-        animation: dialogExit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      :host(:active-view-transition)::view-transition-new(dialog-backdrop) {
+        animation: fadeIn 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      /* Exit animations: animate the old snapshot out */
+      :host(:active-view-transition)::view-transition-old(dialog-content) {
+        animation: dialogExit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+      }
+      :host(:active-view-transition)::view-transition-old(dialog-backdrop) {
+        animation: fadeOut 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
       }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);
@@ -153,7 +169,6 @@ export class MetroContentDialog extends LitElement {
   constructor() {
     super();
     this.open = false;
-    this.closing = false;
     this.title = "";
     this.closable = true;
   }
@@ -161,7 +176,7 @@ export class MetroContentDialog extends LitElement {
   render() {
     return html`
       <div class="backdrop" @click=${this.#handleBackdropClick}></div>
-      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="${this.title ? "dialog-title" : ""}" @animationend=${this.#handleAnimationEnd} @keydown=${this.#handleKeydown}>
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="${this.title ? "dialog-title" : ""}" @keydown=${this.#handleKeydown}>
         ${this.closable
           ? html`<button class="close-btn" @click=${this.#close} aria-label="Close">
               <metro-icon icon="close" size="medium"></metro-icon>
@@ -180,24 +195,6 @@ export class MetroContentDialog extends LitElement {
     `;
   }
 
-  /**
-   * Handles animation end events to fully close the dialog after exit animation completes.
-   * @param e - The animation event
-   * @returns void
-   */
-  #handleAnimationEnd(e: AnimationEvent): void {
-    if (e.animationName === "dialogExit" && this.closing) {
-      this.closing = false;
-      this.open = false;
-      this.#restoreFocus();
-    }
-  }
-
-  /**
-   * Handles keyboard events for Escape key to close the dialog.
-   * @param e - The keyboard event
-   * @returns void
-   */
   #handleKeydown(e: KeyboardEvent): void {
     if (e.key === "Escape" && this.closable) {
       e.preventDefault();
@@ -208,11 +205,6 @@ export class MetroContentDialog extends LitElement {
     }
   }
 
-  /**
-   * Traps focus within the dialog when Tab is pressed.
-   * @param e - The keyboard event
-   * @returns void
-   */
   #trapFocus(e: KeyboardEvent): void {
     const dialog = this.shadowRoot?.querySelector(".dialog");
     if (!dialog) return;
@@ -234,10 +226,6 @@ export class MetroContentDialog extends LitElement {
     }
   }
 
-  /**
-   * Saves the currently focused element and focuses the dialog.
-   * @returns void
-   */
   #saveFocus(): void {
     this.#previousFocus = document.activeElement as HTMLElement;
     requestAnimationFrame(() => {
@@ -253,10 +241,6 @@ export class MetroContentDialog extends LitElement {
     });
   }
 
-  /**
-   * Restores focus to the element that was focused before the dialog opened.
-   * @returns void
-   */
   #restoreFocus(): void {
     if (this.#previousFocus) {
       this.#previousFocus.focus();
@@ -264,11 +248,6 @@ export class MetroContentDialog extends LitElement {
     }
   }
 
-  /**
-   * Handles backdrop click to close the dialog when closable is true.
-   * @param e - The click event
-   * @returns void
-   */
   #handleBackdropClick(e: Event): void {
     if (this.closable) {
       this.#close();
@@ -276,33 +255,77 @@ export class MetroContentDialog extends LitElement {
     e.stopPropagation();
   }
 
-  /**
-   * Initiates the close sequence with exit animation and dispatches close event.
-   * @returns void
-   */
   #close(): void {
-    if (!this.open || this.closing) return;
-    this.closing = true;
-    this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    if (!this.open) return;
+    void this.hide();
+  }
+
+  /**
+   * Applies a property change via View Transitions with headless fallback.
+   * Uses the applied-flag pattern to ensure DOM updates even when
+   * startViewTransition skips the callback (headless browsers).
+   * Awaits both updateCallbackDone and finished to properly clean up
+   * the transition before returning.
+   */
+  async #applyChange(setter: () => void): Promise<void> {
+    if ("startViewTransition" in document) {
+      let applied = false;
+      try {
+        const transition = document.startViewTransition({
+          update: () => {
+            setter();
+            applied = true;
+            return this.updateComplete;
+          },
+          types: ["content-dialog"],
+        });
+        try {
+          await transition.updateCallbackDone;
+        } catch {
+          // updateCallbackDone rejected — transition was skipped
+        }
+        // Await finished to fully clean up the transition so it
+        // doesn't block subsequent startViewTransition calls.
+        try {
+          await transition.finished;
+        } catch {
+          // finished rejected — transition was skipped
+        }
+      } catch {
+        // startViewTransition threw synchronously — fall through to fallback
+      }
+      if (!applied) {
+        setter();
+        await this.updateComplete;
+      }
+    } else {
+      setter();
+      await this.updateComplete;
+    }
   }
 
   /**
    * Opens the dialog with enter animation and dispatches show event.
-   * @returns void
+   * Uses View Transitions for a coordinated backdrop + dialog animation.
+   * @returns Promise that resolves when the dialog is fully open.
    */
-  show(): void {
-    this.closing = false;
-    this.open = true;
+  async show(): Promise<void> {
+    if (this.open) return;
     this.#saveFocus();
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+    await this.#applyChange(() => { this.open = true; });
   }
 
   /**
    * Closes the dialog with exit animation and dispatches close event.
-   * @returns void
+   * Uses View Transitions for a coordinated backdrop + dialog animation.
+   * @returns Promise that resolves when the dialog is fully closed.
    */
-  hide(): void {
-    this.#close();
+  async hide(): Promise<void> {
+    if (!this.open) return;
+    this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    await this.#applyChange(() => { this.open = false; });
+    this.#restoreFocus();
   }
 }
 
