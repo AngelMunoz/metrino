@@ -1,10 +1,5 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
-import {
-  viewTransitionStyles,
-  type TransitionOptions,
-} from "../../utils/animations.ts";
-import { withViewTransition } from "../../utils/view-transition.ts";
 
 export type ZoomState = "in" | "out";
 
@@ -19,7 +14,6 @@ export class MetroSemanticZoom extends LitElement {
 
   static styles = [
     baseTypography,
-    viewTransitionStyles,
     css`
       :host {
         display: block;
@@ -41,20 +35,17 @@ export class MetroSemanticZoom extends LitElement {
         position: absolute;
         inset: 0;
         background: var(--metro-background, transparent);
-        transition:
-          transform var(--metro-transition-slow, 333ms)
-            var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
-          opacity var(--metro-transition-fast, 167ms)
-            var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         overflow: auto;
       }
       .zoomed-in {
+        view-transition-name: semantic-zoom-in;
         transform: scale(1);
         opacity: 1;
         filter: blur(0);
         z-index: 1;
       }
       .zoomed-out {
+        view-transition-name: semantic-zoom-out;
         transform: scale(0.5);
         opacity: 0;
         filter: blur(4px);
@@ -101,22 +92,23 @@ export class MetroSemanticZoom extends LitElement {
 
   setZoomedState(
     state: ZoomState,
-    options?: TransitionOptions,
   ): Promise<void> {
     if (this.#isTransitioning || this.zoomed === state) {
       return Promise.resolve();
     }
 
-    return this.#performTransition(state, options ?? {});
+    return this.#performTransition(state);
   }
 
   async #performTransition(
     targetState: ZoomState,
-    _options: TransitionOptions,
   ): Promise<void> {
     this.#isTransitioning = true;
     const previousState = this.zoomed;
 
+    // Set the reactive property — this schedules a Lit update but does NOT
+    // change the DOM synchronously. The VT API captures the old DOM state
+    // before the Lit render runs, so the old snapshot is still correct.
     this.zoomed = targetState;
     this.#isTransitioning = false;
 
@@ -127,7 +119,23 @@ export class MetroSemanticZoom extends LitElement {
       }),
     );
 
-    await withViewTransition(() => this.updateComplete);
+    if ("startViewTransition" in document) {
+      try {
+        const transition = document.startViewTransition({
+          update: () => this.updateComplete,
+          types: ["semantic-zoom"],
+        });
+        // Suppress the animation AbortError immediately — don't wait for it.
+        transition.finished.catch(() => {});
+        await transition.updateCallbackDone;
+      } catch {
+        // VT was skipped before the callback ran. The Lit update from the
+        // property set above is still pending — just wait for it.
+        await this.updateComplete;
+      }
+    } else {
+      await this.updateComplete;
+    }
   }
 
   render() {
@@ -139,10 +147,10 @@ export class MetroSemanticZoom extends LitElement {
         @touchend=${this.#handleTouchEnd}
         @wheel=${this.#handleWheel}
       >
-        <div class="zoomed-in" view-transition-name="semantic-zoom-in">
+        <div class="zoomed-in">
           <slot name="zoomed-in"></slot>
         </div>
-        <div class="zoomed-out" view-transition-name="semantic-zoom-out">
+        <div class="zoomed-out">
           <slot name="zoomed-out"></slot>
         </div>
       </div>

@@ -389,38 +389,13 @@
   }
 }
 
-::view-transition {
-  background: var(--metro-background, #1f1f1f);
-}
-
-::view-transition-group(root) {
-  animation-duration: 450ms;
-  animation-timing-function: var(--metro-easing);
-}
-
-::view-transition-image-pair(root) {
-  background: var(--metro-background, #1f1f1f);
-}
-
-::view-transition-old(root) {
-  animation-name: metro-view-transition-out;
-  animation-duration: 350ms;
-  animation-timing-function: var(--metro-easing);
-}
-
-::view-transition-new(root) {
-  animation-name: metro-view-transition-in;
-  animation-duration: 450ms;
-  animation-timing-function: var(--metro-easing);
-}
-
-::view-transition-old(semantic-zoom-out) {
+html:active-view-transition-type(semantic-zoom)::view-transition-old(semantic-zoom-out) {
   animation-name: metro-semantic-zoom-out;
   animation-duration: 400ms;
   animation-timing-function: var(--metro-easing);
 }
 
-::view-transition-new(semantic-zoom-in) {
+html:active-view-transition-type(semantic-zoom)::view-transition-new(semantic-zoom-in) {
   animation-name: metro-semantic-zoom-in;
   animation-duration: 400ms;
   animation-timing-function: var(--metro-easing);
