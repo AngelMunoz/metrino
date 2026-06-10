@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-10
+
+## Added
+- **icons** - exported the icon map from the icon module
+
+## Changed
+- **tokens.css** - made sure that the tokens css sets the font family at the document level
+
 ## [0.2.0] - 2026-06-10
 
 ### Changed

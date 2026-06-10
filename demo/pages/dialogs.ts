@@ -49,9 +49,6 @@ export class MetrinoDialogsPage extends LitElement {
       margin-bottom: var(--metro-spacing-md, 12px);
       font-size: var(--metro-font-size-normal, 14px);
     }
-    metro-button {
-      min-width: 160px;
-    }
     .flyout-content {
       padding: var(--metro-spacing-lg, 16px);
       min-width: 200px;

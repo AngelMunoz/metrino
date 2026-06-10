@@ -55,7 +55,7 @@ export { MetroSplitView } from "./components/navigation/split-view.ts";
 export { MetroBorder } from "./components/primitives/border.ts";
 export { MetroContextMenu } from "./components/primitives/context-menu.ts";
 export { MetroExpander } from "./components/primitives/expander.ts";
-export { MetroIcon } from "./components/primitives/icon.ts";
+export { MetroIcon, iconMap } from "./components/primitives/icon.ts";
 export { MetroImage } from "./components/primitives/image.ts";
 export { MetroInfoBar } from "./components/primitives/info-bar.ts";
 export { MetroMediaElement } from "./components/primitives/media-element.ts";

@@ -34,6 +34,7 @@ body {
   min-height: 100vh;
   background: var(--metro-background);
   color: var(--metro-foreground);
+  font-family: var(--metro-font-family);
 }
 
 :root,

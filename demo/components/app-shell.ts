@@ -12,7 +12,7 @@ import "@src/components/navigation/app-bar.ts";
 import "@src/components/navigation/app-bar-button.ts";
 import "@src/components/navigation/app-bar-separator.ts";
 import "@src/components/primitives/icon.ts";
-import { iconMap } from "../../src/components/primitives/icon";
+import { iconMap } from "@src/components/primitives/icon.ts";
 
 const ACCENT_COLORS: { name: AccentColor; hex: string }[] = [
   { name: "blue", hex: "#0078d4" },
