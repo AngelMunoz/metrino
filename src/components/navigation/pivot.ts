@@ -1,6 +1,5 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
-import { withViewTransition } from "../../utils/view-transition.ts";
 
 /**
  * Metro Pivot Component
@@ -164,8 +163,6 @@ export class MetroPivot extends LitElement {
       item.toggleAttribute("active", i === index);
     });
     this.selectedIndex = index;
-
-    void withViewTransition(() => this.updateComplete);
 
     this.dispatchEvent(
       new CustomEvent("selectionchanged", {

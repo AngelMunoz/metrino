@@ -288,34 +288,6 @@ export function animateChildren(
 export const METRO_EASING = "cubic-bezier(0.1, 0.9, 0.2, 1)";
 export const METRO_EASING_VALUES = [0.1, 0.9, 0.2, 1] as const;
 
-export function supportsViewTransitions(): boolean {
-  return typeof document !== "undefined" && "startViewTransition" in document;
-}
-
-export interface ViewTransitionConfig {
-  update: () => void | Promise<void>;
-  types?: string[];
-}
-
-export async function withViewTransition(config: ViewTransitionConfig): Promise<void> {
-  if (!supportsViewTransitions()) {
-    await config.update();
-    return;
-  }
-
-  const transition = document.startViewTransition!(async () => {
-    await config.update();
-  });
-
-  if (config.types) {
-    transition.ready.then(() => {
-      document.documentElement.classList.add(...config.types!);
-    });
-  }
-
-  await transition.finished;
-}
-
 export function createTransition(
   element: HTMLElement,
   type: TransitionType,
@@ -460,28 +432,3 @@ export function crossFadeTransition(
     }, duration);
   });
 }
-
-export const viewTransitionStyles: CSSResult = css`
-  ::view-transition-old(root) {
-    animation-duration: 333ms;
-    animation-timing-function: var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-  }
-  ::view-transition-new(root) {
-    animation-duration: 333ms;
-    animation-timing-function: var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-  }
-  ::view-transition-old(zoom-out) {
-    animation-name: metro-semantic-zoom-out;
-    animation-duration: 400ms;
-    animation-timing-function: var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-  }
-  ::view-transition-new(zoom-in) {
-    animation-name: metro-semantic-zoom-in;
-    animation-duration: 400ms;
-    animation-timing-function: var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-  }
-  :root::view-transition-group(semantic-zoom) {
-    animation-duration: 400ms;
-    animation-timing-function: var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-  }
-`;

@@ -10,12 +10,12 @@ type FlyoutPlacement = "top" | "bottom" | "left" | "right";
  * Metro Flyout Component
  *
  * A floating popup panel that appears relative to a target element.
- * Features a 3D perspective animation and backdrop overlay. The Flyout
- * is positioned programmatically and is ideal for contextual menus,
+ * Features a 3D perspective animation via View Transitions and backdrop overlay.
+ * The Flyout is positioned programmatically and is ideal for contextual menus,
  * tooltips, or any popup content.
  *
  * Features:
- * - 3D perspective enter animation (rotates from -15deg to 0deg)
+ * - 3D perspective enter animation via View Transitions
  * - Four placement options: top, bottom, left, right
  * - Backdrop overlay for modal-like behavior
  * - Automatic positioning based on target element
@@ -65,6 +65,9 @@ export class MetroFlyout extends LitElement {
       :host([open]) {
         display: block;
       }
+      :host(:active-view-transition) {
+        view-transition-name: none;
+      }
       .flyout {
         position: fixed;
         background: var(--metro-background, #1f1f1f);
@@ -73,6 +76,7 @@ export class MetroFlyout extends LitElement {
         transform: perspective(800px) rotateX(-15deg);
         transition: opacity var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)), transform var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         transform-origin: top center;
+        view-transition-name: flyout-panel;
       }
       :host([open]) .flyout {
         opacity: 1;
@@ -82,6 +86,7 @@ export class MetroFlyout extends LitElement {
         position: fixed;
         inset: 0;
         z-index: -1;
+        view-transition-name: flyout-backdrop;
       }
     `,
   ];
@@ -103,42 +108,74 @@ export class MetroFlyout extends LitElement {
     `;
   }
 
-  /**
-   * Handles keyboard events for Escape key to close the flyout.
-   * @param e - The keyboard event
-   * @returns void
-   */
   #handleKeydown(e: KeyboardEvent): void {
     if (e.key === "Escape") {
       e.preventDefault();
-      this.hide();
+      void this.hide();
+    }
+  }
+
+  /**
+   * Applies a property change via View Transitions with headless fallback.
+   */
+  async #applyChange(setter: () => void): Promise<void> {
+    if ("startViewTransition" in document) {
+      let applied = false;
+      try {
+        const transition = document.startViewTransition({
+          update: () => {
+            setter();
+            applied = true;
+            return this.updateComplete;
+          },
+          types: ["flyout"],
+        });
+        try {
+          await transition.updateCallbackDone;
+        } catch {
+          // updateCallbackDone rejected
+        }
+        try {
+          await transition.finished;
+        } catch {
+          // finished rejected
+        }
+      } catch {
+        // startViewTransition threw
+      }
+      if (!applied) {
+        setter();
+        await this.updateComplete;
+      }
+    } else {
+      setter();
+      await this.updateComplete;
     }
   }
 
   /**
    * Shows the flyout positioned relative to the target element.
    * @param target - The element to position the flyout relative to
-   * @returns void
+   * @returns Promise that resolves when the flyout is fully open.
    */
-  show(target: Element): void {
+  async show(target: Element): Promise<void> {
     this.#target = target;
-    this.open = true;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+    await this.#applyChange(() => { this.open = true; });
   }
 
   /**
    * Hides the flyout and dispatches the close event.
-   * @returns void
+   * @returns Promise that resolves when the flyout is fully closed.
    */
-  hide(): void {
-    this.open = false;
+  async hide(): Promise<void> {
+    if (!this.open) return;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    await this.#applyChange(() => { this.open = false; });
   }
 
   /**
    * Updates the flyout position when opened.
-   * @param changedProperties - Map of changed properties
-   * @returns void
    */
   protected updated(changedProperties: Map<string, unknown>): void {
     if (changedProperties.has("open") && this.open && this.#target) {
@@ -146,10 +183,6 @@ export class MetroFlyout extends LitElement {
     }
   }
 
-  /**
-   * Calculates and sets the flyout position based on placement and target.
-   * @returns void
-   */
   #positionFlyout(): void {
     if (!this.#target) return;
     const rect = this.#target.getBoundingClientRect();
@@ -183,12 +216,8 @@ export class MetroFlyout extends LitElement {
     flyout.style.left = `${left}px`;
   }
 
-  /**
-   * Handles backdrop click to close the flyout.
-   * @returns void
-   */
   #close(): void {
-    this.hide();
+    void this.hide();
   }
 }
 

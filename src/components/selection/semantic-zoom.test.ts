@@ -1,19 +1,16 @@
 import { assert } from "chai";
 import "./semantic-zoom.ts";
 import { MetroSemanticZoom } from "./semantic-zoom.ts";
-import { mockViewTransitions, restoreViewTransitions } from "../../test-helpers.ts";
 
 suite("metro-semantic-zoom", () => {
   let container: HTMLDivElement;
 
   setup(() => {
-    mockViewTransitions();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
 
   teardown(() => {
-    restoreViewTransitions();
     container.remove();
   });
 
@@ -54,15 +51,28 @@ suite("metro-semantic-zoom", () => {
 
   test("clicking toggle button toggles zoom", async () => {
     const el = await createZoom();
-    const toggleBtn = el.shadowRoot?.querySelector(".zoom-hint") as HTMLElement;
-    
-    toggleBtn.click();
-    await el.updateComplete;
+
+    await el.setZoomedState("out");
     assert.equal(el.zoomed, "out");
-    
-    toggleBtn.click();
-    await el.updateComplete;
+
+    await el.setZoomedState("in");
     assert.equal(el.zoomed, "in");
+  });
+
+  test("toggle button click triggers zoom state change", async () => {
+    const el = await createZoom();
+    const toggleBtn = el.shadowRoot?.querySelector(".zoom-hint") as HTMLElement;
+
+    const zoomed = new Promise<string>((resolve) => {
+      el.addEventListener("zoomchanged", ((e: CustomEvent) => {
+        resolve(e.detail.zoomed);
+      }) as EventListener, { once: true });
+    });
+
+    toggleBtn.click();
+    const state = await zoomed;
+    assert.equal(state, "out");
+    assert.equal(el.zoomed, "out");
   });
 
   test("dispatches zoomchanged event", async () => {
@@ -77,9 +87,7 @@ suite("metro-semantic-zoom", () => {
       capturedDetail = e.detail;
     }) as EventListener);
 
-    const toggleBtn = el.shadowRoot?.querySelector(".zoom-hint") as HTMLElement;
-    toggleBtn.click();
-    await el.updateComplete;
+    await el.setZoomedState("out");
 
     assert.isDefined(capturedDetail);
     assert.equal(capturedDetail!.zoomed, "out");
