@@ -75,7 +75,7 @@ jobs:
 
       - name: Set version in package.json
         if: steps.check_tag.outputs.exists == 'false'
-        run: npm version ${{ steps.extract.outputs.version }} --no-git-tag-version --allow-dirty
+        run: sed -i 's/"version": "[^"]*"/"version": "${{ steps.extract.outputs.version }}"/' package.json
 
       - name: Publish to GitHub Packages
         if: steps.check_tag.outputs.exists == 'false'
