@@ -10,6 +10,9 @@
 - **semantic-zoom**: Fixed VT callback pattern — DOM changes now happen inside `startViewTransition` with an `applied` flag fallback for headless browsers.
 - **shared styles**: Removed unused `dialogAnimation` export (keyframes moved into component styles).
 
+### Fixed
+- **View Transition pseudo-element styles**: Moved `::view-transition-old/new` animation rules and `@keyframes` from component shadow CSS to global `src/styles/animations.css`. Shadow CSS cannot style document-root pseudo-elements — these rules were silently failing. Now scoped with `html:active-view-transition-type(...)` per component.
+
 ### Removed
 - Centralized `dialogAnimation` keyframes from `src/styles/shared.ts` (no longer imported by any component).
 

@@ -112,28 +112,6 @@ export class MetroContentDialog extends LitElement {
       .backdrop {
         view-transition-name: dialog-backdrop;
       }
-      /* Enter animations: no old snapshot, animate the new one in */
-      :host(:active-view-transition)::view-transition-new(dialog-content) {
-        animation: dialogEnter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      :host(:active-view-transition)::view-transition-new(dialog-backdrop) {
-        animation: fadeIn 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      /* Exit animations: animate the old snapshot out */
-      :host(:active-view-transition)::view-transition-old(dialog-content) {
-        animation: dialogExit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
-      }
-      :host(:active-view-transition)::view-transition-old(dialog-backdrop) {
-        animation: fadeOut 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-      }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);
         font-size: var(--metro-font-size-large, 20px);

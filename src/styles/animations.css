@@ -400,3 +400,151 @@ html:active-view-transition-type(semantic-zoom)::view-transition-new(semantic-zo
   animation-duration: 400ms;
   animation-timing-function: var(--metro-easing);
 }
+
+/* ===== Content Dialog View Transitions ===== */
+
+@keyframes metro-dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes metro-dialog-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+}
+
+html:active-view-transition-type(content-dialog)::view-transition-new(dialog-content) {
+  animation: metro-dialog-enter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(content-dialog)::view-transition-new(dialog-backdrop) {
+  animation: metro-fade-in 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(content-dialog)::view-transition-old(dialog-content) {
+  animation: metro-dialog-exit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+
+html:active-view-transition-type(content-dialog)::view-transition-old(dialog-backdrop) {
+  animation: metro-fade-out 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+
+/* ===== Message Dialog View Transitions ===== */
+
+@keyframes metro-msg-dialog-enter {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0deg);
+  }
+}
+
+@keyframes metro-msg-dialog-exit {
+  from {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(90deg);
+  }
+}
+
+html:active-view-transition-type(message-dialog)::view-transition-new(msg-dialog-content) {
+  animation: metro-msg-dialog-enter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(message-dialog)::view-transition-old(msg-dialog-content) {
+  animation: metro-msg-dialog-exit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+
+html:active-view-transition-type(message-dialog)::view-transition-new(msg-dialog-backdrop) {
+  animation: metro-fade-in 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(message-dialog)::view-transition-old(msg-dialog-backdrop) {
+  animation: metro-fade-out 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+
+/* ===== Settings Flyout View Transitions ===== */
+
+@keyframes metro-settings-panel-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes metro-settings-panel-slide-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+html:active-view-transition-type(settings-flyout)::view-transition-new(settings-flyout-panel) {
+  animation: metro-settings-panel-slide-in var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(settings-flyout)::view-transition-old(settings-flyout-panel) {
+  animation: metro-settings-panel-slide-out var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+
+html:active-view-transition-type(settings-flyout)::view-transition-new(settings-flyout-backdrop) {
+  animation: metro-fade-in var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(settings-flyout)::view-transition-old(settings-flyout-backdrop) {
+  animation: metro-fade-out var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+
+/* ===== Flyout View Transitions ===== */
+
+@keyframes metro-flyout-enter {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateX(-15deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg);
+  }
+}
+
+@keyframes metro-flyout-exit {
+  from {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: perspective(800px) rotateX(-15deg);
+  }
+}
+
+html:active-view-transition-type(flyout)::view-transition-new(flyout-panel) {
+  animation: metro-flyout-enter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(flyout)::view-transition-old(flyout-panel) {
+  animation: metro-flyout-exit var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+
+html:active-view-transition-type(flyout)::view-transition-new(flyout-backdrop) {
+  animation: metro-fade-in var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+
+html:active-view-transition-type(flyout)::view-transition-old(flyout-backdrop) {
+  animation: metro-fade-out var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}

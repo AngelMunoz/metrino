@@ -121,36 +121,6 @@ export class MetroSettingsFlyout extends LitElement {
       :host([width="wide"]) .flyout-panel {
         width: 646px;
       }
-      @keyframes settingsPanelSlideIn {
-        from { transform: translateX(100%); }
-        to { transform: translateX(0); }
-      }
-      @keyframes settingsPanelSlideOut {
-        from { transform: translateX(0); }
-        to { transform: translateX(100%); }
-      }
-      @keyframes settingsBackdropFadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes settingsBackdropFadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-      }
-      ::view-transition-new(settings-flyout-panel) {
-        animation: settingsPanelSlideIn var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      ::view-transition-old(settings-flyout-panel) {
-        animation: settingsPanelSlideOut var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-        animation-fill-mode: both;
-      }
-      ::view-transition-new(settings-flyout-backdrop) {
-        animation: settingsBackdropFadeIn var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      ::view-transition-old(settings-flyout-backdrop) {
-        animation: settingsBackdropFadeOut var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-        animation-fill-mode: both;
-      }
       .flyout-header {
         display: flex;
         align-items: center;

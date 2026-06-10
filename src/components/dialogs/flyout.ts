@@ -88,48 +88,6 @@ export class MetroFlyout extends LitElement {
         z-index: -1;
         view-transition-name: flyout-backdrop;
       }
-      @keyframes flyoutEnter {
-        from {
-          opacity: 0;
-          transform: perspective(800px) rotateX(-15deg);
-        }
-        to {
-          opacity: 1;
-          transform: perspective(800px) rotateX(0deg);
-        }
-      }
-      @keyframes flyoutExit {
-        from {
-          opacity: 1;
-          transform: perspective(800px) rotateX(0deg);
-        }
-        to {
-          opacity: 0;
-          transform: perspective(800px) rotateX(-15deg);
-        }
-      }
-      @keyframes flyoutBackdropIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes flyoutBackdropOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-      }
-      ::view-transition-new(flyout-panel) {
-        animation: flyoutEnter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      ::view-transition-old(flyout-panel) {
-        animation: flyoutExit var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-        animation-fill-mode: both;
-      }
-      ::view-transition-new(flyout-backdrop) {
-        animation: flyoutBackdropIn var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      ::view-transition-old(flyout-backdrop) {
-        animation: flyoutBackdropOut var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-        animation-fill-mode: both;
-      }
     `,
   ];
 

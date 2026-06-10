@@ -97,48 +97,6 @@ export class MetroMessageDialog extends LitElement {
         max-width: 400px;
         view-transition-name: msg-dialog-content;
       }
-      @keyframes dialogMsgEnter {
-        from {
-          opacity: 0;
-          transform: perspective(1000px) rotateX(90deg);
-        }
-        to {
-          opacity: 1;
-          transform: perspective(1000px) rotateX(0deg);
-        }
-      }
-      @keyframes dialogMsgExit {
-        from {
-          opacity: 1;
-          transform: perspective(1000px) rotateX(0deg);
-        }
-        to {
-          opacity: 0;
-          transform: perspective(1000px) rotateX(90deg);
-        }
-      }
-      @keyframes backdropMsgFadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes backdropMsgfadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-      }
-      ::view-transition-new(msg-dialog-content) {
-        animation: dialogMsgEnter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      ::view-transition-old(msg-dialog-content) {
-        animation: dialogMsgExit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-        animation-fill-mode: both;
-      }
-      ::view-transition-new(msg-dialog-backdrop) {
-        animation: backdropMsgFadeIn 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-      }
-      ::view-transition-old(msg-dialog-backdrop) {
-        animation: backdropMsgfadeOut 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-        animation-fill-mode: both;
-      }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);
         font-size: var(--metro-font-size-large, 20px);
