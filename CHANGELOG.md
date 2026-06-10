@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed
+- **content-dialog**: Replaced `closing` state machine and `animationend` handler with View Transitions API. `show()` and `hide()` are now async (`Promise<void>`). Removed `closing` property.
+- **message-dialog**: Same VT refactor as content-dialog. Removed `closing` property and `animationend` handler. `show()` and `hide()` are now async.
+- **settings-flyout**: Added `view-transition-name` on panel and backdrop for View Transition participation. CSS transitions remain as baseline. `show()` and `hide()` are now async.
+- **flyout**: Added `view-transition-name` on panel and backdrop. CSS transitions remain as baseline. `show()` and `hide()` are now async.
+- **semantic-zoom**: Fixed VT callback pattern — DOM changes now happen inside `startViewTransition` with an `applied` flag fallback for headless browsers.
+- **shared styles**: Removed unused `dialogAnimation` export (keyframes moved into component styles).
+
+### Removed
+- Centralized `dialogAnimation` keyframes from `src/styles/shared.ts` (no longer imported by any component).
+
 ## [0.1.0] - 2026-06-09
 
 ### Added
