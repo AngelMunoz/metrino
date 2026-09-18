@@ -346,7 +346,11 @@ export class MetroIcon extends LitElement {
   }
 }
 
-customElements.define("metro-icon", MetroIcon);
+export function registerMetroIcon(): void {
+  if (!customElements.get("metro-icon")) {
+    customElements.define("metro-icon", MetroIcon);
+  }
+}
 
 export { iconMap };
 

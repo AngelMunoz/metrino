@@ -220,7 +220,11 @@ export class MetroSlider extends LitElement {
   }
 }
 
-customElements.define("metro-slider", MetroSlider);
+export function registerMetroSlider(): void {
+  if (!customElements.get("metro-slider")) {
+    customElements.define("metro-slider", MetroSlider);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

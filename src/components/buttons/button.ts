@@ -176,7 +176,11 @@ export class MetroButton extends LitElement {
   };
 }
 
-customElements.define("metro-button", MetroButton);
+export function registerMetroButton(): void {
+  if (!customElements.get("metro-button")) {
+    customElements.define("metro-button", MetroButton);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

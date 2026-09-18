@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./calendar.ts";
-import { MetroCalendar } from "./calendar.ts";
+import { registerMetroCalendar, MetroCalendar } from "./calendar.ts";
 
 suite("metro-calendar", () => {
+  registerMetroCalendar();
   let container: HTMLDivElement;
 
   setup(() => {

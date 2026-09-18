@@ -100,7 +100,11 @@ export class MetroFlipTile extends LitElement {
   }
 }
 
-customElements.define("metro-flip-tile", MetroFlipTile);
+export function registerMetroFlipTile(): void {
+  if (!customElements.get("metro-flip-tile")) {
+    customElements.define("metro-flip-tile", MetroFlipTile);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

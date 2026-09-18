@@ -437,7 +437,11 @@ export class MetroListView extends LitElement {
   }
 }
 
-customElements.define("metro-list-view", MetroListView);
+export function registerMetroListView(): void {
+  if (!customElements.get("metro-list-view")) {
+    customElements.define("metro-list-view", MetroListView);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

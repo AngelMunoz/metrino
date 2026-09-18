@@ -101,7 +101,11 @@ export class MetroBorder extends LitElement {
   }
 }
 
-customElements.define("metro-border", MetroBorder);
+export function registerMetroBorder(): void {
+  if (!customElements.get("metro-border")) {
+    customElements.define("metro-border", MetroBorder);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

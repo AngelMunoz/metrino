@@ -253,7 +253,11 @@ export class MetroListBox extends LitElement {
   }
 }
 
-customElements.define("metro-list-box", MetroListBox);
+export function registerMetroListBox(): void {
+  if (!customElements.get("metro-list-box")) {
+    customElements.define("metro-list-box", MetroListBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

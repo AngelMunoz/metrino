@@ -219,7 +219,11 @@ export class MetroTextBox extends LitElement {
   }
 }
 
-customElements.define("metro-text-box", MetroTextBox);
+export function registerMetroTextBox(): void {
+  if (!customElements.get("metro-text-box")) {
+    customElements.define("metro-text-box", MetroTextBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

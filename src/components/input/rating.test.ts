@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "../input/rating.ts";
-import { MetroRating } from "../input/rating.ts";
+import { registerMetroRating, MetroRating } from "../input/rating.ts";
 
 suite("metro-rating", () => {
   let container: HTMLDivElement;
+  registerMetroRating();
 
   setup(() => {
     container = document.createElement("div");

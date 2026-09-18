@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./scroll-viewer.ts";
-import { MetroScrollViewer } from "./scroll-viewer.ts";
+import { registerMetroScrollViewer, MetroScrollViewer } from "./scroll-viewer.ts";
 
 suite("metro-scroll-viewer", () => {
   let container: HTMLDivElement;
+  registerMetroScrollViewer();
 
   setup(() => {
     container = document.createElement("div");

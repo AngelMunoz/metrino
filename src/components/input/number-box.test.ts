@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "../input/number-box.ts";
-import { MetroNumberBox } from "../input/number-box.ts";
+import { registerMetroNumberBox, MetroNumberBox } from "../input/number-box.ts";
 
 suite("metro-number-box", () => {
   let container: HTMLDivElement;
+  registerMetroNumberBox();
 
   setup(() => {
     container = document.createElement("div");

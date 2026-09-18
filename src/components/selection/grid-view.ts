@@ -439,7 +439,11 @@ export class MetroGridView extends LitElement {
   }
 }
 
-customElements.define("metro-grid-view", MetroGridView);
+export function registerMetroGridView(): void {
+  if (!customElements.get("metro-grid-view")) {
+    customElements.define("metro-grid-view", MetroGridView);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

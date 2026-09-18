@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, applyTiltEffect } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 /**
  * Metro App Bar Button Component
@@ -175,7 +175,12 @@ export class MetroAppBarButton extends LitElement {
   }
 }
 
-customElements.define("metro-app-bar-button", MetroAppBarButton);
+export function registerMetroAppBarButton(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-app-bar-button")) {
+    customElements.define("metro-app-bar-button", MetroAppBarButton);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -1,9 +1,8 @@
 import { assert } from "chai";
-import "./pivot.ts";
-import "./pivot-item.ts";
-import { MetroPivot } from "./pivot.ts";
+import { registerMetroPivot, MetroPivot } from "./pivot.ts";
 
 suite("metro-pivot", () => {
+  registerMetroPivot();
   let container: HTMLDivElement;
 
   setup(() => {

@@ -193,7 +193,11 @@ export class MetroNumberBox extends LitElement {
   }
 }
 
-customElements.define("metro-number-box", MetroNumberBox);
+export function registerMetroNumberBox(): void {
+  if (!customElements.get("metro-number-box")) {
+    customElements.define("metro-number-box", MetroNumberBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

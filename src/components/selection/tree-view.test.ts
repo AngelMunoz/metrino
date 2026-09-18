@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./tree-view.ts";
-import { MetroTreeView, type TreeViewItem } from "./tree-view.ts";
+import { registerMetroTreeView, MetroTreeView, type TreeViewItem } from "./tree-view.ts";
 
 suite("metro-tree-view", () => {
   let container: HTMLDivElement;
+  registerMetroTreeView();
 
   setup(() => {
     container = document.createElement("div");

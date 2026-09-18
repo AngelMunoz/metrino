@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./list-view.ts";
-import { MetroListView } from "./list-view.ts";
+import { registerMetroListView, MetroListView } from "./list-view.ts";
 
 suite("metro-list-view", () => {
   let container: HTMLDivElement;
+  registerMetroListView();
 
   setup(() => {
     container = document.createElement("div");

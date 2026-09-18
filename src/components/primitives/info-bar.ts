@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, closeButton } from "../../styles/shared.ts";
-import "./icon.ts";
+import { registerMetroIcon } from "./icon.ts";
 
 const severityIconMap: Record<string, string> = {
   informational: "info",
@@ -109,7 +109,12 @@ export class MetroInfoBar extends LitElement {
   }
 }
 
-customElements.define("metro-info-bar", MetroInfoBar);
+export function registerMetroInfoBar(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-info-bar")) {
+    customElements.define("metro-info-bar", MetroInfoBar);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

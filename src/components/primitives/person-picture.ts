@@ -99,7 +99,11 @@ export class MetroPersonPicture extends LitElement {
   }
 }
 
-customElements.define("metro-person-picture", MetroPersonPicture);
+export function registerMetroPersonPicture(): void {
+  if (!customElements.get("metro-person-picture")) {
+    customElements.define("metro-person-picture", MetroPersonPicture);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

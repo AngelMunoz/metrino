@@ -88,7 +88,11 @@ export class MetroDatePicker extends LitElement {
   }
 }
 
-customElements.define("metro-date-picker", MetroDatePicker);
+export function registerMetroDatePicker(): void {
+  if (!customElements.get("metro-date-picker")) {
+    customElements.define("metro-date-picker", MetroDatePicker);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -185,7 +185,11 @@ export class MetroPivot extends LitElement {
   }
 }
 
-customElements.define("metro-pivot", MetroPivot);
+export function registerMetroPivot(): void {
+  if (!customElements.get("metro-pivot")) {
+    customElements.define("metro-pivot", MetroPivot);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

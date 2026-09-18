@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./date-picker-roller.ts";
-import { MetroDatePickerRoller } from "./date-picker-roller.ts";
+import { registerMetroDatePickerRoller, MetroDatePickerRoller } from "./date-picker-roller.ts";
 
 suite("metro-date-picker-roller", () => {
+  registerMetroDatePickerRoller();
   let container: HTMLDivElement;
 
   setup(() => {

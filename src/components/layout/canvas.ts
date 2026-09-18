@@ -21,7 +21,11 @@ export class MetroCanvas extends LitElement {
   }
 }
 
-customElements.define("metro-canvas", MetroCanvas);
+export function registerMetroCanvas(): void {
+  if (!customElements.get("metro-canvas")) {
+    customElements.define("metro-canvas", MetroCanvas);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

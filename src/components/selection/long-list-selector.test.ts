@@ -1,6 +1,6 @@
 import { assert } from "chai";
-import "./long-list-selector.ts";
 import {
+  registerMetroLongListSelector,
   MetroLongListSelector,
   type LongListSelectorItem,
 } from "./long-list-selector.ts";
@@ -13,6 +13,7 @@ interface TestItem extends LongListSelectorItem {
 
 suite("metro-long-list-selector", () => {
   let container: HTMLDivElement;
+  registerMetroLongListSelector();
 
   setup(() => {
     container = document.createElement("div");

@@ -1,6 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 export class MetroAutoSuggestBox extends LitElement {
   static formAssociated = true;
@@ -244,7 +244,12 @@ export class MetroAutoSuggestBox extends LitElement {
   }
 }
 
-customElements.define("metro-auto-suggest-box", MetroAutoSuggestBox);
+export function registerMetroAutoSuggestBox(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-auto-suggest-box")) {
+    customElements.define("metro-auto-suggest-box", MetroAutoSuggestBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

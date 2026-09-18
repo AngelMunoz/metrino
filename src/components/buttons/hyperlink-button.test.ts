@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./hyperlink-button.ts";
-import { MetroHyperlinkButton } from "./hyperlink-button.ts";
+import { registerMetroHyperlinkButton, MetroHyperlinkButton } from "./hyperlink-button.ts";
 
 suite("metro-hyperlink-button", () => {
+  registerMetroHyperlinkButton();
   let button: MetroHyperlinkButton;
   let innerButton: HTMLElement | null;
 

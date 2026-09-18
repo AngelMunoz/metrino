@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./button.ts";
-import { MetroButton } from "./button.ts";
+import { registerMetroButton, MetroButton } from "./button.ts";
 
 suite("metro-button", () => {
+  registerMetroButton();
   let button: MetroButton;
   let innerButton: HTMLButtonElement | null;
 

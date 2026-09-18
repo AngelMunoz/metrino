@@ -8,11 +8,15 @@ import {
   type Theme,
   type AccentColor,
 } from "../state";
-import "@src/components/navigation/app-bar.ts";
-import "@src/components/navigation/app-bar-button.ts";
-import "@src/components/navigation/app-bar-separator.ts";
-import "@src/components/primitives/icon.ts";
-import { iconMap } from "@src/components/primitives/icon.ts";
+import { registerMetroAppBar } from "@src/components/navigation/app-bar.ts";
+import { registerMetroAppBarButton } from "@src/components/navigation/app-bar-button.ts";
+import { registerMetroAppBarSeparator } from "@src/components/navigation/app-bar-separator.ts";
+import { registerMetroIcon, iconMap } from "@src/components/primitives/icon.ts";
+
+registerMetroAppBar();
+registerMetroAppBarButton();
+registerMetroAppBarSeparator();
+registerMetroIcon();
 
 const ACCENT_COLORS: { name: AccentColor; hex: string }[] = [
   { name: "blue", hex: "#0078d4" },

@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./grid-view.ts";
-import { MetroGridView, type GridViewItem } from "./grid-view.ts";
+import { registerMetroGridView, MetroGridView, type GridViewItem } from "./grid-view.ts";
 
 suite("metro-grid-view", () => {
   let container: HTMLDivElement;
+  registerMetroGridView();
 
   setup(() => {
     container = document.createElement("div");

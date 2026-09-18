@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./toast.ts";
-import { MetroToast, showToast, hideToast } from "./toast.ts";
+import { registerMetroToast, MetroToast, showToast, hideToast } from "./toast.ts";
 
 suite("metro-toast", () => {
+  registerMetroToast();
   let container: HTMLDivElement;
 
   setup(() => {

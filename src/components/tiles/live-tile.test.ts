@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./live-tile.ts";
-import { MetroLiveTile } from "./live-tile.ts";
+import { registerMetroLiveTile, MetroLiveTile } from "./live-tile.ts";
 
 suite("metro-live-tile", () => {
   let container: HTMLDivElement;
+  registerMetroLiveTile();
 
   setup(() => {
     container = document.createElement("div");

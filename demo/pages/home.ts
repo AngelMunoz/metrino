@@ -5,10 +5,15 @@ import "../components/api-docs.ts";
 import "@src/styles/tokens.css";
 import "@src/styles/typography.css";
 import "@src/styles/animations.css";
-import "@src/components/navigation/hub.ts";
-import "@src/components/navigation/hub-section.ts";
-import "@src/components/layout/stack-panel.ts";
-import "@src/components/primitives/text-block.ts";
+import { registerMetroHub } from "@src/components/navigation/hub.ts";
+import { registerMetroHubSection } from "@src/components/navigation/hub-section.ts";
+import { registerMetroStackPanel } from "@src/components/layout/stack-panel.ts";
+import { registerMetroTextBlock } from "@src/components/primitives/text-block.ts";
+
+registerMetroHub();
+registerMetroHubSection();
+registerMetroStackPanel();
+registerMetroTextBlock();
 
 const ALL_CATEGORIES = [
   { id: "buttons", title: "Buttons" },

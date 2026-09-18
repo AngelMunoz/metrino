@@ -66,7 +66,11 @@ export class MetroAppBarSeparator extends LitElement {
   }
 }
 
-customElements.define("metro-app-bar-separator", MetroAppBarSeparator);
+export function registerMetroAppBarSeparator(): void {
+  if (!customElements.get("metro-app-bar-separator")) {
+    customElements.define("metro-app-bar-separator", MetroAppBarSeparator);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

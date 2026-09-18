@@ -1,14 +1,24 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/dialogs/content-dialog.ts";
-import "@src/components/dialogs/message-dialog.ts";
-import "@src/components/dialogs/flyout.ts";
-import "@src/components/dialogs/settings-flyout.ts";
-import "@src/components/primitives/toast.ts";
-import "@src/components/primitives/menu-flyout.ts";
-import "@src/components/buttons/button.ts";
-import "@src/components/primitives/icon.ts";
-import "@src/components/input/toggle-switch.ts";
+import { registerMetroContentDialog } from "@src/components/dialogs/content-dialog.ts";
+import { registerMetroMessageDialog } from "@src/components/dialogs/message-dialog.ts";
+import { registerMetroFlyout } from "@src/components/dialogs/flyout.ts";
+import { registerMetroSettingsFlyout } from "@src/components/dialogs/settings-flyout.ts";
+import { registerMetroToast } from "@src/components/primitives/toast.ts";
+import { registerMetroMenuFlyout } from "@src/components/primitives/menu-flyout.ts";
+import { registerMetroButton } from "@src/components/buttons/button.ts";
+import { registerMetroIcon } from "@src/components/primitives/icon.ts";
+import { registerMetroToggleSwitch } from "@src/components/input/toggle-switch.ts";
+
+registerMetroContentDialog();
+registerMetroMessageDialog();
+registerMetroFlyout();
+registerMetroSettingsFlyout();
+registerMetroToast();
+registerMetroMenuFlyout();
+registerMetroButton();
+registerMetroIcon();
+registerMetroToggleSwitch();
 
 export class MetrinoDialogsPage extends LitElement {
   static styles = css`

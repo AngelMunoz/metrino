@@ -244,7 +244,11 @@ export class MetroSplitView extends LitElement {
   }
 }
 
-customElements.define("metro-split-view", MetroSplitView);
+export function registerMetroSplitView(): void {
+  if (!customElements.get("metro-split-view")) {
+    customElements.define("metro-split-view", MetroSplitView);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

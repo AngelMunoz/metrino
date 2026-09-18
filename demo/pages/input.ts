@@ -1,16 +1,28 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/input/text-box.ts";
-import "@src/components/input/password-box.ts";
-import "@src/components/input/number-box.ts";
-import "@src/components/input/check-box.ts";
-import "@src/components/input/radio-button.ts";
-import "@src/components/input/toggle-switch.ts";
-import "@src/components/input/slider.ts";
-import "@src/components/input/rating.ts";
-import "@src/components/input/combo-box.ts";
-import "@src/components/input/auto-suggest-box.ts";
-import "@src/components/input/rich-edit-box.ts";
+import { registerMetroTextBox } from "@src/components/input/text-box.ts";
+import { registerMetroPasswordBox } from "@src/components/input/password-box.ts";
+import { registerMetroNumberBox } from "@src/components/input/number-box.ts";
+import { registerMetroCheckBox } from "@src/components/input/check-box.ts";
+import { registerMetroRadioButton } from "@src/components/input/radio-button.ts";
+import { registerMetroToggleSwitch } from "@src/components/input/toggle-switch.ts";
+import { registerMetroSlider } from "@src/components/input/slider.ts";
+import { registerMetroRating } from "@src/components/input/rating.ts";
+import { registerMetroComboBox } from "@src/components/input/combo-box.ts";
+import { registerMetroAutoSuggestBox } from "@src/components/input/auto-suggest-box.ts";
+import { registerMetroRichEditBox } from "@src/components/input/rich-edit-box.ts";
+
+registerMetroTextBox();
+registerMetroPasswordBox();
+registerMetroNumberBox();
+registerMetroCheckBox();
+registerMetroRadioButton();
+registerMetroToggleSwitch();
+registerMetroSlider();
+registerMetroRating();
+registerMetroComboBox();
+registerMetroAutoSuggestBox();
+registerMetroRichEditBox();
 
 export class MetrinoInputPage extends LitElement {
   static styles = css`

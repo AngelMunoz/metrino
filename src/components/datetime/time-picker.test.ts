@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./time-picker.ts";
-import { MetroTimePicker } from "./time-picker.ts";
+import { registerMetroTimePicker, MetroTimePicker } from "./time-picker.ts";
 
 suite("metro-time-picker", () => {
+  registerMetroTimePicker();
   let container: HTMLDivElement;
 
   setup(() => {

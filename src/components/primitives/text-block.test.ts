@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./text-block.ts";
-import { MetroTextBlock } from "./text-block.ts";
+import { registerMetroTextBlock, MetroTextBlock } from "./text-block.ts";
 
 suite("metro-text-block", () => {
+  registerMetroTextBlock();
   let container: HTMLDivElement;
 
   setup(() => {

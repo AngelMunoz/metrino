@@ -1,13 +1,22 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/layout/stack-panel.ts";
-import "@src/components/layout/grid.ts";
-import "@src/components/layout/wrap-panel.ts";
-import "@src/components/layout/scroll-viewer.ts";
-import "@src/components/layout/viewbox.ts";
-import "@src/components/layout/canvas.ts";
-import "@src/components/layout/tile-grid.ts";
-import "@src/components/layout/variable-sized-wrap-grid.ts";
+import { registerMetroStackPanel } from "@src/components/layout/stack-panel.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
+import { registerMetroWrapPanel } from "@src/components/layout/wrap-panel.ts";
+import { registerMetroScrollViewer } from "@src/components/layout/scroll-viewer.ts";
+import { registerMetroViewbox } from "@src/components/layout/viewbox.ts";
+import { registerMetroCanvas } from "@src/components/layout/canvas.ts";
+import { registerMetroTileGrid } from "@src/components/layout/tile-grid.ts";
+import { registerMetroVariableSizedWrapGrid } from "@src/components/layout/variable-sized-wrap-grid.ts";
+
+registerMetroStackPanel();
+registerMetroGrid();
+registerMetroWrapPanel();
+registerMetroScrollViewer();
+registerMetroViewbox();
+registerMetroCanvas();
+registerMetroTileGrid();
+registerMetroVariableSizedWrapGrid();
 
 export class MetrinoLayoutPage extends LitElement {
   static styles = css`

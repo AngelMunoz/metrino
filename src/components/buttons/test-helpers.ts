@@ -1,10 +1,10 @@
-import "./dropdown-button.ts";
-import { MetroDropdownButton } from "./dropdown-button.ts";
+import { registerMetroDropdownButton, MetroDropdownButton } from "./dropdown-button.ts";
 
 export async function createButton(
   label: string = "Menu",
   content: string = "",
 ): Promise<MetroDropdownButton> {
+  registerMetroDropdownButton();
   const el = document.createElement("metro-dropdown-button") as MetroDropdownButton;
   el.label = label;
   if (content) {

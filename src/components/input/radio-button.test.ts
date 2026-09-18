@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./radio-button.ts";
-import { MetroRadioButton } from "./radio-button.ts";
+import { registerMetroRadioButton, MetroRadioButton } from "./radio-button.ts";
 
 suite("metro-radio-button", () => {
   let container: HTMLDivElement;
+  registerMetroRadioButton();
 
   setup(() => {
     container = document.createElement("div");

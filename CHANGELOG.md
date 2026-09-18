@@ -2,13 +2,24 @@
 
 ## [Unreleased]
 
+### Changed (BREAKING)
+- **all components**: Component modules no longer register their custom elements as an import side effect. Each module exports a `registerMetro<Component>()` function (e.g. `registerMetroButton`) that defines the element if it is not already defined; calling it also registers the component's internal dependencies. The root package additionally exports per-category helpers (`registerButtons`, `registerNavigation`, ...) and `registerAllComponents` from the new `src/register.ts`. Consumers must now call the register function explicitly — importing a module only pulls in the class and its types.
+
+### Added
+- **register.ts** - central registration module with per-category register helpers and `registerAllComponents()`
+
+### Fixed
+- **demo**: demo pages and the app shell now register the components they render explicitly instead of relying on side-effect imports
+- **tests**: all test suites call the component's register function explicitly
+- **package.json**: `prepublishOnly` now uses `pnpm run build`
+
 ## [0.3.0] - 2026-06-10
 
-## Added
+### Added
 - **icons** - exported the icon map from the icon module
 
-## Changed
-- **tokens.css** - made sure that the tokens css sets the font family at the document level
+### Changed
+- **tokens.css** - made sure that the tokens css sets font family at the document level
 
 ## [0.2.0] - 2026-06-10
 

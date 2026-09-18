@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./grid.ts";
-import { MetroGrid } from "./grid.ts";
+import { registerMetroGrid, MetroGrid } from "./grid.ts";
 
 suite("metro-grid", () => {
   let container: HTMLDivElement;
+  registerMetroGrid();
 
   setup(() => {
     container = document.createElement("div");

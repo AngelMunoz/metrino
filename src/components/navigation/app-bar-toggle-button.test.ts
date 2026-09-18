@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./app-bar-toggle-button.ts";
-import { MetroAppBarToggleButton } from "./app-bar-toggle-button.ts";
+import { registerMetroAppBarToggleButton, MetroAppBarToggleButton } from "./app-bar-toggle-button.ts";
 
 suite("metro-app-bar-toggle-button", () => {
+  registerMetroAppBarToggleButton();
   let container: HTMLDivElement;
 
   setup(() => {

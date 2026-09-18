@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "../input/password-box.ts";
-import { MetroPasswordBox } from "../input/password-box.ts";
+import { registerMetroPasswordBox, MetroPasswordBox } from "../input/password-box.ts";
 
 suite("metro-password-box", () => {
   let container: HTMLDivElement;
+  registerMetroPasswordBox();
 
   setup(() => {
     container = document.createElement("div");

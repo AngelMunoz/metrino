@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./flyout.ts";
-import { MetroFlyout } from "./flyout.ts";
+import { registerMetroFlyout, MetroFlyout } from "./flyout.ts";
 
 suite("metro-flyout", () => {
+  registerMetroFlyout();
   let container: HTMLDivElement;
 
   setup(() => {

@@ -122,7 +122,11 @@ export class MetroRating extends LitElement {
   }
 }
 
-customElements.define("metro-rating", MetroRating);
+export function registerMetroRating(): void {
+  if (!customElements.get("metro-rating")) {
+    customElements.define("metro-rating", MetroRating);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

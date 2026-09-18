@@ -593,7 +593,11 @@ export class MetroLongListSelector extends LitElement {
   }
 }
 
-customElements.define("metro-long-list-selector", MetroLongListSelector);
+export function registerMetroLongListSelector(): void {
+  if (!customElements.get("metro-long-list-selector")) {
+    customElements.define("metro-long-list-selector", MetroLongListSelector);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

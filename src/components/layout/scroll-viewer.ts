@@ -330,7 +330,11 @@ export class MetroScrollViewer extends LitElement {
   }
 }
 
-customElements.define("metro-scroll-viewer", MetroScrollViewer);
+export function registerMetroScrollViewer(): void {
+  if (!customElements.get("metro-scroll-viewer")) {
+    customElements.define("metro-scroll-viewer", MetroScrollViewer);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

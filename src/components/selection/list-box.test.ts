@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./list-box.ts";
-import { MetroListBox } from "./list-box.ts";
+import { registerMetroListBox, MetroListBox } from "./list-box.ts";
 
 suite("metro-list-box", () => {
   let container: HTMLDivElement;
+  registerMetroListBox();
 
   setup(() => {
     container = document.createElement("div");

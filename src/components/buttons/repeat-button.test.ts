@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./repeat-button.ts";
-import { MetroRepeatButton } from "./repeat-button.ts";
+import { registerMetroRepeatButton, MetroRepeatButton } from "./repeat-button.ts";
 
 suite("metro-repeat-button", () => {
+  registerMetroRepeatButton();
   let button: MetroRepeatButton;
 
   setup(async () => {

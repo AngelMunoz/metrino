@@ -235,7 +235,11 @@ export class MetroRepeatButton extends LitElement {
   };
 }
 
-customElements.define("metro-repeat-button", MetroRepeatButton);
+export function registerMetroRepeatButton(): void {
+  if (!customElements.get("metro-repeat-button")) {
+    customElements.define("metro-repeat-button", MetroRepeatButton);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

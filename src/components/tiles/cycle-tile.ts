@@ -124,7 +124,11 @@ export class MetroCycleTile extends LitElement {
   }
 }
 
-customElements.define("metro-cycle-tile", MetroCycleTile);
+export function registerMetroCycleTile(): void {
+  if (!customElements.get("metro-cycle-tile")) {
+    customElements.define("metro-cycle-tile", MetroCycleTile);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

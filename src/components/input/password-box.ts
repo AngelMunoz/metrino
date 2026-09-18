@@ -1,6 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 /**
  * Metro Password Box Component
@@ -271,7 +271,12 @@ export class MetroPasswordBox extends LitElement {
   }
 }
 
-customElements.define("metro-password-box", MetroPasswordBox);
+export function registerMetroPasswordBox(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-password-box")) {
+    customElements.define("metro-password-box", MetroPasswordBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

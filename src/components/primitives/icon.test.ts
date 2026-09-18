@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./icon.ts";
-import { MetroIcon } from "./icon.ts";
+import { registerMetroIcon, MetroIcon } from "./icon.ts";
 
 suite("metro-icon", () => {
+  registerMetroIcon();
   let container: HTMLDivElement;
 
   setup(() => {

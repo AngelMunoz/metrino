@@ -134,7 +134,11 @@ export class MetroViewbox extends LitElement {
   }
 }
 
-customElements.define("metro-viewbox", MetroViewbox);
+export function registerMetroViewbox(): void {
+  if (!customElements.get("metro-viewbox")) {
+    customElements.define("metro-viewbox", MetroViewbox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

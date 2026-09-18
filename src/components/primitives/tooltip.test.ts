@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./tooltip.ts";
-import { MetroTooltip } from "./tooltip.ts";
+import { registerMetroTooltip, MetroTooltip } from "./tooltip.ts";
 
 suite("metro-tooltip", () => {
+  registerMetroTooltip();
   let container: HTMLDivElement;
 
   setup(() => {

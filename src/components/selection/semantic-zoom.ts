@@ -217,7 +217,11 @@ export class MetroSemanticZoom extends LitElement {
   }
 }
 
-customElements.define("metro-semantic-zoom", MetroSemanticZoom);
+export function registerMetroSemanticZoom(): void {
+  if (!customElements.get("metro-semantic-zoom")) {
+    customElements.define("metro-semantic-zoom", MetroSemanticZoom);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

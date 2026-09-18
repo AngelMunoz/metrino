@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./stack-panel.ts";
-import { MetroStackPanel } from "./stack-panel.ts";
+import { registerMetroStackPanel, MetroStackPanel } from "./stack-panel.ts";
 
 suite("metro-stack-panel", () => {
   let container: HTMLDivElement;
+  registerMetroStackPanel();
 
   setup(() => {
     container = document.createElement("div");

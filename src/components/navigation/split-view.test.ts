@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./split-view.ts";
-import { MetroSplitView } from "./split-view.ts";
+import { registerMetroSplitView, MetroSplitView } from "./split-view.ts";
 
 suite("metro-split-view", () => {
+  registerMetroSplitView();
   let container: HTMLDivElement;
 
   setup(() => {

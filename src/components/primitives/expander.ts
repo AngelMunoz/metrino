@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
-import "./icon.ts";
+import { registerMetroIcon } from "./icon.ts";
 
 /**
  * Metro Expander Component
@@ -148,7 +148,12 @@ export class MetroExpander extends LitElement {
   }
 }
 
-customElements.define("metro-expander", MetroExpander);
+export function registerMetroExpander(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-expander")) {
+    customElements.define("metro-expander", MetroExpander);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

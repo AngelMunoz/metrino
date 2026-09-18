@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./check-box.ts";
-import { MetroCheckBox } from "./check-box.ts";
+import { registerMetroCheckBox, MetroCheckBox } from "./check-box.ts";
 
 suite("metro-check-box", () => {
   let container: HTMLDivElement;
+  registerMetroCheckBox();
 
   setup(() => {
     container = document.createElement("div");

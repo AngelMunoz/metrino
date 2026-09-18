@@ -33,7 +33,11 @@ export class MetroStackPanel extends LitElement {
   }
 }
 
-customElements.define("metro-stack-panel", MetroStackPanel);
+export function registerMetroStackPanel(): void {
+  if (!customElements.get("metro-stack-panel")) {
+    customElements.define("metro-stack-panel", MetroStackPanel);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

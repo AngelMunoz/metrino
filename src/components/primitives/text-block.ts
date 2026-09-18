@@ -49,7 +49,11 @@ export class MetroTextBlock extends LitElement {
   }
 }
 
-customElements.define("metro-text-block", MetroTextBlock);
+export function registerMetroTextBlock(): void {
+  if (!customElements.get("metro-text-block")) {
+    customElements.define("metro-text-block", MetroTextBlock);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

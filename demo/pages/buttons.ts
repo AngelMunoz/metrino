@@ -1,9 +1,14 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/buttons/button.ts";
-import "@src/components/buttons/hyperlink-button.ts";
-import "@src/components/buttons/repeat-button.ts";
-import "@src/components/buttons/dropdown-button.ts";
+import { registerMetroButton } from "@src/components/buttons/button.ts";
+import { registerMetroHyperlinkButton } from "@src/components/buttons/hyperlink-button.ts";
+import { registerMetroRepeatButton } from "@src/components/buttons/repeat-button.ts";
+import { registerMetroDropdownButton } from "@src/components/buttons/dropdown-button.ts";
+
+registerMetroButton();
+registerMetroHyperlinkButton();
+registerMetroRepeatButton();
+registerMetroDropdownButton();
 
 export class MetrinoButtonsPage extends LitElement {
   static styles = css`

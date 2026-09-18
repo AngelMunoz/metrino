@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./app-bar-button.ts";
-import { MetroAppBarButton } from "./app-bar-button.ts";
+import { registerMetroAppBarButton, MetroAppBarButton } from "./app-bar-button.ts";
 
 suite("metro-app-bar-button", () => {
+  registerMetroAppBarButton();
   let container: HTMLDivElement;
 
   setup(() => {

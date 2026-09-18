@@ -1,7 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
-import "./calendar.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
+import { registerMetroCalendar } from "./calendar.ts";
 
 export class MetroCalendarDatePicker extends LitElement {
   static formAssociated = true;
@@ -240,7 +240,13 @@ export class MetroCalendarDatePicker extends LitElement {
   }
 }
 
-customElements.define("metro-calendar-date-picker", MetroCalendarDatePicker);
+export function registerMetroCalendarDatePicker(): void {
+  registerMetroCalendar();
+  registerMetroIcon();
+  if (!customElements.get("metro-calendar-date-picker")) {
+    customElements.define("metro-calendar-date-picker", MetroCalendarDatePicker);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

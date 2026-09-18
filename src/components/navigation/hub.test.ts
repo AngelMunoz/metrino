@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./hub.ts";
-import { MetroHub } from "./hub.ts";
+import { registerMetroHub, MetroHub } from "./hub.ts";
 
 suite("metro-hub", () => {
+  registerMetroHub();
   let container: HTMLDivElement;
 
   setup(() => {

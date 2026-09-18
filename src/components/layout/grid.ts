@@ -26,7 +26,11 @@ export class MetroGrid extends LitElement {
   }
 }
 
-customElements.define("metro-grid", MetroGrid);
+export function registerMetroGrid(): void {
+  if (!customElements.get("metro-grid")) {
+    customElements.define("metro-grid", MetroGrid);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

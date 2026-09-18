@@ -121,7 +121,11 @@ export class MetroProgressRing extends LitElement {
   }
 }
 
-customElements.define("metro-progress-ring", MetroProgressRing);
+export function registerMetroProgressRing(): void {
+  if (!customElements.get("metro-progress-ring")) {
+    customElements.define("metro-progress-ring", MetroProgressRing);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

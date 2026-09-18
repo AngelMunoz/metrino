@@ -213,7 +213,11 @@ export class MetroCheckBox extends LitElement {
   }
 }
 
-customElements.define("metro-check-box", MetroCheckBox);
+export function registerMetroCheckBox(): void {
+  if (!customElements.get("metro-check-box")) {
+    customElements.define("metro-check-box", MetroCheckBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

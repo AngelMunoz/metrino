@@ -136,7 +136,11 @@ export class MetroImage extends LitElement {
   }
 }
 
-customElements.define("metro-image", MetroImage);
+export function registerMetroImage(): void {
+  if (!customElements.get("metro-image")) {
+    customElements.define("metro-image", MetroImage);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

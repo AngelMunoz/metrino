@@ -36,10 +36,12 @@ npm install lit @mdi/js
 
 ### Full Bundle
 
-Import all components at once:
+Register all components at once:
 
 ```typescript
-import '@angelmunoz/metrino';
+import { registerAllComponents } from '@angelmunoz/metrino';
+
+registerAllComponents();
 ```
 
 ```html
@@ -52,13 +54,28 @@ import '@angelmunoz/metrino';
 
 ### Cherry-Pick Components
 
-Import only the components you need for smaller bundle sizes:
+Register only the components you need for smaller bundle sizes. Importing a
+module no longer registers the custom element as a side effect — call its
+`registerMetro<Component>()` function explicitly (dependencies are registered
+automatically):
 
 ```typescript
-import '@angelmunoz/metrino/button';
-import '@angelmunoz/metrino/pivot';
-import '@angelmunoz/metrino/pivot-item';
-import '@angelmunoz/metrino/flip-tile';
+import { registerMetroButton } from '@angelmunoz/metrino/button';
+import { registerMetroPivot } from '@angelmunoz/metrino/pivot';
+import { registerMetroFlipTile } from '@angelmunoz/metrino/flip-tile';
+
+registerMetroButton();
+registerMetroPivot(); // also registers metro-pivot-item
+registerMetroFlipTile();
+```
+
+You can also register a whole category from the root package:
+
+```typescript
+import { registerButtons, registerNavigation } from '@angelmunoz/metrino';
+
+registerButtons();
+registerNavigation();
 ```
 
 ### Import Classes for TypeScript

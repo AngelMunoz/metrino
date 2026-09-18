@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "../input/combo-box.ts";
-import { MetroComboBox } from "../input/combo-box.ts";
+import { registerMetroComboBox, MetroComboBox } from "../input/combo-box.ts";
 
 suite("metro-combo-box", () => {
   let container: HTMLDivElement;
+  registerMetroComboBox();
 
   setup(() => {
     container = document.createElement("div");

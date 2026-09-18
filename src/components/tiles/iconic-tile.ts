@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { tileBase, tileSizes, tileBadge, applyTiltEffect } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 type TileSize = "small" | "medium" | "large";
 
@@ -99,7 +99,12 @@ export class MetroIconicTile extends LitElement {
   }
 }
 
-customElements.define("metro-iconic-tile", MetroIconicTile);
+export function registerMetroIconicTile(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-iconic-tile")) {
+    customElements.define("metro-iconic-tile", MetroIconicTile);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

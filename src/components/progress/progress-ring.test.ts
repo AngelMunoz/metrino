@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./progress-ring.ts";
-import { MetroProgressRing } from "./progress-ring.ts";
+import { registerMetroProgressRing, MetroProgressRing } from "./progress-ring.ts";
 
 suite("metro-progress-ring", () => {
   let container: HTMLDivElement;
+  registerMetroProgressRing();
 
   setup(() => {
     container = document.createElement("div");

@@ -1,6 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 export class MetroComboBox extends LitElement {
   static formAssociated = true;
@@ -211,7 +211,12 @@ export class MetroComboBox extends LitElement {
   }
 }
 
-customElements.define("metro-combo-box", MetroComboBox);
+export function registerMetroComboBox(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-combo-box")) {
+    customElements.define("metro-combo-box", MetroComboBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

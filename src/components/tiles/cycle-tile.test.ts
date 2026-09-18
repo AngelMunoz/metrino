@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./cycle-tile.ts";
-import { MetroCycleTile } from "./cycle-tile.ts";
+import { registerMetroCycleTile, MetroCycleTile } from "./cycle-tile.ts";
 
 suite("metro-cycle-tile", () => {
   let container: HTMLDivElement;
+  registerMetroCycleTile();
 
   setup(() => {
     container = document.createElement("div");

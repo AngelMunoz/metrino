@@ -88,7 +88,11 @@ export class MetroTimePicker extends LitElement {
   }
 }
 
-customElements.define("metro-time-picker", MetroTimePicker);
+export function registerMetroTimePicker(): void {
+  if (!customElements.get("metro-time-picker")) {
+    customElements.define("metro-time-picker", MetroTimePicker);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

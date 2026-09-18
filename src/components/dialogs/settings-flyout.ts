@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, closeButton } from "../../styles/shared.ts";
 import type { PropertyValueMap } from "lit";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 /**
  * Settings flyout width options.
@@ -296,7 +296,12 @@ export class MetroSettingsFlyout extends LitElement {
   }
 }
 
-customElements.define("metro-settings-flyout", MetroSettingsFlyout);
+export function registerMetroSettingsFlyout(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-settings-flyout")) {
+    customElements.define("metro-settings-flyout", MetroSettingsFlyout);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

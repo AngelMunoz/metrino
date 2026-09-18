@@ -101,7 +101,11 @@ export class MetroVariableSizedWrapGrid extends LitElement {
   }
 }
 
-customElements.define("metro-variable-sized-wrap-grid", MetroVariableSizedWrapGrid);
+export function registerMetroVariableSizedWrapGrid(): void {
+  if (!customElements.get("metro-variable-sized-wrap-grid")) {
+    customElements.define("metro-variable-sized-wrap-grid", MetroVariableSizedWrapGrid);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

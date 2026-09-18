@@ -218,7 +218,11 @@ export class MetroMessageDialog extends LitElement {
   }
 }
 
-customElements.define("metro-message-dialog", MetroMessageDialog);
+export function registerMetroMessageDialog(): void {
+  if (!customElements.get("metro-message-dialog")) {
+    customElements.define("metro-message-dialog", MetroMessageDialog);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

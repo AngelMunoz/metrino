@@ -221,7 +221,11 @@ export class MetroFlyout extends LitElement {
   }
 }
 
-customElements.define("metro-flyout", MetroFlyout);
+export function registerMetroFlyout(): void {
+  if (!customElements.get("metro-flyout")) {
+    customElements.define("metro-flyout", MetroFlyout);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

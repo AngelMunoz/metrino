@@ -71,7 +71,11 @@ export class MetroTileGrid extends LitElement {
   }
 }
 
-customElements.define("metro-tile-grid", MetroTileGrid);
+export function registerMetroTileGrid(): void {
+  if (!customElements.get("metro-tile-grid")) {
+    customElements.define("metro-tile-grid", MetroTileGrid);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./slider.ts";
-import { MetroSlider } from "./slider.ts";
+import { registerMetroSlider, MetroSlider } from "./slider.ts";
 
 suite("metro-slider", () => {
   let container: HTMLDivElement;
+  registerMetroSlider();
 
   setup(() => {
     container = document.createElement("div");

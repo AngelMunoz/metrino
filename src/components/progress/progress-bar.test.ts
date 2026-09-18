@@ -1,10 +1,9 @@
 import { assert } from "chai";
-import "./progress-bar.ts";
-import { MetroProgressBar } from "./progress-bar.ts";
+import { registerMetroProgressBar, MetroProgressBar } from "./progress-bar.ts";
 
 suite("metro-progress-bar", () => {
   let container: HTMLDivElement;
-
+  registerMetroProgressBar();
   setup(() => {
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -14,9 +13,13 @@ suite("metro-progress-bar", () => {
     container.remove();
   });
 
-  async function createProgress(attrs: Record<string, string> = {}): Promise<MetroProgressBar> {
+  async function createProgress(
+    attrs: Record<string, string> = {},
+  ): Promise<MetroProgressBar> {
     const el = document.createElement("metro-progress-bar") as MetroProgressBar;
-    Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+    Object.entries(attrs).forEach(([key, value]) =>
+      el.setAttribute(key, value),
+    );
     container.appendChild(el);
     await el.updateComplete;
     return el;
@@ -24,7 +27,9 @@ suite("metro-progress-bar", () => {
 
   test("renders progress container", async () => {
     const el = await createProgress();
-    const progressContainer = el.shadowRoot?.querySelector(".progress-container");
+    const progressContainer = el.shadowRoot?.querySelector(
+      ".progress-container",
+    );
     assert.exists(progressContainer);
   });
 
@@ -46,16 +51,18 @@ suite("metro-progress-bar", () => {
   test("fill width reflects value percentage", async () => {
     const el = await createProgress({ value: "75" });
     await el.updateComplete;
-    
+
     const fill = el.shadowRoot?.querySelector(".progress-fill") as HTMLElement;
     assert.include(fill.style.width, "75");
   });
 
   test("indeterminate mode renders dots", async () => {
     const el = await createProgress({ indeterminate: "" });
-    const container = el.shadowRoot?.querySelector(".progress-container.indeterminate");
+    const container = el.shadowRoot?.querySelector(
+      ".progress-container.indeterminate",
+    );
     assert.exists(container);
-    
+
     const dots = el.shadowRoot?.querySelectorAll(".indeterminate-dot");
     assert.equal(dots?.length, 5);
   });
@@ -70,20 +77,24 @@ suite("metro-progress-bar", () => {
   test("respects maximum attribute", async () => {
     const el = await createProgress({ value: "5", maximum: "10" });
     await el.updateComplete;
-    
+
     const fill = el.shadowRoot?.querySelector(".progress-fill") as HTMLElement;
     assert.include(fill.style.width, "50");
   });
 
   test("has progressbar role", async () => {
     const el = await createProgress();
-    const progressContainer = el.shadowRoot?.querySelector('[role="progressbar"]');
+    const progressContainer = el.shadowRoot?.querySelector(
+      '[role="progressbar"]',
+    );
     assert.exists(progressContainer);
   });
 
   test("has aria-valuenow attribute", async () => {
     const el = await createProgress({ value: "30" });
-    const progressContainer = el.shadowRoot?.querySelector(".progress-container");
+    const progressContainer = el.shadowRoot?.querySelector(
+      ".progress-container",
+    );
     assert.equal(progressContainer?.getAttribute("aria-valuenow"), "30");
   });
 });

@@ -1,17 +1,30 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/navigation/pivot.ts";
-import "@src/components/navigation/pivot-item.ts";
-import "@src/components/navigation/hub.ts";
-import "@src/components/navigation/hub-section.ts";
-import "@src/components/navigation/panorama.ts";
-import "@src/components/navigation/panorama-item.ts";
-import "@src/components/navigation/split-view.ts";
-import "@src/components/navigation/app-bar.ts";
-import "@src/components/navigation/app-bar-button.ts";
-import "@src/components/navigation/app-bar-separator.ts";
-import "@src/components/navigation/app-bar-toggle-button.ts";
-import "@src/components/primitives/icon.ts";
+import { registerMetroPivot } from "@src/components/navigation/pivot.ts";
+import { registerMetroPivotItem } from "@src/components/navigation/pivot-item.ts";
+import { registerMetroHub } from "@src/components/navigation/hub.ts";
+import { registerMetroHubSection } from "@src/components/navigation/hub-section.ts";
+import { registerMetroPanorama } from "@src/components/navigation/panorama.ts";
+import { registerMetroPanoramaItem } from "@src/components/navigation/panorama-item.ts";
+import { registerMetroSplitView } from "@src/components/navigation/split-view.ts";
+import { registerMetroAppBar } from "@src/components/navigation/app-bar.ts";
+import { registerMetroAppBarButton } from "@src/components/navigation/app-bar-button.ts";
+import { registerMetroAppBarSeparator } from "@src/components/navigation/app-bar-separator.ts";
+import { registerMetroAppBarToggleButton } from "@src/components/navigation/app-bar-toggle-button.ts";
+import { registerMetroIcon } from "@src/components/primitives/icon.ts";
+
+registerMetroPivot();
+registerMetroPivotItem();
+registerMetroHub();
+registerMetroHubSection();
+registerMetroPanorama();
+registerMetroPanoramaItem();
+registerMetroSplitView();
+registerMetroAppBar();
+registerMetroAppBarButton();
+registerMetroAppBarSeparator();
+registerMetroAppBarToggleButton();
+registerMetroIcon();
 
 export class MetrinoNavigationPage extends LitElement {
   static properties = {

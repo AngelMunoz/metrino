@@ -22,7 +22,11 @@ export class MetroWrapPanel extends LitElement {
   }
 }
 
-customElements.define("metro-wrap-panel", MetroWrapPanel);
+export function registerMetroWrapPanel(): void {
+  if (!customElements.get("metro-wrap-panel")) {
+    customElements.define("metro-wrap-panel", MetroWrapPanel);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

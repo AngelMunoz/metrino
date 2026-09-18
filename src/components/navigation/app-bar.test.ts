@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./app-bar.ts";
-import { MetroAppBar } from "./app-bar.ts";
+import { registerMetroAppBar, MetroAppBar } from "./app-bar.ts";
 
 suite("metro-app-bar", () => {
+  registerMetroAppBar();
   let container: HTMLDivElement;
 
   setup(() => {

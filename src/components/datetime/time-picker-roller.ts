@@ -379,7 +379,11 @@ export class MetroTimePickerRoller extends LitElement {
   }
 }
 
-customElements.define("metro-time-picker-roller", MetroTimePickerRoller);
+export function registerMetroTimePickerRoller(): void {
+  if (!customElements.get("metro-time-picker-roller")) {
+    customElements.define("metro-time-picker-roller", MetroTimePickerRoller);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

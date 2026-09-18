@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./iconic-tile.ts";
-import { MetroIconicTile } from "./iconic-tile.ts";
+import { registerMetroIconicTile, MetroIconicTile } from "./iconic-tile.ts";
 
 suite("metro-iconic-tile", () => {
   let container: HTMLDivElement;
+  registerMetroIconicTile();
 
   setup(() => {
     container = document.createElement("div");

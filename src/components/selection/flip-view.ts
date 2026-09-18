@@ -1,6 +1,6 @@
 import { LitElement, html, css, type PropertyValues, type TemplateResult, nothing } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 import {
   createGestureState,
   updateGesture,
@@ -415,7 +415,12 @@ export class MetroFlipView extends LitElement {
   }
 }
 
-customElements.define("metro-flip-view", MetroFlipView);
+export function registerMetroFlipView(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-flip-view")) {
+    customElements.define("metro-flip-view", MetroFlipView);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

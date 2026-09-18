@@ -1,10 +1,9 @@
 import { assert } from "chai";
-import "./flip-view.ts";
-import { MetroFlipView } from "./flip-view.ts";
+import { MetroFlipView, registerMetroFlipView } from "./flip-view.ts";
 
 suite("metro-flip-view", () => {
   let container: HTMLDivElement;
-
+  registerMetroFlipView();
   setup(() => {
     container = document.createElement("div");
     container.style.width = "400px";
@@ -135,10 +134,10 @@ suite("metro-flip-view", () => {
           <div>Slide 3</div>
         </metro-flip-view>
       `);
-      
+
       el.index = 2;
       await el.updateComplete;
-      
+
       const transform = getTransformValue(el);
       assert.include(transform, "translateX");
     });
@@ -176,10 +175,12 @@ suite("metro-flip-view", () => {
           <div>Slide 2</div>
         </metro-flip-view>
       `);
-      const nextBtn = el.shadowRoot?.querySelector(".nav-button.next") as HTMLElement;
+      const nextBtn = el.shadowRoot?.querySelector(
+        ".nav-button.next",
+      ) as HTMLElement;
       nextBtn?.click();
       await el.updateComplete;
-      
+
       assert.equal(el.index, 1);
     });
 
@@ -190,10 +191,12 @@ suite("metro-flip-view", () => {
           <div>Slide 2</div>
         </metro-flip-view>
       `);
-      const prevBtn = el.shadowRoot?.querySelector(".nav-button.prev") as HTMLElement;
+      const prevBtn = el.shadowRoot?.querySelector(
+        ".nav-button.prev",
+      ) as HTMLElement;
       prevBtn?.click();
       await el.updateComplete;
-      
+
       assert.equal(el.index, 0);
     });
 
@@ -204,7 +207,9 @@ suite("metro-flip-view", () => {
           <div>Slide 2</div>
         </metro-flip-view>
       `);
-      const prevBtn = el.shadowRoot?.querySelector(".nav-button.prev") as HTMLButtonElement;
+      const prevBtn = el.shadowRoot?.querySelector(
+        ".nav-button.prev",
+      ) as HTMLButtonElement;
       assert.isTrue(prevBtn?.disabled);
     });
   });
@@ -221,11 +226,13 @@ suite("metro-flip-view", () => {
       el.addEventListener("change", ((e: CustomEvent) => {
         eventDetail = e.detail;
       }) as EventListener);
-      
-      const nextBtn = el.shadowRoot?.querySelector(".nav-button.next") as HTMLElement;
+
+      const nextBtn = el.shadowRoot?.querySelector(
+        ".nav-button.next",
+      ) as HTMLElement;
       nextBtn?.click();
       await el.updateComplete;
-      
+
       assert.deepEqual(eventDetail, { index: 1 });
     });
   });

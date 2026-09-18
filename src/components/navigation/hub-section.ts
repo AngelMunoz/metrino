@@ -86,7 +86,11 @@ export class MetroHubSection extends LitElement {
   }
 }
 
-customElements.define("metro-hub-section", MetroHubSection);
+export function registerMetroHubSection(): void {
+  if (!customElements.get("metro-hub-section")) {
+    customElements.define("metro-hub-section", MetroHubSection);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

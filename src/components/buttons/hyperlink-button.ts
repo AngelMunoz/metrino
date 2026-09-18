@@ -181,7 +181,11 @@ export class MetroHyperlinkButton extends LitElement {
   };
 }
 
-customElements.define("metro-hyperlink-button", MetroHyperlinkButton);
+export function registerMetroHyperlinkButton(): void {
+  if (!customElements.get("metro-hyperlink-button")) {
+    customElements.define("metro-hyperlink-button", MetroHyperlinkButton);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

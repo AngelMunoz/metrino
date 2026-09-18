@@ -81,7 +81,11 @@ export class MetroRichTextBlock extends LitElement {
   }
 }
 
-customElements.define("metro-rich-text-block", MetroRichTextBlock);
+export function registerMetroRichTextBlock(): void {
+  if (!customElements.get("metro-rich-text-block")) {
+    customElements.define("metro-rich-text-block", MetroRichTextBlock);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

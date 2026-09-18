@@ -1,12 +1,20 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/tiles/flip-tile.ts";
-import "@src/components/tiles/cycle-tile.ts";
-import "@src/components/tiles/iconic-tile.ts";
-import "@src/components/tiles/live-tile.ts";
-import "@src/components/layout/tile-grid.ts";
-import "@src/components/input/slider.ts";
-import "@src/components/buttons/button.ts";
+import { registerMetroFlipTile } from "@src/components/tiles/flip-tile.ts";
+import { registerMetroCycleTile } from "@src/components/tiles/cycle-tile.ts";
+import { registerMetroIconicTile } from "@src/components/tiles/iconic-tile.ts";
+import { registerMetroLiveTile } from "@src/components/tiles/live-tile.ts";
+import { registerMetroTileGrid } from "@src/components/layout/tile-grid.ts";
+import { registerMetroSlider } from "@src/components/input/slider.ts";
+import { registerMetroButton } from "@src/components/buttons/button.ts";
+
+registerMetroFlipTile();
+registerMetroCycleTile();
+registerMetroIconicTile();
+registerMetroLiveTile();
+registerMetroTileGrid();
+registerMetroSlider();
+registerMetroButton();
 
 export class MetrinoTilesPage extends LitElement {
   static styles = css`

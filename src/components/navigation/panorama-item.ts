@@ -78,7 +78,11 @@ export class MetroPanoramaItem extends LitElement {
   }
 }
 
-customElements.define("metro-panorama-item", MetroPanoramaItem);
+export function registerMetroPanoramaItem(): void {
+  if (!customElements.get("metro-panorama-item")) {
+    customElements.define("metro-panorama-item", MetroPanoramaItem);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

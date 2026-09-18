@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./wrap-panel.ts";
-import { MetroWrapPanel } from "./wrap-panel.ts";
+import { registerMetroWrapPanel, MetroWrapPanel } from "./wrap-panel.ts";
 
 suite("metro-wrap-panel", () => {
   let container: HTMLDivElement;
+  registerMetroWrapPanel();
 
   setup(() => {
     container = document.createElement("div");

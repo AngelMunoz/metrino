@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
 import type { PropertyValues } from "lit";
 import { baseTypography, disabledState, hoverHighlight, applyTiltEffect } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 /**
  * Metro App Bar Toggle Button Component
@@ -315,7 +315,12 @@ export class MetroAppBarToggleButton extends LitElement {
   }
 }
 
-customElements.define("metro-app-bar-toggle-button", MetroAppBarToggleButton);
+export function registerMetroAppBarToggleButton(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-app-bar-toggle-button")) {
+    customElements.define("metro-app-bar-toggle-button", MetroAppBarToggleButton);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

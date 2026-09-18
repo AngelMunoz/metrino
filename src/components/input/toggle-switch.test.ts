@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./toggle-switch.ts";
-import { MetroToggleSwitch } from "./toggle-switch.ts";
+import { registerMetroToggleSwitch, MetroToggleSwitch } from "./toggle-switch.ts";
 
 suite("metro-toggle-switch", () => {
   let container: HTMLDivElement;
+  registerMetroToggleSwitch();
 
   setup(() => {
     container = document.createElement("div");

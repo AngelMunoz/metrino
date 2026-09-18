@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, closeButton } from "../../styles/shared.ts";
-import "./icon.ts";
+import { registerMetroIcon } from "./icon.ts";
 
 /**
  * Options for showing a toast notification.
@@ -247,7 +247,12 @@ export class MetroToast extends LitElement {
   }
 }
 
-customElements.define("metro-toast", MetroToast);
+export function registerMetroToast(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-toast")) {
+    customElements.define("metro-toast", MetroToast);
+  }
+}
 
 let globalToast: MetroToast | null = null;
 

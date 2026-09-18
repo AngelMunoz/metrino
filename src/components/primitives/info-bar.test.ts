@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./info-bar.ts";
-import { MetroInfoBar } from "./info-bar.ts";
+import { registerMetroInfoBar, MetroInfoBar } from "./info-bar.ts";
 
 suite("metro-info-bar", () => {
+  registerMetroInfoBar();
   let container: HTMLDivElement;
 
   setup(() => {

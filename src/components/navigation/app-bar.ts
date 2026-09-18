@@ -194,7 +194,11 @@ export class MetroAppBar extends LitElement {
   }
 }
 
-customElements.define("metro-app-bar", MetroAppBar);
+export function registerMetroAppBar(): void {
+  if (!customElements.get("metro-app-bar")) {
+    customElements.define("metro-app-bar", MetroAppBar);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

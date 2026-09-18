@@ -232,7 +232,11 @@ export class MetroContextMenu extends LitElement {
   }
 }
 
-customElements.define("metro-context-menu", MetroContextMenu);
+export function registerMetroContextMenu(): void {
+  if (!customElements.get("metro-context-menu")) {
+    customElements.define("metro-context-menu", MetroContextMenu);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./content-dialog.ts";
-import { MetroContentDialog } from "./content-dialog.ts";
+import { registerMetroContentDialog, MetroContentDialog } from "./content-dialog.ts";
 
 suite("metro-content-dialog", () => {
+  registerMetroContentDialog();
   let container: HTMLDivElement;
 
   setup(() => {

@@ -102,7 +102,11 @@ export class MetroMenuFlyout extends LitElement {
   }
 }
 
-customElements.define("metro-menu-flyout", MetroMenuFlyout);
+export function registerMetroMenuFlyout(): void {
+  if (!customElements.get("metro-menu-flyout")) {
+    customElements.define("metro-menu-flyout", MetroMenuFlyout);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

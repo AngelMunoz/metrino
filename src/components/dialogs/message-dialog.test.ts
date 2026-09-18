@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./message-dialog.ts";
-import { MetroMessageDialog } from "./message-dialog.ts";
+import { registerMetroMessageDialog, MetroMessageDialog } from "./message-dialog.ts";
 
 suite("metro-message-dialog", () => {
+  registerMetroMessageDialog();
   let container: HTMLDivElement;
 
   setup(() => {

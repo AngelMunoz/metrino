@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, modalBackdrop, closeButton } from "../../styles/shared.ts";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 /**
  * Metro Content Dialog Component
@@ -307,7 +307,12 @@ export class MetroContentDialog extends LitElement {
   }
 }
 
-customElements.define("metro-content-dialog", MetroContentDialog);
+export function registerMetroContentDialog(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-content-dialog")) {
+    customElements.define("metro-content-dialog", MetroContentDialog);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

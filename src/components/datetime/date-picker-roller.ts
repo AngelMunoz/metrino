@@ -391,7 +391,11 @@ export class MetroDatePickerRoller extends LitElement {
   }
 }
 
-customElements.define("metro-date-picker-roller", MetroDatePickerRoller);
+export function registerMetroDatePickerRoller(): void {
+  if (!customElements.get("metro-date-picker-roller")) {
+    customElements.define("metro-date-picker-roller", MetroDatePickerRoller);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

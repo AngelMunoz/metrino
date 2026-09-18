@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./dropdown-button.ts";
-import { MetroDropdownButton } from "./dropdown-button.ts";
+import { registerMetroDropdownButton, MetroDropdownButton } from "./dropdown-button.ts";
 import { createButton } from "./test-helpers.ts";
 
 suite("metro-dropdown-button", () => {
+  registerMetroDropdownButton();
   let container: HTMLDivElement;
   let el: MetroDropdownButton;
   let buttonContent: HTMLElement | null;

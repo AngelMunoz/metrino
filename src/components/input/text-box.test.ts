@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "../input/text-box.ts";
-import { MetroTextBox } from "../input/text-box.ts";
+import { registerMetroTextBox, MetroTextBox } from "../input/text-box.ts";
 
 suite("metro-text-box", () => {
   let container: HTMLDivElement;
+  registerMetroTextBox();
 
   setup(() => {
     container = document.createElement("div");

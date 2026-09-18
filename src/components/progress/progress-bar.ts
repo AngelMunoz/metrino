@@ -131,7 +131,11 @@ export class MetroProgressBar extends LitElement {
   }
 }
 
-customElements.define("metro-progress-bar", MetroProgressBar);
+export function registerMetroProgressBar(): void {
+  if (!customElements.get("metro-progress-bar")) {
+    customElements.define("metro-progress-bar", MetroProgressBar);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

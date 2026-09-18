@@ -200,7 +200,11 @@ export class MetroTooltip extends LitElement {
   }
 }
 
-customElements.define("metro-tooltip", MetroTooltip);
+export function registerMetroTooltip(): void {
+  if (!customElements.get("metro-tooltip")) {
+    customElements.define("metro-tooltip", MetroTooltip);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

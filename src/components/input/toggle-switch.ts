@@ -217,7 +217,11 @@ export class MetroToggleSwitch extends LitElement {
   }
 }
 
-customElements.define("metro-toggle-switch", MetroToggleSwitch);
+export function registerMetroToggleSwitch(): void {
+  if (!customElements.get("metro-toggle-switch")) {
+    customElements.define("metro-toggle-switch", MetroToggleSwitch);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

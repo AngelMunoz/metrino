@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./semantic-zoom.ts";
-import { MetroSemanticZoom } from "./semantic-zoom.ts";
+import { registerMetroSemanticZoom, MetroSemanticZoom } from "./semantic-zoom.ts";
 
 suite("metro-semantic-zoom", () => {
   let container: HTMLDivElement;
+  registerMetroSemanticZoom();
 
   setup(() => {
     container = document.createElement("div");

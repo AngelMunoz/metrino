@@ -173,7 +173,11 @@ export class MetroLiveTile extends LitElement {
   }
 }
 
-customElements.define("metro-live-tile", MetroLiveTile);
+export function registerMetroLiveTile(): void {
+  if (!customElements.get("metro-live-tile")) {
+    customElements.define("metro-live-tile", MetroLiveTile);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

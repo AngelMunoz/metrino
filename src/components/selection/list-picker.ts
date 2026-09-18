@@ -224,7 +224,11 @@ export class MetroListPicker extends LitElement {
   }
 }
 
-customElements.define("metro-list-picker", MetroListPicker);
+export function registerMetroListPicker(): void {
+  if (!customElements.get("metro-list-picker")) {
+    customElements.define("metro-list-picker", MetroListPicker);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

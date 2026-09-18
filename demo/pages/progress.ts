@@ -1,9 +1,14 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/progress/progress-bar.ts";
-import "@src/components/progress/progress-ring.ts";
-import "@src/components/input/slider.ts";
-import "@src/components/buttons/button.ts";
+import { registerMetroProgressBar } from "@src/components/progress/progress-bar.ts";
+import { registerMetroProgressRing } from "@src/components/progress/progress-ring.ts";
+import { registerMetroSlider } from "@src/components/input/slider.ts";
+import { registerMetroButton } from "@src/components/buttons/button.ts";
+
+registerMetroProgressBar();
+registerMetroProgressRing();
+registerMetroSlider();
+registerMetroButton();
 
 export class MetrinoProgressPage extends LitElement {
   static styles = css`

@@ -133,7 +133,11 @@ export class MetroRadioButton extends LitElement {
   }
 }
 
-customElements.define("metro-radio-button", MetroRadioButton);
+export function registerMetroRadioButton(): void {
+  if (!customElements.get("metro-radio-button")) {
+    customElements.define("metro-radio-button", MetroRadioButton);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

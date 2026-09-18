@@ -5,16 +5,27 @@ import {
   groupHeader,
 } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
-import "@src/components/selection/list-box.ts";
-import "@src/components/selection/list-view.ts";
-import "@src/components/selection/grid-view.ts";
-import "@src/components/selection/flip-view.ts";
-import "@src/components/selection/tree-view.ts";
-import "@src/components/selection/long-list-selector.ts";
-import "@src/components/selection/semantic-zoom.ts";
-import "@src/components/selection/list-picker.ts";
-import "@src/components/buttons/button.ts";
-import "@src/components/primitives/icon.ts";
+import { registerMetroListBox } from "@src/components/selection/list-box.ts";
+import { registerMetroListView } from "@src/components/selection/list-view.ts";
+import { registerMetroGridView } from "@src/components/selection/grid-view.ts";
+import { registerMetroFlipView } from "@src/components/selection/flip-view.ts";
+import { registerMetroTreeView } from "@src/components/selection/tree-view.ts";
+import { registerMetroLongListSelector } from "@src/components/selection/long-list-selector.ts";
+import { registerMetroSemanticZoom } from "@src/components/selection/semantic-zoom.ts";
+import { registerMetroListPicker } from "@src/components/selection/list-picker.ts";
+import { registerMetroButton } from "@src/components/buttons/button.ts";
+import { registerMetroIcon } from "@src/components/primitives/icon.ts";
+
+registerMetroListBox();
+registerMetroListView();
+registerMetroGridView();
+registerMetroFlipView();
+registerMetroTreeView();
+registerMetroLongListSelector();
+registerMetroSemanticZoom();
+registerMetroListPicker();
+registerMetroButton();
+registerMetroIcon();
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 

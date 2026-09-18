@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./person-picture.ts";
-import { MetroPersonPicture } from "./person-picture.ts";
+import { registerMetroPersonPicture, MetroPersonPicture } from "./person-picture.ts";
 
 suite("metro-person-picture", () => {
+  registerMetroPersonPicture();
   let container: HTMLDivElement;
 
   setup(() => {

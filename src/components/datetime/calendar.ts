@@ -365,7 +365,11 @@ export class MetroCalendar extends LitElement {
   }
 }
 
-customElements.define("metro-calendar", MetroCalendar);
+export function registerMetroCalendar(): void {
+  if (!customElements.get("metro-calendar")) {
+    customElements.define("metro-calendar", MetroCalendar);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

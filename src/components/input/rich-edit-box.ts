@@ -254,7 +254,11 @@ export class MetroRichEditBox extends LitElement {
   }
 }
 
-customElements.define("metro-rich-edit-box", MetroRichEditBox);
+export function registerMetroRichEditBox(): void {
+  if (!customElements.get("metro-rich-edit-box")) {
+    customElements.define("metro-rich-edit-box", MetroRichEditBox);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

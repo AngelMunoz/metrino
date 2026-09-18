@@ -196,7 +196,11 @@ export class MetroMediaElement extends LitElement {
   }
 }
 
-customElements.define("metro-media-element", MetroMediaElement);
+export function registerMetroMediaElement(): void {
+  if (!customElements.get("metro-media-element")) {
+    customElements.define("metro-media-element", MetroMediaElement);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

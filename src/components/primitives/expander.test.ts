@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import "./expander.ts";
-import { MetroExpander } from "./expander.ts";
+import { registerMetroExpander, MetroExpander } from "./expander.ts";
 
 suite("metro-expander", () => {
+  registerMetroExpander();
   let container: HTMLDivElement;
 
   setup(() => {

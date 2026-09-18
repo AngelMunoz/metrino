@@ -300,7 +300,11 @@ export class MetroDropdownButton extends LitElement {
   }
 }
 
-customElements.define("metro-dropdown-button", MetroDropdownButton);
+export function registerMetroDropdownButton(): void {
+  if (!customElements.get("metro-dropdown-button")) {
+    customElements.define("metro-dropdown-button", MetroDropdownButton);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -1,17 +1,30 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/primitives/text-block.ts";
-import "@src/components/primitives/icon.ts";
-import "@src/components/primitives/expander.ts";
-import "@src/components/primitives/info-bar.ts";
-import "@src/components/primitives/person-picture.ts";
-import "@src/components/primitives/tooltip.ts";
-import "@src/components/primitives/border.ts";
-import "@src/components/primitives/image.ts";
-import "@src/components/primitives/rich-text-block.ts";
-import "@src/components/primitives/media-element.ts";
-import "@src/components/primitives/context-menu.ts";
-import "@src/components/buttons/button.ts";
+import { registerMetroTextBlock } from "@src/components/primitives/text-block.ts";
+import { registerMetroIcon } from "@src/components/primitives/icon.ts";
+import { registerMetroExpander } from "@src/components/primitives/expander.ts";
+import { registerMetroInfoBar } from "@src/components/primitives/info-bar.ts";
+import { registerMetroPersonPicture } from "@src/components/primitives/person-picture.ts";
+import { registerMetroTooltip } from "@src/components/primitives/tooltip.ts";
+import { registerMetroBorder } from "@src/components/primitives/border.ts";
+import { registerMetroImage } from "@src/components/primitives/image.ts";
+import { registerMetroRichTextBlock } from "@src/components/primitives/rich-text-block.ts";
+import { registerMetroMediaElement } from "@src/components/primitives/media-element.ts";
+import { registerMetroContextMenu } from "@src/components/primitives/context-menu.ts";
+import { registerMetroButton } from "@src/components/buttons/button.ts";
+
+registerMetroTextBlock();
+registerMetroIcon();
+registerMetroExpander();
+registerMetroInfoBar();
+registerMetroPersonPicture();
+registerMetroTooltip();
+registerMetroBorder();
+registerMetroImage();
+registerMetroRichTextBlock();
+registerMetroMediaElement();
+registerMetroContextMenu();
+registerMetroButton();
 
 const ICON_SAMPLES = [
   "home",

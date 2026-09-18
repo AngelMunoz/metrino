@@ -1,9 +1,9 @@
 import { assert } from "chai";
-import "./flip-tile.ts";
-import { MetroFlipTile } from "./flip-tile.ts";
+import { registerMetroFlipTile, MetroFlipTile } from "./flip-tile.ts";
 
 suite("metro-flip-tile", () => {
   let container: HTMLDivElement;
+  registerMetroFlipTile();
 
   setup(() => {
     container = document.createElement("div");

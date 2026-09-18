@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, scrollbarVisible } from "../../styles/shared.ts";
 import type { PropertyValueMap } from "lit";
-import "../primitives/icon.ts";
+import { registerMetroIcon } from "../primitives/icon.ts";
 
 export interface TreeViewItem {
   id: string;
@@ -361,7 +361,12 @@ export class MetroTreeView extends LitElement {
   }
 }
 
-customElements.define("metro-tree-view", MetroTreeView);
+export function registerMetroTreeView(): void {
+  registerMetroIcon();
+  if (!customElements.get("metro-tree-view")) {
+    customElements.define("metro-tree-view", MetroTreeView);
+  }
+}
 
 declare global {
   interface HTMLElementTagNameMap {

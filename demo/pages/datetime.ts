@@ -1,11 +1,18 @@
 import { LitElement, html, css } from "lit";
 import "../components/api-docs.ts";
-import "@src/components/datetime/date-picker.ts";
-import "@src/components/datetime/time-picker.ts";
-import "@src/components/datetime/date-picker-roller.ts";
-import "@src/components/datetime/time-picker-roller.ts";
-import "@src/components/datetime/calendar.ts";
-import "@src/components/datetime/calendar-date-picker.ts";
+import { registerMetroDatePicker } from "@src/components/datetime/date-picker.ts";
+import { registerMetroTimePicker } from "@src/components/datetime/time-picker.ts";
+import { registerMetroDatePickerRoller } from "@src/components/datetime/date-picker-roller.ts";
+import { registerMetroTimePickerRoller } from "@src/components/datetime/time-picker-roller.ts";
+import { registerMetroCalendar } from "@src/components/datetime/calendar.ts";
+import { registerMetroCalendarDatePicker } from "@src/components/datetime/calendar-date-picker.ts";
+
+registerMetroDatePicker();
+registerMetroTimePicker();
+registerMetroDatePickerRoller();
+registerMetroTimePickerRoller();
+registerMetroCalendar();
+registerMetroCalendarDatePicker();
 
 export class MetrinoDatetimePage extends LitElement {
   static styles = css`
