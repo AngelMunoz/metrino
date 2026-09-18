@@ -2,13 +2,18 @@
 
 ## [Unreleased]
 
-### Changed (BREAKING)
+## [0.4.0] - 2026-08-18
+
+### Changed
+
 - **all components**: Component modules no longer register their custom elements as an import side effect. Each module exports a `registerMetro<Component>()` function (e.g. `registerMetroButton`) that defines the element if it is not already defined; calling it also registers the component's internal dependencies. The root package additionally exports per-category helpers (`registerButtons`, `registerNavigation`, ...) and `registerAllComponents` from the new `src/register.ts`. Consumers must now call the register function explicitly — importing a module only pulls in the class and its types.
 
 ### Added
+
 - **register.ts** - central registration module with per-category register helpers and `registerAllComponents()`
 
 ### Fixed
+
 - **demo**: demo pages and the app shell now register the components they render explicitly instead of relying on side-effect imports
 - **tests**: all test suites call the component's register function explicitly
 - **package.json**: `prepublishOnly` now uses `pnpm run build`
@@ -16,14 +21,17 @@
 ## [0.3.0] - 2026-06-10
 
 ### Added
+
 - **icons** - exported the icon map from the icon module
 
 ### Changed
+
 - **tokens.css** - made sure that the tokens css sets font family at the document level
 
 ## [0.2.0] - 2026-06-10
 
 ### Changed
+
 - **content-dialog**: Replaced `closing` state machine and `animationend` handler with View Transitions API. `show()` and `hide()` are now async (`Promise<void>`). Removed `closing` property.
 - **message-dialog**: Same VT refactor as content-dialog. Removed `closing` property and `animationend` handler. `show()` and `hide()` are now async.
 - **settings-flyout**: Added `view-transition-name` on panel and backdrop for View Transition participation. CSS transitions remain as baseline. `show()` and `hide()` are now async.
@@ -32,14 +40,17 @@
 - **shared styles**: Removed unused `dialogAnimation` export (keyframes moved into component styles).
 
 ### Fixed
+
 - **View Transition pseudo-element styles**: Moved `::view-transition-old/new` animation rules and `@keyframes` from component shadow CSS to global `src/styles/animations.css`. Shadow CSS cannot style document-root pseudo-elements — these rules were silently failing. Now scoped with `html:active-view-transition-type(...)` per component.
 
 ### Removed
+
 - Centralized `dialogAnimation` keyframes from `src/styles/shared.ts` (no longer imported by any component).
 
 ## [0.1.0] - 2026-06-09
 
 ### Added
+
 - 62 Metro Design Language web components built with Lit
 - CSS custom properties design token system (light/dark themes, 21 accent colors)
 - Metro type ramp (title, subtitle, header, body, display, badge, caption)
