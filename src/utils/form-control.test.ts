@@ -5,6 +5,7 @@ import {
   dateValidation,
   numberValidation,
   parseISODate,
+  richTextValidation,
   textValidation,
   timeValidation,
 } from "./form-control.ts";
@@ -40,6 +41,23 @@ suite("form-control helpers", () => {
 
     test("empty optional value is valid", () => {
       assert.deepEqual(textValidation("", false), VALID);
+    });
+  });
+
+  suite("richTextValidation", () => {
+    test("required with empty or formatting-only markup reports valueMissing", () => {
+      assert.isTrue(richTextValidation("", true).flags.valueMissing);
+      assert.isTrue(richTextValidation("<br>", true).flags.valueMissing);
+      assert.isTrue(richTextValidation("<p>   </p>", true).flags.valueMissing);
+    });
+
+    test("required with visible text is valid", () => {
+      assert.deepEqual(richTextValidation("<p>Hello</p>", true), VALID);
+    });
+
+    test("optional markup is always valid", () => {
+      assert.deepEqual(richTextValidation("<br>", false), VALID);
+      assert.deepEqual(richTextValidation("", false), VALID);
     });
   });
 
@@ -184,9 +202,16 @@ suite("form-control helpers", () => {
       assert.deepEqual(timeValidation("2:05 am", false), VALID);
     });
 
+    test("in-range seconds are valid", () => {
+      assert.deepEqual(timeValidation("14:30:59", false), VALID);
+      assert.deepEqual(timeValidation("1:05:59 PM", false), VALID);
+    });
+
     test("out-of-range times report badInput", () => {
       assert.isTrue(timeValidation("25:00", false).flags.badInput);
       assert.isTrue(timeValidation("13:30 PM", false).flags.badInput);
+      assert.isTrue(timeValidation("23:59:99", false).flags.badInput);
+      assert.isTrue(timeValidation("1:05:99 PM", false).flags.badInput);
       assert.isTrue(timeValidation("garbage", false).flags.badInput);
     });
   });
@@ -379,6 +404,133 @@ suite("form control validation integration", () => {
     await assertSubmitAllowed(form);
   });
 
+  test("radio-button: groups are scoped to the form owner", async () => {
+    const formA = document.createElement("form");
+    const formB = document.createElement("form");
+    const radios: Validatable[] = [];
+
+    function addRadio(form: HTMLFormElement, value: string, required = false): Validatable {
+      const radio = document.createElement("metro-radio-button") as Validatable;
+      radio.setAttribute("name", "plan");
+      radio.setAttribute("value", value);
+      if (required) radio.setAttribute("required", "");
+      form.appendChild(radio);
+      radios.push(radio);
+      return radio;
+    }
+
+    const [a1, a2, b1, b2] = [
+      addRadio(formA, "a1", true),
+      addRadio(formA, "a2"),
+      addRadio(formB, "b1"),
+      addRadio(formB, "b2"),
+    ];
+    container.appendChild(formA);
+    container.appendChild(formB);
+    for (const radio of radios) {
+      await radio.updateComplete;
+    }
+
+    async function click(radio: Validatable): Promise<void> {
+      (radio.shadowRoot?.querySelector(".radio") as HTMLElement).click();
+      await radio.updateComplete;
+    }
+
+    // A selection in form B must neither satisfy nor clear form A's group.
+    await click(b1);
+    assert.isFalse(a1.checked);
+    assert.isFalse(a2.checked);
+    await assertSubmitBlocked(formA, a1, () => {});
+
+    await click(a2);
+    assert.isTrue(b1.checked);
+    await assertSubmitAllowed(formA);
+
+    // Selecting another member of form B leaves form A's selection alone.
+    await click(b2);
+    assert.isTrue(a2.checked);
+    assert.isTrue(b2.checked);
+  });
+
+  test("radio-button: renaming the checked member revalidates the group left behind", async () => {
+    const form = document.createElement("form");
+    const required = document.createElement("metro-radio-button") as Validatable;
+    required.setAttribute("name", "plan");
+    required.setAttribute("value", "a");
+    required.setAttribute("required", "");
+    const checked = document.createElement("metro-radio-button") as Validatable;
+    checked.setAttribute("name", "plan");
+    checked.setAttribute("value", "b");
+    form.appendChild(required);
+    form.appendChild(checked);
+    container.appendChild(form);
+    await required.updateComplete;
+    await checked.updateComplete;
+
+    checked.checked = true;
+    await checked.updateComplete;
+    await assertSubmitAllowed(form);
+
+    // The required group loses its only selection when the checked member is
+    // renamed out of it, so the form must block again.
+    await assertSubmitBlocked(form, required, () => { checked.name = "other"; });
+  });
+
+  test("radio-button: removing the checked member invalidates the group left behind", async () => {
+    const form = document.createElement("form");
+    const required = document.createElement("metro-radio-button") as Validatable;
+    required.setAttribute("name", "plan");
+    required.setAttribute("value", "a");
+    required.setAttribute("required", "");
+    const checked = document.createElement("metro-radio-button") as Validatable;
+    checked.setAttribute("name", "plan");
+    checked.setAttribute("value", "b");
+    form.appendChild(required);
+    form.appendChild(checked);
+    container.appendChild(form);
+    await required.updateComplete;
+    await checked.updateComplete;
+
+    checked.checked = true;
+    await checked.updateComplete;
+    await assertSubmitAllowed(form);
+
+    checked.remove();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await required.updateComplete;
+    await assertSubmitBlocked(form, required, () => {});
+  });
+
+  test("radio-button: moving a checked member between forms moves its group membership", async () => {
+    const formA = document.createElement("form");
+    formA.id = "radio-move-form-a";
+    const formB = document.createElement("form");
+    const required = document.createElement("metro-radio-button") as Validatable;
+    required.setAttribute("name", "plan");
+    required.setAttribute("value", "a");
+    required.setAttribute("required", "");
+    const checked = document.createElement("metro-radio-button") as Validatable;
+    checked.setAttribute("name", "plan");
+    checked.setAttribute("value", "b");
+    formA.appendChild(required);
+    formB.appendChild(checked);
+    container.appendChild(formA);
+    container.appendChild(formB);
+    await required.updateComplete;
+    await checked.updateComplete;
+
+    // Checking the member in form B must not satisfy form A's group.
+    checked.checked = true;
+    await checked.updateComplete;
+    await assertSubmitBlocked(formA, required, () => {});
+
+    // Re-associating the checked radio with form A satisfies its group.
+    checked.setAttribute("form", formA.id);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await required.updateComplete;
+    await assertSubmitAllowed(formA);
+  });
+
   test("slider: programmatic out-of-range values block submit", async () => {
     const { form, control } = await createInForm("metro-slider", { name: "vol", min: "0", max: "100" });
     await assertSubmitAllowed(form);
@@ -395,6 +547,30 @@ suite("form control validation integration", () => {
     await control.updateComplete;
     await assertSubmitAllowed(form);
     await assertSubmitBlocked(form, control, () => { control.value = 9; });
+  });
+
+  test("numeric controls: non-finite values are not submitted", async () => {
+    const cases = [
+      ["metro-number-box", "count"],
+      ["metro-slider", "vol"],
+      ["metro-rating", "stars"],
+    ] as const;
+
+    for (const [tag, name] of cases) {
+      const { form, control } = await createInForm(tag, { name });
+
+      control.value = Number.NaN;
+      await control.updateComplete;
+      assert.isFalse(new FormData(form).has(name), `${tag} must not submit NaN`);
+
+      control.value = Number.POSITIVE_INFINITY;
+      await control.updateComplete;
+      assert.isFalse(new FormData(form).has(name), `${tag} must not submit Infinity`);
+
+      control.value = 3;
+      await control.updateComplete;
+      assert.equal(new FormData(form).get(name), "3", `${tag} must submit finite values`);
+    }
   });
 
   test("combo-box: required blocks submit until selected", async () => {
@@ -416,6 +592,15 @@ suite("form control validation integration", () => {
   test("rich-edit-box: required blocks submit until content is set", async () => {
     const { form, control } = await createInForm("metro-rich-edit-box", { name: "bio", required: "" });
     await assertSubmitBlocked(form, control, () => {});
+    control.value = "<p>Hello</p>";
+    await control.updateComplete;
+    await assertSubmitAllowed(form);
+  });
+
+  test("rich-edit-box: required ignores formatting-only markup", async () => {
+    const { form, control } = await createInForm("metro-rich-edit-box", { name: "bio", required: "" });
+    await assertSubmitBlocked(form, control, () => { control.value = "<br>"; });
+    await assertSubmitBlocked(form, control, () => { control.value = "<p>   </p>"; });
     control.value = "<p>Hello</p>";
     await control.updateComplete;
     await assertSubmitAllowed(form);

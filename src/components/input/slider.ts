@@ -195,7 +195,7 @@ export class MetroSlider extends LitElement {
   #updateState(): void {
     updateFormControlState(
       this.#internals,
-      String(this.value),
+      Number.isFinite(this.value) ? String(this.value) : null,
       numberValidation({
         value: this.value,
         required: false,

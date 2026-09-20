@@ -110,7 +110,9 @@ All input and date/time controls are form-associated custom elements: they
 submit their value through `FormData`, reset with the form, disable with the
 form, and participate in constraint validation. Set `required` (and where
 supported `min`/`max`/`step` or date bounds) and an invalid control blocks
-submission; `form.reportValidity()` focuses the control's inner input.
+submission; `form.reportValidity()` focuses the control's inner element when
+that element is focusable (`metro-rating` and the picker rollers report their
+message without moving focus).
 
 ```html
 <form id="signup">

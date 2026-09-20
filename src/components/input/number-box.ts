@@ -148,7 +148,7 @@ export class MetroNumberBox extends LitElement {
   #updateState(): void {
     updateFormControlState(
       this.#internals,
-      String(this.value),
+      Number.isFinite(this.value) ? String(this.value) : null,
       numberValidation({
         value: this.value,
         required: this.required && !this.disabled,

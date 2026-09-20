@@ -115,7 +115,12 @@ export class MetroRating extends LitElement {
       this.required && !this.disabled && unrated
         ? valueMissing()
         : numberValidation({ value: this.value, required: false, min: 0, max: this.max });
-    updateFormControlState(this.#internals, String(this.value), validation, this.#star);
+    updateFormControlState(
+      this.#internals,
+      Number.isFinite(this.value) ? String(this.value) : null,
+      validation,
+      this.#star,
+    );
   }
 
   #setValue(value: number): void {

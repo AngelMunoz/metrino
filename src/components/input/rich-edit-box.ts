@@ -1,7 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, formLabel, disabledState } from "../../styles/shared.ts";
 import { sanitizeHtmlFragment } from "../../utils/sanitize.ts";
-import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
+import { richTextValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 /**
  * Metro Rich Edit Box Component
@@ -240,14 +240,16 @@ export class MetroRichEditBox extends LitElement {
   /**
    * Syncs both halves of form state — the submitted value and the
    * constraint-validation state — so neither can go stale. Like a native
-   * readonly input, a readonly editor is barred from validation.
+   * readonly input, a readonly editor is barred from validation. Required is
+   * checked against visible text, not markup, so an editor emptied with
+   * Ctrl+A / Delete (which can leave "<br>" behind) still reports missing.
    * @returns void
    */
   #updateState(): void {
     updateFormControlState(
       this.#internals,
       this.value,
-      textValidation(this.value, this.required && !this.disabled && !this.readonly),
+      richTextValidation(this.value, this.required && !this.disabled && !this.readonly),
       this.#getEditor(),
     );
   }

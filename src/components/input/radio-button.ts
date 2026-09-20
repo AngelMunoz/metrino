@@ -60,6 +60,11 @@ export class MetroRadioButton extends LitElement {
 
   #internals: ElementInternals;
   #control?: HTMLDivElement;
+  /**
+   * Snapshot of the group this button belonged to after the last sync, used
+   * to resync the members it leaves behind on a name or form-owner change.
+   */
+  #group: MetroRadioButton[] = [];
 
   constructor() {
     super();
@@ -87,9 +92,25 @@ export class MetroRadioButton extends LitElement {
     `;
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    // This button may have joined a different group by being re-parented.
+    this.#syncGroup(this.#group);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    // Removing a member -- especially a checked or required one -- can flip
+    // the group-wide validity of the members left behind.
+    for (const member of this.#group) {
+      if (member !== this && member.isConnected) member.#updateState();
+    }
+    this.#group = [];
+  }
+
   firstUpdated(): void {
     this.#control = this.shadowRoot?.querySelector(".radio") ?? undefined;
-    this.#updateState();
+    this.#syncGroup();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
@@ -100,9 +121,28 @@ export class MetroRadioButton extends LitElement {
       changedProperties.has("name")
     ) {
       // Checkedness of one member changes the group-wide validity of all
-      // others (required groups become valid once any member is checked),
-      // so the whole group resyncs whenever this member's state changes.
-      for (const member of this.#groupMembers()) {
+      // others (required groups become valid once any member is checked).
+      // A name change also moves this button to a different group, so the
+      // group it left is resynced from the pre-change snapshot.
+      const previous = changedProperties.has("name") ? this.#group : [];
+      this.#syncGroup(previous);
+    }
+  }
+
+  /**
+   * Recomputes this button's group and writes form state on every member,
+   * including the members of a group it just left, because group-wide
+   * validity can change for them too.
+   * @param previous - Members of the group before this update, if any
+   * @returns void
+   */
+  #syncGroup(previous: MetroRadioButton[] = []): void {
+    const members = this.#groupMembers();
+    for (const member of members) {
+      member.#group = members;
+    }
+    for (const member of new Set([...members, ...previous])) {
+      if (member === this || member.isConnected) {
         member.#updateState();
       }
     }
@@ -132,14 +172,15 @@ export class MetroRadioButton extends LitElement {
     this.checked = true;
     // Uncheck the group before dispatching so change listeners observe the
     // final state. Like native radios, the group is scoped to the tree the
-    // button lives in (its root node), not the document, so groups work
-    // inside shadow roots as well as light DOM.
+    // button lives in (its root node) and its form owner, not the document,
+    // so groups work inside shadow roots as well as light DOM and two forms
+    // can reuse the same name.
     for (const member of this.#groupMembers()) {
       if (member !== this && member.checked) {
         member.checked = false;
       }
-      member.#updateState();
     }
+    this.#syncGroup();
     this.dispatchEvent(new CustomEvent("change", {
       detail: { checked: this.checked, value: this.value },
       bubbles: true,
@@ -149,8 +190,8 @@ export class MetroRadioButton extends LitElement {
 
   /**
    * Returns every radio button in this button's group: the same-named
-   * buttons in the tree this button lives in (its root node), including
-   * this one.
+   * buttons in the tree this button lives in (its root node) that share its
+   * form owner, including this one.
    * @returns MetroRadioButton[]
    */
   #groupMembers(): MetroRadioButton[] {
@@ -160,8 +201,11 @@ export class MetroRadioButton extends LitElement {
     if (!(root instanceof Document || root instanceof ShadowRoot || root instanceof Element)) {
       return [this];
     }
+    const form = this.#internals.form;
     root.querySelectorAll<MetroRadioButton>("metro-radio-button").forEach(rb => {
-      if (rb.name === this.name) members.push(rb);
+      if (rb instanceof MetroRadioButton && rb.name === this.name && rb.#internals.form === form) {
+        members.push(rb);
+      }
     });
     return members.length > 0 ? members : [this];
   }
@@ -171,6 +215,12 @@ export class MetroRadioButton extends LitElement {
       e.preventDefault();
       this.#select();
     }
+  }
+
+  formAssociatedCallback(): void {
+    // The group is scoped to the form owner, so association changes (e.g.
+    // moving the button between forms) move it between groups.
+    this.#syncGroup(this.#group);
   }
 
   formDisabledCallback(disabled: boolean): void {

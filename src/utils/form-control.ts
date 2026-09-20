@@ -10,6 +10,8 @@
  * path (property change, user input, reset, state restore) already calls.
  */
 
+import { sanitizeHtmlFragment } from "./sanitize.ts";
+
 /**
  * Constraint-validation outcome for a control state: which native validity
  * flags apply and the message reported for the first failing flag.
@@ -64,6 +66,20 @@ export function textValidation(value: string, required: boolean): ValidationStat
     return { flags: { valueMissing: true }, message: REQUIRED_MESSAGE };
   }
   return VALID;
+}
+
+/**
+ * Validation for rich text entry: `value` is markup, so a required control
+ * must contain visible text — formatting-only markup such as "<br>" or
+ * whitespace-only content counts as missing.
+ * @param value - Current HTML value
+ * @param required - Whether the control requires content (already gated on disabled/readonly)
+ * @returns ValidationState
+ */
+export function richTextValidation(value: string, required: boolean): ValidationState {
+  if (!required) return VALID;
+  const text = sanitizeHtmlFragment(value).textContent ?? "";
+  return text.trim() === "" ? valueMissing() : VALID;
 }
 
 /**
@@ -217,14 +233,15 @@ export function timeValidation(value: string, required: boolean): ValidationStat
   }
   const hours = Number(match[1]);
   const minutes = Number(match[2]);
+  const seconds = match[3] === undefined ? 0 : Number(match[3]);
   const meridiem = match[4]?.toLowerCase();
   if (meridiem) {
-    if (hours < 1 || hours > 12 || minutes > 59) {
+    if (hours < 1 || hours > 12 || minutes > 59 || seconds > 59) {
       return { flags: { badInput: true }, message: "Enter a valid time." };
     }
     return VALID;
   }
-  if (hours > 23 || minutes > 59) {
+  if (hours > 23 || minutes > 59 || seconds > 59) {
     return { flags: { badInput: true }, message: "Enter a valid time." };
   }
   return VALID;
