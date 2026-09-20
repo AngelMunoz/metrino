@@ -189,7 +189,7 @@ export class MetroLongListSelector extends LitElement {
 
     if (this.items.length === 0) {
       return html`
-        <div class="list-container" style="max-height: ${this.maxHeight}">
+        <div class="list-container">
           <div class="empty-message">No items</div>
         </div>
       `;
@@ -198,7 +198,6 @@ export class MetroLongListSelector extends LitElement {
     return html`
       <div
         class="list-container"
-        style="max-height: ${this.maxHeight}"
         @scroll=${this.#onScroll}
       >
         <div class="viewport" style="height: ${this.#totalHeight}px;">
@@ -542,6 +541,14 @@ export class MetroLongListSelector extends LitElement {
 
     if (changedProperties.has("selectedValue") && this.selectedValue !== null && this.selectionMode !== "none") {
       this.#syncSelectionFromValue();
+    }
+  }
+
+  protected updated(): void {
+    const container = this.shadowRoot?.querySelector<HTMLElement>(".list-container");
+    if (container) {
+      container.style.maxHeight = "";
+      container.style.maxHeight = this.maxHeight;
     }
   }
 

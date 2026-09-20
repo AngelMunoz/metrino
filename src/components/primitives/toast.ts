@@ -4,6 +4,9 @@ import { registerMetroIcon } from "./icon.ts";
 
 /**
  * Options for showing a toast notification.
+ *
+ * `title` and `message` are rendered as plain text. Markup is not interpreted,
+ * so untrusted values are safe to pass.
  */
 export interface ToastOptions {
   /** Optional title displayed above the message */
@@ -25,6 +28,8 @@ const severityIcons: Record<string, string> = {
   warning: "warning",
   error: "close",
 };
+
+const VALID_SEVERITIES = new Set(Object.keys(severityIcons));
 
 /**
  * Metro Toast Component
@@ -181,8 +186,13 @@ export class MetroToast extends LitElement {
    */
   show(options: ToastOptions): string {
     const id = `toast-${++this.#toastId}`;
-    const severity = options.severity || "informational";
-    
+    const severity = options.severity ?? "informational";
+    if (!VALID_SEVERITIES.has(severity)) {
+      throw new TypeError(
+        `Invalid severity "${severity}". Expected: informational, success, warning, error`,
+      );
+    }
+
     const toast = document.createElement("div");
     toast.className = `toast ${severity}`;
     toast.id = id;
@@ -198,10 +208,18 @@ export class MetroToast extends LitElement {
 
     const content = document.createElement("div");
     content.className = "toast-content";
-    content.innerHTML = `
-      ${options.title ? `<div class="toast-title">${options.title}</div>` : ""}
-      <div class="toast-message">${options.message}</div>
-    `;
+
+    if (options.title) {
+      const title = document.createElement("div");
+      title.className = "toast-title";
+      title.textContent = options.title;
+      content.appendChild(title);
+    }
+
+    const message = document.createElement("div");
+    message.className = "toast-message";
+    message.textContent = options.message;
+    content.appendChild(message);
 
     const closeBtn = document.createElement("button");
     closeBtn.className = "close-btn";

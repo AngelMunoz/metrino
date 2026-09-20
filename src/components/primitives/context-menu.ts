@@ -3,6 +3,11 @@ import { baseTypography, dropdownAnimation } from "../../styles/shared.ts";
 
 export class MetroContextMenu extends LitElement {
   static properties = {
+    /**
+     * CSS selector for the element that opens the context menu.
+     * Invalid selectors are ignored.
+     * @default ""
+     */
     target: { type: String },
     open: { type: Boolean, reflect: true },
     delay: { type: Number },
@@ -113,13 +118,22 @@ export class MetroContextMenu extends LitElement {
   }
 
   #attachToTarget(): void {
-    this.#targetElement = document.querySelector(this.target);
+    this.#targetElement = this.#queryTarget(this.target);
     if (!this.#targetElement) return;
 
     this.#targetElement.addEventListener("pointerdown", this.#boundPointerDown as EventListener);
     this.#targetElement.addEventListener("pointerup", this.#boundPointerUp as EventListener);
     this.#targetElement.addEventListener("pointerleave", this.#boundPointerLeave as EventListener);
     this.#targetElement.addEventListener("contextmenu", this.#boundContextMenu as EventListener);
+  }
+
+  #queryTarget(selector: string): Element | null {
+    if (!selector) return null;
+    try {
+      return document.querySelector(selector);
+    } catch {
+      return null;
+    }
   }
 
   #detachFromTarget(): void {

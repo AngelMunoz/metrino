@@ -9,20 +9,37 @@ export class MetroGrid extends LitElement {
   declare rows: string | undefined;
   declare columns: string | undefined;
 
+  #hostStyles: CSSStyleSheet | undefined;
+
   static styles = css`
-    :host { display: grid; box-sizing: border-box; }
+    :host { display: grid; box-sizing: border-box; gap: var(--metro-gap, 8px); }
     ::slotted(*) { min-width: 0; min-height: 0; }
   `;
 
   render() {
-    const rowStyles = this.rows ? `grid-template-rows: ${this.rows};` : "";
-    const colStyles = this.columns ? `grid-template-columns: ${this.columns};` : "";
-    return html`
-      <style>
-        :host { ${rowStyles} ${colStyles} gap: var(--metro-gap, 8px); }
-      </style>
-      <slot></slot>
-    `;
+    return html`<slot></slot>`;
+  }
+
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    const root = super.createRenderRoot();
+    if (!(root instanceof ShadowRoot)) return root;
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(":host {}");
+    root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+    this.#hostStyles = sheet;
+    return root;
+  }
+
+  protected updated(): void {
+    const sheet = this.#hostStyles;
+    if (!sheet) return;
+    const rule = sheet.cssRules[0];
+    if (!(rule instanceof CSSStyleRule)) return;
+    const style = rule.style;
+    style.setProperty("grid-template-rows", "");
+    style.setProperty("grid-template-columns", "");
+    if (this.rows) style.setProperty("grid-template-rows", this.rows);
+    if (this.columns) style.setProperty("grid-template-columns", this.columns);
   }
 }
 

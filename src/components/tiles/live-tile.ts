@@ -8,6 +8,21 @@ interface LiveTileItem {
   message?: string;
 }
 
+const createTextElement = (className: string, text: string): HTMLDivElement => {
+  const el = document.createElement("div");
+  el.className = className;
+  el.textContent = text;
+  return el;
+};
+
+/**
+ * Metro Live Tile Component
+ *
+ * Cycles through short text updates on an accent-colored tile. Item text is
+ * rendered as plain text, so untrusted values are safe to pass. For custom
+ * content (icons, images, custom layouts) project into the `icon` or default
+ * slot instead of passing markup through `setItems`.
+ */
 export class MetroLiveTile extends LitElement {
   static properties = {
     size: { type: String, reflect: true },
@@ -104,6 +119,12 @@ export class MetroLiveTile extends LitElement {
     `;
   }
 
+  /**
+   * Sets the items the tile cycles through. `title` and `message` are
+   * rendered as plain text.
+   * @param items - Tile text items
+   * @returns void
+   */
   setItems(items: LiveTileItem[]): void {
     this.#items = items;
     this.#renderCurrentItem();
@@ -126,10 +147,13 @@ export class MetroLiveTile extends LitElement {
     const item = this.#items[this.#currentIndex];
     const content = document.createElement("div");
     content.className = "live-content";
-    content.innerHTML = `
-      ${item.title ? `<div class="live-title">${item.title}</div>` : ""}
-      ${item.message ? `<div class="live-message">${item.message}</div>` : ""}
-    `;
+
+    if (item.title) {
+      content.appendChild(createTextElement("live-title", item.title));
+    }
+    if (item.message) {
+      content.appendChild(createTextElement("live-message", item.message));
+    }
 
     container.appendChild(content);
     requestAnimationFrame(() => {

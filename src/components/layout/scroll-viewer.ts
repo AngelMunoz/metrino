@@ -22,8 +22,8 @@ export type ScrollbarMode = "auto" | "visible" | "hidden";
 
 export class MetroScrollViewer extends LitElement {
   static properties = {
-    scrollOrientation: { type: String, reflect: true },
-    scrollbarMode: { type: String, reflect: true },
+    scrollOrientation: { type: String, reflect: true, attribute: "scroll-orientation" },
+    scrollbarMode: { type: String, reflect: true, attribute: "scrollbar-mode" },
     touchPhysics: { type: Boolean, reflect: true, attribute: "touch-physics" },
   };
 

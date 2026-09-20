@@ -11,5 +11,5 @@
     "erasableSyntaxOnly": false,
   },
   "include": ["src"],
-  "exclude": ["**/*.test.ts"],
+  "exclude": ["**/*.test.ts", "**/test-helpers.ts"],
 }

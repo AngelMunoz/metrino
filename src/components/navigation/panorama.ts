@@ -13,6 +13,31 @@ import {
   type GestureState,
 } from "../../utils/touch-physics.ts";
 
+const SAFE_BACKGROUND_SCHEMES = new Set(["http:", "https:"]);
+
+/**
+ * Builds a quoted CSS url() for a background image, or null when the value is
+ * empty or uses a scheme other than http(s) or data:image.
+ * @param value - The background image URL
+ * @returns string | null
+ */
+function safeBackgroundStyle(value: string): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value, document.baseURI);
+    if (
+      !SAFE_BACKGROUND_SCHEMES.has(url.protocol) &&
+      !url.href.toLowerCase().startsWith("data:image/")
+    ) {
+      return null;
+    }
+    const escaped = url.href.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    return `url("${escaped}")`;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Metro Panorama Component
  *
@@ -53,6 +78,8 @@ export class MetroPanorama extends LitElement {
     /**
      * URL of the background image for the parallax effect.
      * The image is displayed at 15% opacity and moves at 20% of scroll speed.
+     * Only relative URLs, http(s) URLs and data:image URLs are applied;
+     * other schemes are ignored.
      * @default ""
      */
     backgroundImage: { type: String, reflect: true, attribute: "background-image" },
@@ -115,11 +142,8 @@ export class MetroPanorama extends LitElement {
 
   render() {
     return html`
-      ${this.backgroundImage
-        ? html`<div
-            class="parallax-bg"
-            style="background-image: url(${this.backgroundImage})"
-          ></div>`
+      ${safeBackgroundStyle(this.backgroundImage)
+        ? html`<div class="parallax-bg"></div>`
         : ""}
       ${this.title ? html`<h2 class="panorama-title">${this.title}</h2>` : ""}
       <div
@@ -145,6 +169,12 @@ export class MetroPanorama extends LitElement {
    */
   firstUpdated(): void {
     this.#scrollContainer = this.shadowRoot?.querySelector(".panorama-container") || null;
+  }
+
+  protected updated(): void {
+    const parallaxBg = this.shadowRoot?.querySelector<HTMLElement>(".parallax-bg");
+    if (!parallaxBg) return;
+    parallaxBg.style.backgroundImage = safeBackgroundStyle(this.backgroundImage) ?? "";
   }
 
   /**

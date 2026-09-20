@@ -1,6 +1,13 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 
+/**
+ * Metro Person Picture Component
+ *
+ * Shows a profile image or generated initials. `src` is rendered in an `<img>`
+ * element, where non-loadable schemes are inert; only http(s), relative and
+ * data: URLs are meaningful.
+ */
 export class MetroPersonPicture extends LitElement {
   static properties = {
     src: { type: String, reflect: true },
