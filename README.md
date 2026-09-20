@@ -86,6 +86,24 @@ import { MetroButton, MetroPivot } from '@angelmunoz/metrino';
 const button: MetroButton = document.querySelector('metro-button');
 ```
 
+### Global Toasts
+
+The `ToastHost` class manages global toast notifications without module-level
+state. It creates and attaches the `<metro-toast>` host element lazily on the
+first `show()` call (registering the custom element for you) and can be
+disposed to remove it from the DOM:
+
+```typescript
+import { ToastHost } from '@angelmunoz/metrino';
+
+const toasts = new ToastHost();
+
+const id = toasts.show({ title: 'Saved', message: 'Your changes are safe', severity: 'success' });
+toasts.hide(id);      // dismiss one toast by id
+toasts.clearAll();    // dismiss every visible toast
+toasts.dispose();     // remove the host element; the next show() recreates it
+```
+
 ### CSS Bundle Only
 
 If you only need the CSS custom properties (without components):

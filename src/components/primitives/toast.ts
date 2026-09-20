@@ -5,7 +5,7 @@ import { registerMetroIcon } from "./icon.ts";
 /**
  * Options for showing a toast notification.
  */
-interface ToastOptions {
+export interface ToastOptions {
   /** Optional title displayed above the message */
   title?: string;
   /** Main message content of the toast */
@@ -41,7 +41,7 @@ const severityIcons: Record<string, string> = {
  * - Stacking multiple toasts vertically
  * - Clear all functionality
  *
- * The component is typically used via the exported showToast() function for
+ * The component is typically managed by the exported ToastHost class for
  * simple global toast notifications, or instantiated directly for more control.
  *
  * @fires toastshown - Fired when a toast is displayed
@@ -254,29 +254,67 @@ export function registerMetroToast(): void {
   }
 }
 
-let globalToast: MetroToast | null = null;
-
 /**
- * Shows a toast notification using the global toast instance.
- * Creates the global instance on first call.
- * @param options - Toast configuration options
- * @returns string - The unique ID of the created toast
+ * Toast Host Controller
+ *
+ * Manages a lazily-created MetroToast instance attached to document.body.
+ * All DOM work happens inside method calls, so constructing a ToastHost
+ * touches nothing and the module carries no mutable top-level state.
+ *
+ * Unlike free functions over a shared global, the show and hide paths live
+ * on one class, so tree-shaking can never retain one without the other.
  */
-export function showToast(options: ToastOptions): string {
-  if (!globalToast) {
-    globalToast = document.createElement("metro-toast") as MetroToast;
-    document.body.appendChild(globalToast);
+export class ToastHost {
+  #host: MetroToast | null = null;
+
+  /**
+   * Shows a toast notification on the host instance.
+   * Creates and attaches the host on first call.
+   * @param options - Toast configuration options
+   * @returns string - The unique ID of the created toast
+   */
+  show(options: ToastOptions): string {
+    return this.#ensureHost().show(options);
   }
-  return globalToast.show(options);
-}
 
-/**
- * Hides a specific toast by ID from the global toast instance.
- * @param id - The toast ID to hide
- * @returns void
- */
-export function hideToast(id: string): void {
-  globalToast?.hide(id);
+  /**
+   * Hides a specific toast by ID from the host instance.
+   * @param id - The toast ID to hide
+   * @returns void
+   */
+  hide(id: string): void {
+    this.#host?.hide(id);
+  }
+
+  /**
+   * Hides all toasts displayed by the host instance.
+   * @returns void
+   */
+  clearAll(): void {
+    this.#host?.clearAll();
+  }
+
+  /**
+   * Removes the host element from the document and resets this instance.
+   * The next show() call creates a fresh host.
+   * @returns void
+   */
+  dispose(): void {
+    this.#host?.remove();
+    this.#host = null;
+  }
+
+  /**
+   * Creates the host element on first use, registering its custom element.
+   */
+  #ensureHost(): MetroToast {
+    if (this.#host === null) {
+      registerMetroToast();
+      this.#host = document.createElement("metro-toast") as MetroToast;
+      document.body.appendChild(this.#host);
+    }
+    return this.#host;
+  }
 }
 
 declare global {

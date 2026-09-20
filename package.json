@@ -345,14 +345,14 @@
     "dev": "vite --mode demo",
     "dev:lib": "vite",
     "build": "vite build && tsc -p tsconfig.build.json",
-    "build:demo": "cem analyze --litelement --globs \"src/components/**/*.ts\" --outdir public && vite build --mode demo",
+    "build:demo": "pnpm run analyze && vite build --mode demo",
     "build:vite": "vite build",
     "build:types": "tsc -p tsconfig.build.json",
     "preview": "vite preview",
     "test": "web-test-runner \"src/**/*.test.ts\" --node-resolve",
     "test:watch": "web-test-runner \"src/**/*.test.ts\" --node-resolve --watch",
     "prepublishOnly": "pnpm run build",
-    "analyze": "cem analyze --litelement --globs \"src/components/**/*.ts\" --outdir public"
+    "analyze": "cem analyze --litelement --globs \"src/components/**/*.ts\" --outdir public && node scripts/sort-manifest.mjs"
   },
   "peerDependencies": {
     "@mdi/js": "7.4.47",
