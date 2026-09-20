@@ -596,16 +596,16 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Hyperlink Button Component\n\nA button-styled hyperlink that combines the visual appearance of a Metro button\nwith the navigation behavior of an anchor element. Ideal for call-to-action\nlinks, navigation buttons, or any UI element that needs to both look like a\nbutton and navigate to another page.\n\nFeatures:\n- Styled as a transparent button with accent-colored text\n- Supports external links with target=\"_blank\" (adds security attributes)\n- Hover underline effect for clear link affordance\n- Tilt animation effect on pointer interaction\n- Keyboard activation support (Enter/Space)\n- Can function as a button without href (uses click handler instead)",
+          "description": "Metro Hyperlink Button Component\n\nA text hyperlink sized to its content: underlined accent-colored text with\ncolor-only hover/press feedback and no background block, so it sits inside\nsentences like a regular link instead of occupying a button rectangle.\n\nFeatures:\n- Underlined accent-colored text, content-sized hit area\n- Color-only feedback: theme-aware accent on hover and press (darker in light\n  themes, lighter in dark themes), no block highlight\n- Minimum 24px hit area for standalone use while staying content-sized\n- Supports external links with target=\"_blank\" (adds security attributes)\n- Tilt animation effect on pointer interaction\n- Keyboard activation support (Enter/Space)\n- Can function as a button without href (uses click handler instead)",
           "name": "MetroHyperlinkButton",
           "cssProperties": [
             {
-              "description": "Text color for the hyperlink button (default: #0078d4)",
+              "description": "Text color (default: #0078d4)",
               "name": "--metro-accent"
             },
             {
-              "description": "Background color applied on hover (default: #1f1f1f)",
-              "name": "--metro-background"
+              "description": "Theme-aware text color on hover and press (default: #005a9e in light themes, #429ce3 in dark themes)",
+              "name": "--metro-accent-text-hover"
             },
             {
               "description": "Transition duration for state changes (default: 167ms)",

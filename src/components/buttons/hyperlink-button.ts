@@ -24,23 +24,24 @@ function navigate(el: MetroHyperlinkButton): void {
 /**
  * Metro Hyperlink Button Component
  *
- * A button-styled hyperlink that combines the visual appearance of a Metro button
- * with the navigation behavior of an anchor element. Ideal for call-to-action
- * links, navigation buttons, or any UI element that needs to both look like a
- * button and navigate to another page.
+ * A text hyperlink sized to its content: underlined accent-colored text with
+ * color-only hover/press feedback and no background block, so it sits inside
+ * sentences like a regular link instead of occupying a button rectangle.
  *
  * Features:
- * - Styled as a transparent button with accent-colored text
+ * - Underlined accent-colored text, content-sized hit area
+ * - Color-only feedback: theme-aware accent on hover and press (darker in light
+ *   themes, lighter in dark themes), no block highlight
+ * - Minimum 24px hit area for standalone use while staying content-sized
  * - Supports external links with target="_blank" (adds security attributes)
- * - Hover underline effect for clear link affordance
  * - Tilt animation effect on pointer interaction
  * - Keyboard activation support (Enter/Space)
  * - Can function as a button without href (uses click handler instead)
  *
  * @fires click - Fired when the button is clicked or activated via keyboard
  *
- * @cssprop --metro-accent - Text color for the hyperlink button (default: #0078d4)
- * @cssprop --metro-background - Background color applied on hover (default: #1f1f1f)
+ * @cssprop --metro-accent - Text color (default: #0078d4)
+ * @cssprop --metro-accent-text-hover - Theme-aware text color on hover and press (default: #005a9e in light themes, #429ce3 in dark themes)
  * @cssprop --metro-transition-fast - Transition duration for state changes (default: 167ms)
  * @cssprop --metro-easing - Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))
  * @cssprop --metro-font-size-normal - Font size for button text (default: 14px)
@@ -88,30 +89,27 @@ export class MetroHyperlinkButton extends LitElement {
       .button {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
         font-size: var(--metro-font-size-normal, 14px);
         font-weight: 400;
         letter-spacing: 0.02em;
-        padding: 12px 24px;
-        min-width: 120px;
-        min-height: 40px;
+        padding: 2px 4px;
+        min-height: 24px;
         border: none;
         background: transparent;
         color: var(--metro-accent, #0078d4);
         cursor: pointer;
-        text-align: center;
-        text-decoration: none;
+        text-decoration: underline;
         user-select: none;
         box-sizing: border-box;
-        transition: background-color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+        transition: color var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
 
       .button:hover {
-        text-decoration: underline;
+        color: var(--metro-accent-text-hover, var(--metro-accent-light, #429ce3));
       }
 
       .button.pressed {
-        opacity: 0.7;
+        color: var(--metro-accent-text-hover, var(--metro-accent-light, #429ce3));
       }
     `,
   ];

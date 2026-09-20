@@ -171,6 +171,14 @@ export class MetrinoButtonsPage extends LitElement {
           Link-styled button for navigation. Renders as a link when href is
           provided, otherwise as a button.
         </p>
+        <p class="section-description">
+          Hyperlinks sit naturally inside text: to learn more, read the
+          <metro-hyperlink-button href="#/buttons"
+            >documentation</metro-hyperlink-button
+          >
+          or go back to the
+          <metro-hyperlink-button href="#/home">start page</metro-hyperlink-button>.
+        </p>
         <div class="demo-container">
           <span class="demo-label">With href:</span>
           <metro-hyperlink-button href="#/buttons"

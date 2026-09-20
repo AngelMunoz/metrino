@@ -42,10 +42,12 @@ body {
   --metro-accent: #0078d4;
   --metro-accent-light: #429ce3;
   --metro-accent-dark: #005a9e;
+  --metro-accent-text-hover: var(--metro-accent-dark);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --metro-accent-text-hover: var(--metro-accent-light);
     --metro-background: #000000;
     --metro-background-alt: #1a1a1a;
     --metro-surface: rgba(255, 255, 255, 0.05);
@@ -61,6 +63,7 @@ body {
 
 @media (prefers-color-scheme: light) {
   :root {
+    --metro-accent-text-hover: var(--metro-accent-dark);
     --metro-background: #ffffff;
     --metro-background-alt: #f3f3f3;
     --metro-surface: rgba(0, 0, 0, 0.05);
@@ -75,6 +78,7 @@ body {
 }
 
 [data-theme="dark"] {
+  --metro-accent-text-hover: var(--metro-accent-light);
   --metro-background: #000000;
   --metro-background-alt: #1a1a1a;
   --metro-surface: rgba(255, 255, 255, 0.05);
@@ -88,6 +92,7 @@ body {
 }
 
 [data-theme="light"] {
+  --metro-accent-text-hover: var(--metro-accent-dark);
   --metro-background: #ffffff;
   --metro-background-alt: #f3f3f3;
   --metro-surface: rgba(0, 0, 0, 0.05);
