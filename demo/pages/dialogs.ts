@@ -4,7 +4,7 @@ import { registerMetroContentDialog } from "@src/components/dialogs/content-dial
 import { registerMetroMessageDialog } from "@src/components/dialogs/message-dialog.ts";
 import { registerMetroFlyout } from "@src/components/dialogs/flyout.ts";
 import { registerMetroSettingsFlyout } from "@src/components/dialogs/settings-flyout.ts";
-import { registerMetroToast } from "@src/components/primitives/toast.ts";
+import { registerMetroToast, ToastHost } from "@src/components/primitives/toast.ts";
 import { registerMetroMenuFlyout } from "@src/components/primitives/menu-flyout.ts";
 import { registerMetroButton } from "@src/components/buttons/button.ts";
 import { registerMetroIcon } from "@src/components/primitives/icon.ts";
@@ -116,8 +116,15 @@ export class MetrinoDialogsPage extends LitElement {
 
   static properties = {};
 
+  #toastHost = new ToastHost();
+
   constructor() {
     super();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#toastHost.dispose();
   }
 
   render() {
@@ -258,7 +265,9 @@ export class MetrinoDialogsPage extends LitElement {
         <p class="description">
           Non-intrusive notifications that appear at the top of the screen.
           Supports different severities and auto-dismiss with configurable
-          duration.
+          duration. Use the declarative element for scoped instances, or the
+          ToastHost class for global notifications without wiring your own
+          element into the DOM.
         </p>
         <div class="demo-row">
           <metro-button @click=${() => this.#showToast("informational")}
@@ -275,13 +284,24 @@ export class MetrinoDialogsPage extends LitElement {
           >
         </div>
         <div class="demo-row">
-          <metro-button @click=${() => this.#showLongToast()}
+          <metro-button @click=${this.#showLongToast}
             >Long Duration (5s)</metro-button
           >
-          <metro-button @click=${() => this.#showPersistentToast()}
+          <metro-button @click=${this.#showPersistentToast}
             >Persistent (no auto-dismiss)</metro-button
           >
           <metro-button @click=${this.#clearAllToasts}>Clear All</metro-button>
+        </div>
+        <div class="demo-row">
+          <metro-button @click=${this.#showGlobalToast}
+            >Global (ToastHost)</metro-button
+          >
+          <metro-button @click=${this.#showGlobalPersistentToast}
+            >Global Persistent</metro-button
+          >
+          <metro-button @click=${this.#clearGlobalToasts}
+            >Clear Global</metro-button
+          >
         </div>
         <metro-toast id="page-toast"></metro-toast>
         <api-docs component="MetroToast"></api-docs>
@@ -458,6 +478,27 @@ export class MetrinoDialogsPage extends LitElement {
       "#page-toast",
     ) as HTMLElement & { clearAll: () => void };
     toast?.clearAll();
+  }
+
+  #showGlobalToast(): void {
+    this.#toastHost.show({
+      title: "ToastHost",
+      message: "This toast comes from a lazily-created global host.",
+      severity: "informational",
+    });
+  }
+
+  #showGlobalPersistentToast(): void {
+    this.#toastHost.show({
+      title: "Persistent",
+      message: "Dismiss this one from the Clear Global button or the X.",
+      severity: "warning",
+      duration: 0,
+    });
+  }
+
+  #clearGlobalToasts(): void {
+    this.#toastHost.clearAll();
   }
 
   #openMenuFlyout(e: Event): void {
