@@ -4,6 +4,11 @@ import { registerMetroPivot } from "@src/components/navigation/pivot.ts";
 import { registerMetroPivotItem } from "@src/components/navigation/pivot-item.ts";
 import { registerMetroHub } from "@src/components/navigation/hub.ts";
 import { registerMetroHubSection } from "@src/components/navigation/hub-section.ts";
+import type {
+  MetroHub,
+  HubSelectionChangedEventDetail,
+} from "@src/components/navigation/hub.ts";
+import { clampIndex } from "@src/components/navigation/hub.ts";
 import { registerMetroPanorama } from "@src/components/navigation/panorama.ts";
 import { registerMetroPanoramaItem } from "@src/components/navigation/panorama-item.ts";
 import { registerMetroSplitView } from "@src/components/navigation/split-view.ts";
@@ -31,11 +36,19 @@ export class MetrinoNavigationPage extends LitElement {
     splitViewOpen: { state: true },
     splitViewMode: { state: true },
     appBarExpanded: { state: true },
+    hubSnap: { state: true },
+    hubRtl: { state: true },
+    hubSmooth: { state: true },
+    hubSelectedIndex: { state: true },
   };
 
   declare splitViewOpen: boolean;
   declare splitViewMode: "overlay" | "inline" | "compact";
   declare appBarExpanded: boolean;
+  declare hubSnap: boolean;
+  declare hubRtl: boolean;
+  declare hubSmooth: boolean;
+  declare hubSelectedIndex: number;
 
   static styles = css`
     :host {
@@ -129,6 +142,18 @@ export class MetrinoNavigationPage extends LitElement {
       background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
       padding: var(--metro-spacing-md, 12px);
       min-height: 150px;
+      box-sizing: border-box;
+    }
+    .hub-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--metro-spacing-sm, 8px);
+      margin-bottom: var(--metro-spacing-md, 12px);
+    }
+    .hub-readout {
+      font-size: var(--metro-font-size-small, 12px);
+      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
     }
     metro-panorama {
       height: 300px;
@@ -164,6 +189,10 @@ export class MetrinoNavigationPage extends LitElement {
     this.splitViewOpen = false;
     this.splitViewMode = "overlay";
     this.appBarExpanded = false;
+    this.hubSnap = false;
+    this.hubRtl = false;
+    this.hubSmooth = true;
+    this.hubSelectedIndex = 0;
   }
 
   render() {
@@ -211,27 +240,54 @@ export class MetrinoNavigationPage extends LitElement {
       </div>
 
       <div class="demo-section" id="metro-hub">
-        <h2>metro-hub (horizontal scrolling sections)</h2>
-        <metro-hub title="Hub Title">
+        <h2>metro-hub (horizontal scrolling sections, programmatic API)</h2>
+        <div class="hub-controls">
+          <button class="control-btn ${this.hubSnap ? "active" : ""}" @click=${this.#toggleHubSnap}>
+            ${this.hubSnap ? "Snap: On" : "Snap: Off"}
+          </button>
+          <button class="control-btn ${this.hubSmooth ? "active" : ""}" @click=${this.#toggleHubSmooth}>
+            ${this.hubSmooth ? "Motion: Smooth" : "Motion: Instant"}
+          </button>
+          <button class="control-btn ${this.hubRtl ? "active" : ""}" @click=${this.#toggleHubRtl}>
+            ${this.hubRtl ? "RTL" : "LTR"}
+          </button>
+          <button class="control-btn" @click=${() => this.#hubGoTo(0)}>First</button>
+          <button class="control-btn" @click=${() => this.#hubGoTo(this.hubSelectedIndex - 1)}>
+            Previous
+          </button>
+          <button class="control-btn" @click=${() => this.#hubGoTo(this.hubSelectedIndex + 1)}>
+            Next
+          </button>
+          <button class="control-btn" @click=${() => this.#hubGoTo(99)}>Last</button>
+          <span class="hub-readout">in view: section ${this.hubSelectedIndex + 1}</span>
+        </div>
+        <metro-hub
+          title="Hub Title"
+          ?snap=${this.hubSnap}
+          dir=${this.hubRtl ? "rtl" : "ltr"}
+          @selectionchanged=${this.#handleHubSelection}
+        >
           <metro-hub-section header="Section 1">
-            <div class="hub-card">
-              Hub sections scroll horizontally. Each section can contain
-              different content.
+            <div class="hub-card" style="width: 280px">
+              Hub sections scroll horizontally with free panning and content
+              peek. Sections size to their content.
             </div>
           </metro-hub-section>
           <metro-hub-section header="Section 2">
-            <div class="hub-card">
-              Section headers are clickable and show hover effects.
+            <div class="hub-card" style="width: 420px">
+              Turn on Snap to settle on section boundaries aligned to the
+              gutter. Header clicks belong to the app.
             </div>
           </metro-hub-section>
           <metro-hub-section header="Section 3">
-            <div class="hub-card">
+            <div class="hub-card" style="width: 320px">
               The hub is ideal for browsing content categories.
             </div>
           </metro-hub-section>
           <metro-hub-section header="Section 4">
-            <div class="hub-card">
-              Each section can have variable width content.
+            <div class="hub-card" style="width: 480px">
+              Mixed widths exercise the scroll math. Tab into the hub and use
+              the arrow keys while Snap is on.
             </div>
           </metro-hub-section>
         </metro-hub>
@@ -451,6 +507,33 @@ export class MetrinoNavigationPage extends LitElement {
     if (mode !== "overlay") {
       this.splitViewOpen = true;
     }
+  }
+
+  #toggleHubSnap(): void {
+    this.hubSnap = !this.hubSnap;
+  }
+
+  #toggleHubRtl(): void {
+    this.hubRtl = !this.hubRtl;
+  }
+
+  #hubGoTo(index: number): void {
+    const hub = this.renderRoot.querySelector<MetroHub>("metro-hub");
+    if (hub === null) {
+      return;
+    }
+    hub.scrollToSection(
+      clampIndex(index, hub.sections.length),
+      this.hubSmooth ? "smooth" : "auto",
+    );
+  }
+
+  #toggleHubSmooth(): void {
+    this.hubSmooth = !this.hubSmooth;
+  }
+
+  #handleHubSelection(event: CustomEvent<HubSelectionChangedEventDetail>): void {
+    this.hubSelectedIndex = event.detail.selectedIndex;
   }
 
   #toggleSplitView(): void {

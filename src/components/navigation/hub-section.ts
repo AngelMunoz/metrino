@@ -1,21 +1,23 @@
 import { LitElement, html, css } from "lit";
+import type { PropertyValues } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 
 /**
  * Metro Hub Section Component
  *
- * A child component for MetroHub that represents a single horizontally-scrolling
- * section. Each section has an optional clickable header and a content area
+ * A child component for MetroHub that represents a single horizontally-
+ * scrolling section. Each section has an optional header and a content area
  * for hosting tiles, lists, or other content.
  *
  * Features:
- * - Optional clickable section header with hover accent color
- * - Large typography-focused header styling
+ * - Optional section header with large typography
  * - Flexible content area with standard padding
  * - Designed to be used within metro-hub for horizontal scrolling layouts
  *
  * Use as children of metro-hub. Set the "header" attribute to define the
- * section title. The header is clickable and changes to accent color on hover.
+ * section title. The header is display-only at the component level; apps
+ * attach their own click listeners on the section element when they want
+ * header navigation (as with the Windows 8.1 hub's clickable headers).
  *
  * @cssprop --metro-foreground - Header text color (default: #ffffff)
  * @cssprop --metro-accent - Header hover color (default: #0078d4)
@@ -27,7 +29,7 @@ import { baseTypography } from "../../styles/shared.ts";
  *
  * @slot - Default slot for section content (tiles, lists, etc.)
  *
- * @csspart section-header - The clickable header element
+ * @csspart section-header - The header element
  * @csspart section-content - The content container
  */
 export class MetroHubSection extends LitElement {
@@ -76,10 +78,39 @@ export class MetroHubSection extends LitElement {
     this.header = "";
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!this.hasAttribute("role")) {
+      this.setAttribute("role", "group");
+    }
+  }
+
+  #mirroredLabel: string | null = null;
+
+  updated(changedProperties: PropertyValues): void {
+    super.updated(changedProperties);
+    if (!changedProperties.has("header")) {
+      return;
+    }
+    const current = this.getAttribute("aria-label");
+    // A consumer-provided label wins; only a label this component mirrored
+    // may be replaced or removed with the header.
+    if (current !== null && current !== this.#mirroredLabel) {
+      return;
+    }
+    if (this.header) {
+      this.#mirroredLabel = this.header;
+      this.setAttribute("aria-label", this.header);
+    } else {
+      this.#mirroredLabel = null;
+      this.removeAttribute("aria-label");
+    }
+  }
+
   render() {
     return html`
-      ${this.header ? html`<h3 class="section-header">${this.header}</h3>` : ""}
-      <div class="section-content">
+      ${this.header ? html`<h3 class="section-header" part="section-header">${this.header}</h3>` : ""}
+      <div class="section-content" part="section-content">
         <slot></slot>
       </div>
     `;

@@ -30,6 +30,7 @@ The following S (Small) and M (Medium) effort fixes have been completed:
 - View Transition API for route changes (demo), pivot tab switching, semantic-zoom
 - Removed fallback patterns — View Transition API used directly (no polyfill)
 - Turnstile animations for ::view-transition-old(root) and ::view-transition-new(root)
+- Hub programmatic API (part attributes, sections, selectedIndex, selectionchanged, scrollToSection with Metro-eased smooth scroll, opt-in snap, keyboard + ARIA, overscroll containment)
 
 ---
 
