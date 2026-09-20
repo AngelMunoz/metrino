@@ -65,16 +65,20 @@ function bezierAxis(a: number, b: number, s: number): number {
 
 /**
  * The Metro easing curve (cubic-bezier(0.1, 0.9, 0.2, 1)) evaluated at a
- * linear progress `t` in [0, 1].
+ * linear progress `t` in [0, 1]. `values` defaults to the Metro curve and can
+ * carry any cubic-bezier control points with x1 and x2 in [0, 1].
  */
-export function metroEase(t: number): number {
+export function metroEase(
+  t: number,
+  values: readonly number[] = METRO_EASING_VALUES,
+): number {
   if (t <= 0) {
     return 0;
   }
   if (t >= 1) {
     return 1;
   }
-  const [x1, y1, x2, y2] = METRO_EASING_VALUES;
+  const [x1 = 0.1, y1 = 0.9, x2 = 0.2, y2 = 1] = values;
   // The x axis is monotonic (0 <= x1 <= x2 <= 1), so a binary search for the
   // curve parameter that produces progress t converges deterministically.
   let lo = 0;
@@ -131,8 +135,8 @@ export function metroEase(t: number): number {
  * @cssprop --metro-spacing-lg - Large spacing unit, the container gutter (default: 16px)
  * @cssprop --metro-spacing-xl - Extra large spacing unit, the section gap (default: 24px)
  * @cssprop --metro-font-size-xxlarge - Font size for the main title (default: 42px)
- * @cssprop --metro-transition-slow - Duration of the opt-in smooth scroll (default: 333ms)
- * @cssprop --metro-easing - Easing curve of the opt-in smooth scroll (default: cubic-bezier(0.1, 0.9, 0.2, 1))
+ * @cssprop --metro-transition-slow - Duration of the smooth scroll (default: 333ms)
+ * @cssprop --metro-easing - Easing of the smooth scroll as cubic-bezier(x1, y1, x2, y2); invalid values fall back to the Metro curve (default: cubic-bezier(0.1, 0.9, 0.2, 1))
  *
  * @slot - Default slot for metro-hub-section children
  *
@@ -287,8 +291,9 @@ export class MetroHub extends LitElement {
     if (resolved === "smooth") {
       this.#animateScrollTo(container, target);
     } else {
-      this.#cancelSmoothScroll();
+      // Cancel after the jump so a settle-on-cancel reads the final position.
       container.scrollTo({ left: target, behavior: "auto" });
+      this.#cancelSmoothScroll();
     }
   }
 
@@ -348,6 +353,29 @@ export class MetroHub extends LitElement {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : SMOOTH_SCROLL_FALLBACK_MS;
   }
 
+  /** The easing control points from --metro-easing, or the Metro curve. */
+  #easingValues(): readonly number[] {
+    const raw = getComputedStyle(this).getPropertyValue("--metro-easing").trim();
+    const match = /^cubic-bezier\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)$/.exec(raw);
+    if (match === null) {
+      return METRO_EASING_VALUES;
+    }
+    const values = match.slice(1).map(Number);
+    const [x1 = 0, , x2 = 0] = values;
+    if (
+      values.length !== 4 ||
+      values.some((value) => !Number.isFinite(value)) ||
+      x1 < 0 ||
+      x1 > 1 ||
+      x2 < 0 ||
+      x2 > 1
+    ) {
+      // x1 and x2 must stay in [0, 1] for the x axis to be monotonic.
+      return METRO_EASING_VALUES;
+    }
+    return values;
+  }
+
   #animateScrollTo(container: HTMLElement, target: number): void {
     this.#cancelSmoothScroll();
     const start = container.scrollLeft;
@@ -357,6 +385,7 @@ export class MetroHub extends LitElement {
     }
     const token = ++this.#animationToken;
     this.#animating = true;
+    const easing = this.#easingValues();
     // Mandatory snap re-snaps every scripted write, which yanks the glide to
     // the boundary and turns it into a jump. Suppress snap for the glide:
     // the final frame lands exactly on the boundary (the snap position), so
@@ -370,7 +399,7 @@ export class MetroHub extends LitElement {
         return;
       }
       const progress = Math.min((now - startTime) / duration, 1);
-      container.scrollLeft = start + delta * metroEase(progress);
+      container.scrollLeft = start + delta * metroEase(progress, easing);
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
@@ -386,6 +415,7 @@ export class MetroHub extends LitElement {
   }
 
   #cancelSmoothScroll(): void {
+    const wasAnimating = this.#animating;
     this.#animationToken++;
     this.#animating = false;
     if (this.#restoreSnap !== null) {
@@ -394,6 +424,11 @@ export class MetroHub extends LitElement {
         container.style.scrollSnapType = this.#restoreSnap;
       }
       this.#restoreSnap = null;
+    }
+    if (wasAnimating) {
+      // An interrupted glide may never produce a scrollend; report the frozen
+      // position so the last event stays in sync with the view.
+      this.#settle();
     }
   }
 
@@ -410,11 +445,13 @@ export class MetroHub extends LitElement {
   }
 
   #handleKeyDown(event: KeyboardEvent): void {
-    if (!this.snap) {
+    const container = this.#container();
+    // Only the container's own keys step sections. Keys from slotted content
+    // (inputs, list views) retarget to the host and belong to that content.
+    if (container === null || event.target !== container) {
       return;
     }
-    const container = this.#container();
-    if (container === null) {
+    if (!this.snap) {
       return;
     }
     const count = this.sections.length;

@@ -8429,6 +8429,14 @@
                 "text": "string | undefined"
               },
               "attribute": "columns"
+            },
+            {
+              "kind": "field",
+              "name": "#hostStyles",
+              "privacy": "private",
+              "type": {
+                "text": "CSSStyleSheet | undefined"
+              }
             }
           ],
           "attributes": [
@@ -8508,7 +8516,7 @@
                 "text": "ScrollOrientation"
               },
               "default": "\"vertical\"",
-              "attribute": "scrollOrientation",
+              "attribute": "scroll-orientation",
               "reflects": true
             },
             {
@@ -8519,7 +8527,7 @@
                 "text": "ScrollbarMode"
               },
               "default": "\"auto\"",
-              "attribute": "scrollbarMode",
+              "attribute": "scrollbar-mode",
               "reflects": true
             },
             {
@@ -8733,7 +8741,7 @@
           ],
           "attributes": [
             {
-              "name": "scrollOrientation",
+              "name": "scroll-orientation",
               "type": {
                 "text": "ScrollOrientation"
               },
@@ -8741,7 +8749,7 @@
               "fieldName": "scrollOrientation"
             },
             {
-              "name": "scrollbarMode",
+              "name": "scrollbar-mode",
               "type": {
                 "text": "ScrollbarMode"
               },
@@ -10169,6 +10177,15 @@
               "default": "\"\"",
               "attribute": "header",
               "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "#mirroredLabel",
+              "privacy": "private",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null"
             }
           ],
           "attributes": [
@@ -10316,9 +10333,16 @@
               "type": {
                 "text": "number"
               }
+            },
+            {
+              "name": "values",
+              "default": "METRO_EASING_VALUES",
+              "type": {
+                "text": "readonly number[]"
+              }
             }
           ],
-          "description": "The Metro easing curve (cubic-bezier(0.1, 0.9, 0.2, 1)) evaluated at a\nlinear progress `t` in [0, 1]."
+          "description": "The Metro easing curve (cubic-bezier(0.1, 0.9, 0.2, 1)) evaluated at a\nlinear progress `t` in [0, 1]. `values` defaults to the Metro curve and can\ncarry any cubic-bezier control points with x1 and x2 in [0, 1]."
         },
         {
           "kind": "class",
@@ -10342,11 +10366,11 @@
               "name": "--metro-font-size-xxlarge"
             },
             {
-              "description": "Duration of the opt-in smooth scroll (default: 333ms)",
+              "description": "Duration of the smooth scroll (default: 333ms)",
               "name": "--metro-transition-slow"
             },
             {
-              "description": "Easing curve of the opt-in smooth scroll (default: cubic-bezier(0.1, 0.9, 0.2, 1))",
+              "description": "Easing of the smooth scroll as cubic-bezier(x1, y1, x2, y2); invalid values fall back to the Metro curve (default: cubic-bezier(0.1, 0.9, 0.2, 1))",
               "name": "--metro-easing"
             }
           ],
@@ -10536,6 +10560,17 @@
                   "text": "number"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#easingValues",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "readonly number[]"
+                }
+              },
+              "description": "The easing control points from --metro-easing, or the Metro curve."
             },
             {
               "kind": "method",

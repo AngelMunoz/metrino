@@ -85,14 +85,25 @@ export class MetroHubSection extends LitElement {
     }
   }
 
+  #mirroredLabel: string | null = null;
+
   updated(changedProperties: PropertyValues): void {
     super.updated(changedProperties);
-    if (changedProperties.has("header")) {
-      if (this.header) {
-        this.setAttribute("aria-label", this.header);
-      } else {
-        this.removeAttribute("aria-label");
-      }
+    if (!changedProperties.has("header")) {
+      return;
+    }
+    const current = this.getAttribute("aria-label");
+    // A consumer-provided label wins; only a label this component mirrored
+    // may be replaced or removed with the header.
+    if (current !== null && current !== this.#mirroredLabel) {
+      return;
+    }
+    if (this.header) {
+      this.#mirroredLabel = this.header;
+      this.setAttribute("aria-label", this.header);
+    } else {
+      this.#mirroredLabel = null;
+      this.removeAttribute("aria-label");
     }
   }
 

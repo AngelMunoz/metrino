@@ -325,6 +325,58 @@ suite("metro-hub", () => {
     assertClose(getContainer(el).scrollLeft, targets[2]);
   });
 
+  test("smooth honors a custom --metro-easing token", async () => {
+    const el = await createHub();
+    el.style.setProperty("--metro-transition-slow", "600ms");
+    // Near-diagonal control points: close to linear. Half time ≈ half way,
+    // while the Metro curve would already be close to the target.
+    el.style.setProperty("--metro-easing", "cubic-bezier(0.33, 0.33, 0.67, 0.67)");
+    await addSections(el);
+    const targets = sectionTargets(el);
+
+    el.scrollToSection(2, "smooth");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const mid = getContainer(el).scrollLeft;
+    assert.isAbove(mid, targets[2] * 0.3);
+    assert.isBelow(mid, targets[2] * 0.7);
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    assertClose(getContainer(el).scrollLeft, targets[2]);
+  });
+
+  test("invalid --metro-easing falls back to the Metro curve", async () => {
+    const el = await createHub();
+    await addSections(el);
+    el.style.setProperty("--metro-easing", "wobbit");
+    const targets = sectionTargets(el);
+
+    el.scrollToSection(2, "smooth");
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    assertClose(getContainer(el).scrollLeft, targets[2]);
+  });
+
+  test("interrupting a glide settles in sync with the view", async () => {
+    const el = await createHub();
+    el.style.setProperty("--metro-transition-slow", "600ms");
+    await addSections(el);
+    const events: number[] = [];
+    el.addEventListener("selectionchanged", (e) => {
+      events.push((e as CustomEvent<HubSelectionChangedEventDetail>).detail.selectedIndex);
+    });
+
+    el.scrollToSection(3, "smooth");
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    getContainer(el).dispatchEvent(new PointerEvent("pointerdown"));
+    const frozen = getContainer(el).scrollLeft;
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assert.equal(getContainer(el).scrollLeft, frozen);
+
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    assert.isAbove(events.length, 0);
+    assert.equal(events[events.length - 1], el.selectedIndex);
+  });
+
   test("scrollToSection lands identically under dir rtl", async () => {
     const el = await createHub({ dir: "rtl" });
     await addSections(el);
@@ -471,5 +523,19 @@ suite("metro-hub", () => {
     await settle();
     assert.isFalse(event.defaultPrevented);
     assert.equal(getContainer(el).scrollLeft, 0);
+  });
+
+  test("arrow keys do not hijack keys from slotted content", async () => {
+    const el = await createHub({ snap: "" });
+    const sections = await addSections(el);
+    const input = document.createElement("input");
+    sections[0]?.appendChild(input);
+    const targets = sectionTargets(el);
+
+    const event = new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true, bubbles: true });
+    input.dispatchEvent(event);
+    await settleSmooth();
+    assert.isFalse(event.defaultPrevented);
+    assert.equal(getContainer(el).scrollLeft, targets[0]);
   });
 });

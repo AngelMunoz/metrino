@@ -61,6 +61,16 @@ suite("metro-hub-section", () => {
     assert.equal(el.getAttribute("aria-label"), "Section Header");
   });
 
+  test("consumer aria-label wins over header", async () => {
+    const el = await createSection({ header: "Section Header", "aria-label": "Custom" });
+    await el.updateComplete;
+    assert.equal(el.getAttribute("aria-label"), "Custom");
+
+    el.header = "Renamed Header";
+    await el.updateComplete;
+    assert.equal(el.getAttribute("aria-label"), "Custom");
+  });
+
   test("no group label without header", async () => {
     const el = await createSection();
     await el.updateComplete;
