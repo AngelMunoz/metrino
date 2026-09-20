@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **toast**: global toast handling moved from the module-level `showToast()`/`hideToast()` functions (backed by a mutable module-scope `let`) to a `ToastHost` controller class. The host element reference lives in a private instance field, so bundlers can never tree-shake one path of the API without the other, and each `ToastHost` instance can be created and disposed independently (useful for tests). `ToastHost` creates and attaches the `<metro-toast>` element to `document.body` lazily on the first `show()` call and registers it (plus its `metro-icon` dependency) automatically.
+- **demo**: the toast section of the dialogs page now demonstrates the `ToastHost` global API (global, persistent, and clear-all buttons) alongside the declarative `<metro-toast>` element
+
+### Added
+
+- **toast**: `ToastHost` class and the `ToastOptions` type are exported from the toast module and the package root
+
+### Removed
+
+- **toast**: `showToast()` and `hideToast()` module functions. They were never re-exported from the package entry, so consumers importing from `@angelmunoz/metrino` are unaffected; code importing them directly from the module should switch to `new ToastHost()`.
+
 ## [0.4.0] - 2026-08-18
 
 ### Changed

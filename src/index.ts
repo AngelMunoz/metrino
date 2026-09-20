@@ -63,7 +63,8 @@ export { MetroMenuFlyout, registerMetroMenuFlyout } from "./components/primitive
 export { MetroPersonPicture, registerMetroPersonPicture } from "./components/primitives/person-picture.ts";
 export { MetroRichTextBlock, registerMetroRichTextBlock } from "./components/primitives/rich-text-block.ts";
 export { MetroTextBlock, registerMetroTextBlock } from "./components/primitives/text-block.ts";
-export { MetroToast, registerMetroToast } from "./components/primitives/toast.ts";
+export { MetroToast, ToastHost, registerMetroToast } from "./components/primitives/toast.ts";
+export type { ToastOptions } from "./components/primitives/toast.ts";
 export { MetroTooltip, registerMetroTooltip } from "./components/primitives/tooltip.ts";
 
 export { MetroProgressBar, registerMetroProgressBar } from "./components/progress/progress-bar.ts";

@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { registerMetroToast, MetroToast, showToast, hideToast } from "./toast.ts";
+import { registerMetroToast, MetroToast, ToastHost } from "./toast.ts";
 
 suite("metro-toast", () => {
   registerMetroToast();
@@ -96,25 +96,41 @@ suite("metro-toast", () => {
     assert.equal(toasts?.length || 0, 0);
   });
 
-  test("showToast() helper works", async () => {
-    const id = showToast({ message: "Global toast" });
+  test("ToastHost show() lazily creates and attaches the host", async () => {
+    const host = new ToastHost();
+    const id = host.show({ message: "Host toast" });
     assert.isString(id);
-    
-    const toast = document.querySelector("metro-toast");
+
+    const el = document.querySelector("metro-toast") as MetroToast;
+    assert.exists(el);
+    const toast = el.shadowRoot?.querySelector(`#${id}`);
     assert.exists(toast);
-    toast?.remove();
+
+    host.dispose();
   });
 
-  test("hideToast() helper works", async () => {
-    const id = showToast({ message: "Global toast", duration: 0 });
-    hideToast(id);
-    
+  test("ToastHost hide() dismisses a toast by id", async () => {
+    const host = new ToastHost();
+    const id = host.show({ message: "Host toast", duration: 0 });
+    host.hide(id);
+
     await new Promise(resolve => setTimeout(resolve, 200));
-    
-    const toastEl = document.querySelector("metro-toast") as MetroToast;
-    const toast = toastEl?.shadowRoot?.querySelector(`#${id}`);
-    assert.notExists(toast);
-    
-    toastEl?.remove();
+
+    const el = document.querySelector("metro-toast") as MetroToast;
+    assert.notExists(el.shadowRoot?.querySelector(`#${id}`));
+
+    host.dispose();
+  });
+
+  test("ToastHost dispose() removes the host and recreates it on next show", async () => {
+    const host = new ToastHost();
+    host.show({ message: "Bye", duration: 0 });
+    host.dispose();
+    assert.notExists(document.querySelector("metro-toast"));
+
+    host.show({ message: "Back again" });
+    assert.exists(document.querySelector("metro-toast"));
+
+    host.dispose();
   });
 });
