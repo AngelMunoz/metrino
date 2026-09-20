@@ -12,6 +12,9 @@ suite("metro-toast", () => {
 
   teardown(() => {
     container.remove();
+    document
+      .querySelectorAll("body > metro-toast")
+      .forEach((el) => el.remove());
   });
 
   async function createToast(): Promise<MetroToast> {
@@ -19,6 +22,12 @@ suite("metro-toast", () => {
     container.appendChild(el);
     await el.updateComplete;
     return el;
+  }
+
+  function findNewHost(existing: Set<Element>): MetroToast | undefined {
+    return Array.from(
+      document.querySelectorAll<MetroToast>("metro-toast"),
+    ).find((el) => !existing.has(el));
   }
 
   test("renders toast container", async () => {
@@ -98,12 +107,13 @@ suite("metro-toast", () => {
 
   test("ToastHost show() lazily creates and attaches the host", async () => {
     const host = new ToastHost();
+    const existing = new Set(document.querySelectorAll("metro-toast"));
     const id = host.show({ message: "Host toast" });
-    assert.isString(id);
 
-    const el = document.querySelector("metro-toast") as MetroToast;
+    assert.isString(id);
+    const el = findNewHost(existing);
     assert.exists(el);
-    const toast = el.shadowRoot?.querySelector(`#${id}`);
+    const toast = el?.shadowRoot?.querySelector(`#${id}`);
     assert.exists(toast);
 
     host.dispose();
@@ -111,25 +121,50 @@ suite("metro-toast", () => {
 
   test("ToastHost hide() dismisses a toast by id", async () => {
     const host = new ToastHost();
+    const existing = new Set(document.querySelectorAll("metro-toast"));
     const id = host.show({ message: "Host toast", duration: 0 });
-    host.hide(id);
+    const el = findNewHost(existing);
+    assert.exists(el);
 
+    host.hide(id);
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    const el = document.querySelector("metro-toast") as MetroToast;
-    assert.notExists(el.shadowRoot?.querySelector(`#${id}`));
+    assert.notExists(el?.shadowRoot?.querySelector(`#${id}`));
+
+    host.dispose();
+  });
+
+  test("ToastHost clearAll() removes all toasts from the host", async () => {
+    const host = new ToastHost();
+    const existing = new Set(document.querySelectorAll("metro-toast"));
+    host.show({ message: "One", duration: 0 });
+    host.show({ message: "Two", duration: 0 });
+    const el = findNewHost(existing);
+    assert.exists(el);
+    assert.equal(el?.shadowRoot?.querySelectorAll(".toast").length, 2);
+
+    host.clearAll();
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    assert.equal(el?.shadowRoot?.querySelectorAll(".toast").length, 0);
 
     host.dispose();
   });
 
   test("ToastHost dispose() removes the host and recreates it on next show", async () => {
     const host = new ToastHost();
+    const existing = new Set(document.querySelectorAll("metro-toast"));
     host.show({ message: "Bye", duration: 0 });
+    const first = findNewHost(existing);
+    assert.exists(first);
+
     host.dispose();
-    assert.notExists(document.querySelector("metro-toast"));
+    assert.isFalse(first?.isConnected ?? false);
 
     host.show({ message: "Back again" });
-    assert.exists(document.querySelector("metro-toast"));
+    const second = findNewHost(existing);
+    assert.exists(second);
+    assert.notStrictEqual(second, first);
 
     host.dispose();
   });

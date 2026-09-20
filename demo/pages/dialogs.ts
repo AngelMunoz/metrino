@@ -122,6 +122,11 @@ export class MetrinoDialogsPage extends LitElement {
     super();
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#toastHost.dispose();
+  }
+
   render() {
     return html`
       <h1>Dialogs</h1>
@@ -279,10 +284,10 @@ export class MetrinoDialogsPage extends LitElement {
           >
         </div>
         <div class="demo-row">
-          <metro-button @click=${this.#showLongToast()}
+          <metro-button @click=${this.#showLongToast}
             >Long Duration (5s)</metro-button
           >
-          <metro-button @click=${this.#showPersistentToast()}
+          <metro-button @click=${this.#showPersistentToast}
             >Persistent (no auto-dismiss)</metro-button
           >
           <metro-button @click=${this.#clearAllToasts}>Clear All</metro-button>
