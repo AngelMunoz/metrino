@@ -1,6 +1,13 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 
+/**
+ * Metro Media Element Component
+ *
+ * Audio/video player. `src` and `poster` are rendered in `<audio>`/`<video>`
+ * elements, where executable schemes such as `javascript:` are inert; http(s),
+ * relative, `blob:` and `data:` URLs are the meaningful values.
+ */
 export class MetroMediaElement extends LitElement {
   static properties = {
     src: { type: String, reflect: true },

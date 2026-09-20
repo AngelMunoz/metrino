@@ -6,6 +6,20 @@ import {
   handleKeyboardActivation,
   addPressedState,
 } from "./shared.ts";
+import { isSafeUrl } from "../../utils/sanitize.ts";
+
+/**
+ * Returns true when a hyperlink is safe to navigate to. Empty values are
+ * allowed (they render as a button instead of a link); otherwise only
+ * relative URLs and the `http`, `https`, `mailto` and `tel` schemes pass.
+ * Dangerous schemes such as `javascript:`, `data:` and `blob:` are rejected.
+ * @param href - The href value to validate
+ * @returns boolean
+ */
+export function isSafeHyperlink(href: string | undefined): boolean {
+  if (!href) return true;
+  return isSafeUrl(href);
+}
 
 /**
  * Navigates to the hyperlink destination when the button is activated.
@@ -13,12 +27,22 @@ import {
  * @returns void
  */
 function navigate(el: MetroHyperlinkButton): void {
-  if (!el.href) return;
+  if (!el.href || !isSafeHyperlink(el.href)) return;
   if (el.target === "_blank") {
     window.open(el.href, "_blank", "noopener,noreferrer");
   } else {
     window.location.href = el.href;
   }
+}
+
+/**
+ * Returns the href to render on the anchor, or an empty string when the
+ * value uses an unsafe scheme.
+ * @param el - The MetroHyperlinkButton instance
+ * @returns string
+ */
+function renderedHref(el: MetroHyperlinkButton): string {
+  return el.href && isSafeHyperlink(el.href) ? el.href : "";
 }
 
 /**
@@ -33,7 +57,8 @@ function navigate(el: MetroHyperlinkButton): void {
  * - Color-only feedback: theme-aware accent on hover and press (darker in light
  *   themes, lighter in dark themes), no block highlight
  * - Minimum 24px hit area for standalone use while staying content-sized
- * - Supports external links with target="_blank" (adds security attributes)
+ * - Supports external links with target="_blank" (adds rel="noopener noreferrer")
+ * - Only relative URLs and http, https, mailto and tel schemes are navigated
  * - Tilt animation effect on pointer interaction
  * - Keyboard activation support (Enter/Space)
  * - Can function as a button without href (uses click handler instead)
@@ -122,7 +147,9 @@ export class MetroHyperlinkButton extends LitElement {
   }
 
   render() {
-    return html`<a class="button" role=${this.href ? "link" : "button"} href=${this.href || ""} target=${this.target || ""} ?aria-disabled=${this.disabled} tabindex=${this.disabled ? -1 : 0} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></a>`;
+    const href = renderedHref(this);
+    const rel = this.target === "_blank" ? "noopener noreferrer" : "";
+    return html`<a class="button" role=${href ? "link" : "button"} href=${href} target=${this.target || ""} rel=${rel} ?aria-disabled=${this.disabled} tabindex=${this.disabled ? -1 : 0} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></a>`;
   }
 
   protected firstUpdated(): void {

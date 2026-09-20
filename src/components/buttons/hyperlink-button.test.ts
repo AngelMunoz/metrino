@@ -1,5 +1,9 @@
 import { assert } from "chai";
-import { registerMetroHyperlinkButton, MetroHyperlinkButton } from "./hyperlink-button.ts";
+import {
+  registerMetroHyperlinkButton,
+  MetroHyperlinkButton,
+  isSafeHyperlink,
+} from "./hyperlink-button.ts";
 
 suite("metro-hyperlink-button", () => {
   registerMetroHyperlinkButton();
@@ -97,5 +101,57 @@ suite("metro-hyperlink-button", () => {
     const event = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     innerButton?.dispatchEvent(event);
     assert.isTrue(clicked);
+  });
+
+  test("isSafeHyperlink allows relative, http, mailto and tel URLs", () => {
+    assert.isTrue(isSafeHyperlink(""));
+    assert.isTrue(isSafeHyperlink(undefined));
+    assert.isTrue(isSafeHyperlink("https://example.com"));
+    assert.isTrue(isSafeHyperlink("http://example.com"));
+    assert.isTrue(isSafeHyperlink("#/route"));
+    assert.isTrue(isSafeHyperlink("/relative/path"));
+    assert.isTrue(isSafeHyperlink("mailto:user@example.com"));
+    assert.isTrue(isSafeHyperlink("tel:+123456789"));
+  });
+
+  test("isSafeHyperlink rejects executable and data schemes", () => {
+    assert.isFalse(isSafeHyperlink("javascript:alert(1)"));
+    assert.isFalse(isSafeHyperlink("JaVaScRiPt:alert(1)"));
+    assert.isFalse(isSafeHyperlink("java\nscript:alert(1)"));
+    assert.isFalse(isSafeHyperlink("data:text/html,<script>alert(1)</script>"));
+    assert.isFalse(isSafeHyperlink("vbscript:msgbox(1)"));
+    assert.isFalse(isSafeHyperlink("blob:https://example.com/abc"));
+  });
+
+  test("unsafe href is not rendered on the anchor", async () => {
+    button.href = "javascript:alert(1)";
+    await button.updateComplete;
+    assert.equal(innerButton?.getAttribute("href"), "");
+    assert.equal(innerButton?.getAttribute("role"), "button");
+  });
+
+  test("target=_blank adds rel=noopener noreferrer", async () => {
+    button.href = "https://example.com";
+    button.target = "_blank";
+    await button.updateComplete;
+    assert.equal(innerButton?.getAttribute("rel"), "noopener noreferrer");
+  });
+
+  test("javascript: href is not opened in a new tab", async () => {
+    const originalOpen = window.open;
+    let opened = false;
+    window.open = () => {
+      opened = true;
+      return null;
+    };
+    try {
+      button.href = "javascript:alert(1)";
+      button.target = "_blank";
+      await button.updateComplete;
+      innerButton?.click();
+      assert.isFalse(opened);
+    } finally {
+      window.open = originalOpen;
+    }
   });
 });

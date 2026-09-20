@@ -4,7 +4,7 @@ import "./styles/animations.css";
 
 export { MetroButton, registerMetroButton } from "./components/buttons/button.ts";
 export { MetroDropdownButton, registerMetroDropdownButton } from "./components/buttons/dropdown-button.ts";
-export { MetroHyperlinkButton, registerMetroHyperlinkButton } from "./components/buttons/hyperlink-button.ts";
+export { MetroHyperlinkButton, registerMetroHyperlinkButton, isSafeHyperlink } from "./components/buttons/hyperlink-button.ts";
 export { MetroRepeatButton, registerMetroRepeatButton } from "./components/buttons/repeat-button.ts";
 
 export { MetroCalendar, registerMetroCalendar } from "./components/datetime/calendar.ts";

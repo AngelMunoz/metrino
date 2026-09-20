@@ -1,6 +1,16 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, formLabel, disabledState } from "../../styles/shared.ts";
+import { sanitizeHtmlFragment } from "../../utils/sanitize.ts";
 
+/**
+ * Metro Rich Edit Box Component
+ *
+ * A contenteditable rich text editor. `value` holds the editor's HTML and new
+ * values are sanitized by a built-in allowlist before they reach the editor;
+ * pasted and dropped markup is sanitized as well. An optional `sanitize`
+ * function can apply an additional policy first. Sanitize the emitted value on
+ * the host side before persisting it or rendering it outside the editor.
+ */
 export class MetroRichEditBox extends LitElement {
   static formAssociated = true;
 
@@ -11,6 +21,7 @@ export class MetroRichEditBox extends LitElement {
     readonly: { type: Boolean, reflect: true },
     label: { type: String, reflect: true },
     name: { type: String, reflect: true },
+    sanitize: { attribute: false },
   };
 
   declare value: string;
@@ -19,6 +30,12 @@ export class MetroRichEditBox extends LitElement {
   declare readonly: boolean;
   declare label: string;
   declare name: string;
+  /**
+   * Optional sanitizer applied to programmatic values and pasted markup
+   * before the built-in sanitizer runs, e.g.
+   * `el.sanitize = (html) => DOMPurify.sanitize(html)`. Property only.
+   */
+  declare sanitize: ((html: string) => string) | undefined;
 
   static styles = [
     baseTypography,
@@ -163,27 +180,52 @@ export class MetroRichEditBox extends LitElement {
           data-placeholder=${this.placeholder}
           @input=${this.#handleInput}
           @blur=${this.#handleBlur}
+          @paste=${this.#handlePaste}
+          @dragover=${this.#handleDragOver}
+          @drop=${this.#handleDrop}
         ></div>
       </div>
     `;
   }
 
+  #lastSyncedValue = "";
+
   firstUpdated(): void {
-    const editor = this.shadowRoot?.querySelector(".editor") as HTMLDivElement;
-    if (editor && this.value) {
-      editor.innerHTML = this.value;
-    }
+    this.#writeValue(this.value);
     this.#updateFormValue();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
     if (changedProperties.has("value")) {
-      const editor = this.shadowRoot?.querySelector(".editor") as HTMLDivElement;
-      if (editor && editor.innerHTML !== this.value) {
-        editor.innerHTML = this.value;
+      if (this.value !== this.#lastSyncedValue) {
+        this.#writeValue(this.value);
       }
       this.#updateFormValue();
     }
+  }
+
+  #getEditor(): HTMLDivElement | null {
+    return this.shadowRoot?.querySelector<HTMLDivElement>(".editor") ?? null;
+  }
+
+  /**
+   * Places a value in the editor through the built-in sanitizer (after the
+   * optional `sanitize` hook) without using an innerHTML sink.
+   * @param value - The HTML value to write
+   * @returns void
+   */
+  #writeValue(value: string): void {
+    const editor = this.#getEditor();
+    if (!editor) return;
+
+    const source = value && this.sanitize ? this.sanitize(value) : value;
+    const fragment = sanitizeHtmlFragment(source);
+
+    const probe = document.createElement("div");
+    probe.appendChild(fragment);
+    if (probe.innerHTML === editor.innerHTML) return;
+
+    editor.replaceChildren(...Array.from(probe.childNodes));
   }
 
   #updateFormValue(): void {
@@ -196,8 +238,9 @@ export class MetroRichEditBox extends LitElement {
   }
 
   #syncValue(): void {
-    const editor = this.shadowRoot?.querySelector(".editor") as HTMLDivElement;
+    const editor = this.#getEditor();
     if (editor) {
+      this.#lastSyncedValue = editor.innerHTML;
       this.value = editor.innerHTML;
       this.#updateFormValue();
     }
@@ -205,8 +248,69 @@ export class MetroRichEditBox extends LitElement {
 
   #handleInput(): void {
     this.#syncValue();
+    this.#emit("input");
+  }
+
+  #handlePaste(e: ClipboardEvent): void {
+    const data = e.clipboardData;
+    if (!data || this.disabled || this.readonly) return;
+    e.preventDefault();
+    this.#insertMarkup(data.getData("text/html"), data.getData("text/plain"));
+  }
+
+  #handleDragOver(e: DragEvent): void {
+    e.preventDefault();
+  }
+
+  #handleDrop(e: DragEvent): void {
+    const data = e.dataTransfer;
+    if (!data || this.disabled || this.readonly) return;
+    e.preventDefault();
+    this.#insertMarkup(data.getData("text/html"), data.getData("text/plain"));
+  }
+
+  #insertMarkup(html: string, text: string): void {
+    if (html) {
+      const source = this.sanitize ? this.sanitize(html) : html;
+      this.#insertNode(sanitizeHtmlFragment(source));
+    } else if (text) {
+      this.#insertNode(document.createTextNode(text));
+    } else {
+      return;
+    }
+    this.#syncValue();
+    this.#emit("input");
+  }
+
+  #insertNode(node: Node): void {
+    const editor = this.#getEditor();
+    if (!editor) return;
+
+    const lastNode =
+      node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.lastChild : node;
+    const selection = window.getSelection();
+    const range =
+      selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
+    if (!range || !editor.contains(range.commonAncestorContainer)) {
+      editor.appendChild(node);
+    } else {
+      range.deleteContents();
+      range.insertNode(node);
+    }
+
+    if (selection && lastNode) {
+      const after = document.createRange();
+      after.setStartAfter(lastNode);
+      after.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(after);
+    }
+  }
+
+  #emit(type: "input" | "change"): void {
     this.dispatchEvent(
-      new CustomEvent("input", {
+      new CustomEvent(type, {
         detail: { value: this.value },
         bubbles: true,
         composed: true,
@@ -215,13 +319,7 @@ export class MetroRichEditBox extends LitElement {
   }
 
   #handleBlur(): void {
-    this.dispatchEvent(
-      new CustomEvent("change", {
-        detail: { value: this.value },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    this.#emit("change");
   }
 
   formAssociatedCallback(_form: HTMLFormElement): void {}
@@ -232,10 +330,7 @@ export class MetroRichEditBox extends LitElement {
 
   formResetCallback(): void {
     this.value = "";
-    const editor = this.shadowRoot?.querySelector(".editor") as HTMLDivElement;
-    if (editor) {
-      editor.innerHTML = "";
-    }
+    this.#writeValue("");
     this.#updateFormValue();
   }
 
@@ -245,10 +340,7 @@ export class MetroRichEditBox extends LitElement {
   ): void {
     if (typeof state === "string") {
       this.value = state;
-      const editor = this.shadowRoot?.querySelector(".editor") as HTMLDivElement;
-      if (editor) {
-        editor.innerHTML = state;
-      }
+      this.#writeValue(state);
       this.#updateFormValue();
     }
   }

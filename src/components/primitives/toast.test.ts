@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { registerMetroToast, MetroToast, ToastHost } from "./toast.ts";
+import type { ToastOptions } from "./toast.ts";
 
 suite("metro-toast", () => {
   registerMetroToast();
@@ -103,6 +104,27 @@ suite("metro-toast", () => {
     
     const toasts = el.shadowRoot?.querySelectorAll(".toast");
     assert.equal(toasts?.length || 0, 0);
+  });
+
+  test("title and message are rendered as text, not markup", async () => {
+    const el = await createToast();
+    const payload = '<img src=x onerror="window.__xss = true">';
+    el.show({ title: payload, message: payload, duration: 0 });
+
+    const title = el.shadowRoot?.querySelector(".toast-title");
+    const message = el.shadowRoot?.querySelector(".toast-message");
+    assert.equal(title?.textContent, payload);
+    assert.equal(message?.textContent, payload);
+    assert.equal(el.shadowRoot?.querySelectorAll("img").length, 0);
+
+    el.clearAll();
+  });
+
+  test("show() rejects invalid severity values", async () => {
+    const el = await createToast();
+    assert.throws(() =>
+      el.show({ message: "Nope", severity: "urgent" as ToastOptions["severity"] }),
+    );
   });
 
   test("ToastHost show() lazily creates and attaches the host", async () => {

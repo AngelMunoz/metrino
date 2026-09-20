@@ -73,4 +73,17 @@ suite("metro-live-tile", () => {
     const content = el.shadowRoot?.querySelector(".live-content");
     assert.exists(content);
   });
+
+  test("item text is rendered as text, not markup", async () => {
+    const el = await createTile();
+    const payload = '<img src=x onerror="window.__xss = true">';
+    el.setItems([{ title: payload, message: payload }]);
+    await el.updateComplete;
+
+    const title = el.shadowRoot?.querySelector(".live-title");
+    const message = el.shadowRoot?.querySelector(".live-message");
+    assert.equal(title?.textContent, payload);
+    assert.equal(message?.textContent, payload);
+    assert.equal(el.shadowRoot?.querySelectorAll("img").length, 0);
+  });
 });

@@ -1,6 +1,12 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 
+/**
+ * Metro Border Component
+ *
+ * Wraps slotted content in a configurable border. `borderColor` and
+ * `background` accept CSS values; invalid declarations are ignored.
+ */
 export class MetroBorder extends LitElement {
   static properties = {
     borderThickness: { type: String, reflect: true, attribute: "border-thickness" },
@@ -45,35 +51,35 @@ export class MetroBorder extends LitElement {
   }
 
   render() {
-    const thickness = this.#parseBorderThickness(this.borderThickness);
-    const color = this.borderColor || "var(--metro-border, rgba(255, 255, 255, 0.2))";
-    const radius = this.cornerRadius;
-    const bg = this.background;
-    const pad = this.#parsePadding(this.padding);
-
-    const style = `
-      border-top-width: ${thickness.top}px;
-      border-right-width: ${thickness.right}px;
-      border-bottom-width: ${thickness.bottom}px;
-      border-left-width: ${thickness.left}px;
-      border-color: ${color};
-      border-style: solid;
-      border-radius: ${radius}px;
-      ${bg ? `background: ${bg};` : ""}
-      padding-top: ${pad.top}px;
-      padding-right: ${pad.right}px;
-      padding-bottom: ${pad.bottom}px;
-      padding-left: ${pad.left}px;
-    `;
-
     return html`
-      <style>
-        .border-container { ${style} }
-      </style>
       <div class="border-container">
         <slot></slot>
       </div>
     `;
+  }
+
+  protected updated(): void {
+    const container = this.shadowRoot?.querySelector<HTMLElement>(".border-container");
+    if (!container) return;
+
+    const thickness = this.#parseBorderThickness(this.borderThickness);
+    const pad = this.#parsePadding(this.padding);
+    const style = container.style;
+
+    style.borderTopWidth = `${thickness.top}px`;
+    style.borderRightWidth = `${thickness.right}px`;
+    style.borderBottomWidth = `${thickness.bottom}px`;
+    style.borderLeftWidth = `${thickness.left}px`;
+    style.borderStyle = "solid";
+    style.borderRadius = `${this.cornerRadius}px`;
+    style.borderColor = "";
+    style.borderColor = this.borderColor || "var(--metro-border, rgba(255, 255, 255, 0.2))";
+    style.background = "";
+    style.background = this.background;
+    style.paddingTop = `${pad.top}px`;
+    style.paddingRight = `${pad.right}px`;
+    style.paddingBottom = `${pad.bottom}px`;
+    style.paddingLeft = `${pad.left}px`;
   }
 
   #parseBorderThickness(value: string): { top: number; right: number; bottom: number; left: number } {

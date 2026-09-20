@@ -101,6 +101,21 @@ suite("metro-long-list-selector", () => {
       assert.exists(emptyMsg);
       assert.equal(emptyMsg?.textContent, "No items");
     });
+
+    test("applies maxHeight as a single style declaration", async () => {
+      const el = await createList({ maxHeight: "150px" });
+      const listContainer = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      assert.equal(listContainer.style.maxHeight, "150px");
+    });
+
+    test("ignores injected declarations in maxHeight", async () => {
+      const el = await createList({
+        maxHeight: "150px; background-image: url(https://evil.test/pixel)",
+      });
+      const listContainer = el.shadowRoot?.querySelector(".list-container") as HTMLElement;
+      assert.equal(listContainer.style.maxHeight, "");
+      assert.equal(listContainer.style.backgroundImage, "");
+    });
   });
 
   suite("flat list index and text consistency", () => {

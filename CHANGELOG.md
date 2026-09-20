@@ -7,11 +7,23 @@
 - **hyperlink-button**: renders as a content-sized text hyperlink — underlined accent-colored text, 2px/4px padding with a 24px minimum hit area, and color-only hover/press feedback (theme-aware accent, no background block). Previously it kept the MetroButton footprint (120×40 hit area, 12px/24px padding) with a hover underline and an opacity press state.
 - **toast**: global toast handling moved from the module-level `showToast()`/`hideToast()` functions (backed by a mutable module-scope `let`) to a `ToastHost` controller class. The host element reference lives in a private instance field, so bundlers can never tree-shake one path of the API without the other, and each `ToastHost` instance can be created and disposed independently (useful for tests). `ToastHost` creates and attaches the `<metro-toast>` element to `document.body` lazily on the first `show()` call and registers it (plus its `metro-icon` dependency) automatically.
 - **demo**: the toast section of the dialogs page now demonstrates the `ToastHost` global API (global, persistent, and clear-all buttons) alongside the declarative `<metro-toast>` element
+- **rich-text-block** / **rich-edit-box**: `content`/`value` now pass through a built-in sanitizer before rendering; unsupported elements are unwrapped, unsupported attributes are dropped, and the editor sanitizes pasted and dropped markup. Use the default slot for content beyond basic formatting.
 
 ### Added
 
 - **toast**: `ToastHost` class and the `ToastOptions` type are exported from the toast module and the package root
 - **tokens**: `--metro-accent-text-hover` semantic token for accent-colored text on hover and press; resolves to `--metro-accent-dark` in light themes and `--metro-accent-light` in dark themes
+- **rich-text-block** / **rich-edit-box**: optional `sanitize` function property applied to `content`/`value` before rendering
+- **hyperlink-button**: exported `isSafeHyperlink()` helper for validating hyperlink schemes
+
+### Security
+
+- **toast**: `title` and `message` are now rendered with `textContent` instead of `innerHTML`, so untrusted values can no longer inject markup (DOM XSS). `show()` also validates `severity` and throws a `TypeError` for unknown values.
+- **live-tile**: `setItems()` item text is now rendered with `textContent` instead of `innerHTML`; custom content remains available through the `icon` and default slots.
+- **hyperlink-button**: `href` values are limited to relative URLs and the `http`, `https`, `mailto` and `tel` schemes — `javascript:`, `data:` and `blob:` URLs are neither rendered on the anchor nor navigated. `target="_blank"` now also sets `rel="noopener noreferrer"`.
+- **rich-text-block** / **rich-edit-box**: `content`/`value` and pasted/dropped editor markup are always sanitized through a built-in allowlist (formatting elements, safe attributes, `http`/`https`/`mailto`/`tel` links) before rendering; an optional `sanitize` hook can apply an additional policy first. Both components now build DOM nodes instead of using `innerHTML`/`unsafeHTML` sinks, so they are compatible with Trusted Types enforcement.
+- **border**, **panorama**, **long-list-selector**: style values are applied through the CSSOM instead of raw style/style-element interpolation, so injected declarations are rejected. Panorama only applies relative, http(s) and `data:image` background URLs.
+- **context-menu**: invalid `target` selectors are ignored instead of throwing during connect.
 
 ### Removed
 
