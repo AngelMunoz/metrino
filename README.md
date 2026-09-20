@@ -104,6 +104,37 @@ toasts.clearAll();    // dismiss every visible toast
 toasts.dispose();     // remove the host element; the next show() recreates it
 ```
 
+### Forms
+
+All input and date/time controls are form-associated custom elements: they
+submit their value through `FormData`, reset with the form, disable with the
+form, and participate in constraint validation. Set `required` (and where
+supported `min`/`max`/`step` or date bounds) and an invalid control blocks
+submission; `form.reportValidity()` focuses the control's inner element when
+that element is focusable (`metro-rating` and the picker rollers report their
+message without moving focus).
+
+```html
+<form id="signup">
+  <metro-text-box name="email" label="Email" required></metro-text-box>
+  <metro-check-box name="tos" required>I agree to the terms</metro-check-box>
+  <metro-calendar-date-picker
+    name="birthday"
+    min-date="1900-01-01"
+    required
+  ></metro-calendar-date-picker>
+  <metro-button type="submit">Sign up</metro-button>
+  <metro-button type="reset">Clear</metro-button>
+</form>
+```
+
+`metro-button` follows native button semantics: it submits its owner form by
+default, `type="reset"` clears it, and `type="button"` performs no form
+action. Controls validate according to their kind — dates compare as calendar
+dates against their bounds, numbers honor `min`/`max`/`step`, an unrated
+`metro-rating` counts as missing, and a required radio group is satisfied by
+any selection in the group.
+
 ### CSS Bundle Only
 
 If you only need the CSS custom properties (without components):

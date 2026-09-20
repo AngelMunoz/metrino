@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, disabledState } from "../../styles/shared.ts";
+import { numberValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 /**
  * Metro Slider Component
@@ -124,6 +125,7 @@ export class MetroSlider extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #input?: HTMLInputElement;
 
   constructor() {
     super();
@@ -158,30 +160,51 @@ export class MetroSlider extends LitElement {
   }
 
   /**
-   * Called on first update to set initial form value.
+   * Called on first update to cache the range input and set initial form state.
    * @returns void
    */
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#input = this.shadowRoot?.querySelector("input") ?? undefined;
+    this.#updateState();
   }
 
   /**
-   * Updates form value when the value property changes.
+   * Updates form state when a validation-relevant property changes.
    * @param changedProperties - Map of changed properties
    * @returns void
    */
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("min") ||
+      changedProperties.has("max") ||
+      changedProperties.has("step")
+    ) {
+      this.#updateState();
     }
   }
 
   /**
-   * Updates the internal form value for form submission.
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. The slider always
+   * reports a value (like a native range input), so only range and step
+   * constraints apply — they catch programmatic values outside min/max or
+   * off the step grid.
    * @returns void
    */
-  #updateFormValue(): void {
-    this.#internals.setFormValue(String(this.value));
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      Number.isFinite(this.value) ? String(this.value) : null,
+      numberValidation({
+        value: this.value,
+        required: false,
+        min: this.min,
+        max: this.max,
+        step: this.step,
+      }),
+      this.#input,
+    );
   }
 
   /**
@@ -193,7 +216,7 @@ export class MetroSlider extends LitElement {
   #handleInput(e: InputEvent): void {
     const target = e.target as HTMLInputElement;
     this.value = parseFloat(target.value);
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(new CustomEvent("change", {
       detail: { value: this.value },
       bubbles: true,
@@ -216,7 +239,25 @@ export class MetroSlider extends LitElement {
    */
   formResetCallback(): void {
     this.value = this.min;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  /**
+   * Called when form state is restored (e.g., session history restore).
+   * Restores the numeric value from the saved state.
+   * @param state - The restored state value
+   * @param _mode - The restoration mode
+   * @returns void
+   */
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    const restored = typeof state === "string" ? parseFloat(state) : Number.NaN;
+    if (!Number.isNaN(restored)) {
+      this.value = restored;
+      this.#updateState();
+    }
   }
 }
 

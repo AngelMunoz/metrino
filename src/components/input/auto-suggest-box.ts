@@ -1,6 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
+import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroAutoSuggestBox extends LitElement {
   static formAssociated = true;
@@ -11,6 +12,7 @@ export class MetroAutoSuggestBox extends LitElement {
     query: { type: String },
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
+    required: { type: Boolean, reflect: true },
   };
 
   declare value: string;
@@ -18,6 +20,7 @@ export class MetroAutoSuggestBox extends LitElement {
   declare query: string;
   declare disabled: boolean;
   declare name: string;
+  declare required: boolean;
 
   static styles = [
     inputBase,
@@ -77,6 +80,7 @@ export class MetroAutoSuggestBox extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #input?: HTMLInputElement;
   #suggestions: string[] = [];
   #highlightedIndex = -1;
   #isOpen = false;
@@ -88,6 +92,7 @@ export class MetroAutoSuggestBox extends LitElement {
     this.query = "";
     this.disabled = false;
     this.name = "";
+    this.required = false;
     this.#internals = this.attachInternals();
   }
 
@@ -127,17 +132,32 @@ export class MetroAutoSuggestBox extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#input = this.shadowRoot?.querySelector("input") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      textValidation(this.value, this.required && !this.disabled),
+      this.#input,
+    );
   }
 
   #highlightMatch(text: string) {
@@ -155,7 +175,7 @@ export class MetroAutoSuggestBox extends LitElement {
     const target = e.target as HTMLInputElement;
     this.value = target.value;
     this.query = this.value;
-    this.#updateFormValue();
+    this.#updateState();
     this.#isOpen = true;
     this.#highlightedIndex = -1;
 
@@ -215,7 +235,7 @@ export class MetroAutoSuggestBox extends LitElement {
     this.value = suggestion;
     this.query = "";
     this.#isOpen = false;
-    this.#updateFormValue();
+    this.#updateState();
 
     this.dispatchEvent(
       new CustomEvent("suggestionchosen", {
@@ -240,7 +260,18 @@ export class MetroAutoSuggestBox extends LitElement {
   formResetCallback(): void {
     this.value = "";
     this.query = "";
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string") {
+      this.value = state;
+      this.query = state;
+      this.#updateState();
+    }
   }
 }
 

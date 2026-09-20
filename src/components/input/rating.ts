@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { disabledState } from "../../styles/shared.ts";
+import { numberValidation, updateFormControlState, valueMissing } from "../../utils/form-control.ts";
 
 export class MetroRating extends LitElement {
   static formAssociated = true;
@@ -10,6 +11,7 @@ export class MetroRating extends LitElement {
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
     readonly: { type: Boolean, reflect: true },
+    required: { type: Boolean, reflect: true },
   };
 
   declare value: number;
@@ -17,6 +19,7 @@ export class MetroRating extends LitElement {
   declare disabled: boolean;
   declare name: string;
   declare readonly: boolean;
+  declare required: boolean;
 
   static styles = [
     disabledState,
@@ -51,6 +54,7 @@ export class MetroRating extends LitElement {
 
   #internals: ElementInternals;
   #hoverValue = 0;
+  #star?: HTMLSpanElement;
 
   constructor() {
     super();
@@ -59,6 +63,7 @@ export class MetroRating extends LitElement {
     this.disabled = false;
     this.name = "";
     this.readonly = false;
+    this.required = false;
     this.#internals = this.attachInternals();
   }
 
@@ -82,23 +87,46 @@ export class MetroRating extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#star = this.shadowRoot?.querySelector(".star") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("max") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(String(this.value));
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. An unrated
+   * rating reports "0", so required treats 0 — not an empty string — as
+   * the missing value.
+   * @returns void
+   */
+  #updateState(): void {
+    const unrated = this.value === 0;
+    const validation =
+      this.required && !this.disabled && unrated
+        ? valueMissing()
+        : numberValidation({ value: this.value, required: false, min: 0, max: this.max });
+    updateFormControlState(
+      this.#internals,
+      Number.isFinite(this.value) ? String(this.value) : null,
+      validation,
+      this.#star,
+    );
   }
 
   #setValue(value: number): void {
     if (this.disabled || this.readonly) return;
     this.value = value;
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(new CustomEvent("change", {
       detail: { value: this.value },
       bubbles: true,
@@ -118,7 +146,18 @@ export class MetroRating extends LitElement {
 
   formResetCallback(): void {
     this.value = 0;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    const restored = typeof state === "string" ? parseFloat(state) : Number.NaN;
+    if (!Number.isNaN(restored)) {
+      this.value = restored;
+      this.#updateState();
+    }
   }
 }
 

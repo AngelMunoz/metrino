@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase } from "../../styles/shared.ts";
+import { timeValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroTimePicker extends LitElement {
   static formAssociated = true;
@@ -29,6 +30,7 @@ export class MetroTimePicker extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #input?: HTMLInputElement;
 
   constructor() {
     super();
@@ -54,23 +56,39 @@ export class MetroTimePicker extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#input = this.shadowRoot?.querySelector("input") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. Values are
+   * native "HH:MM" strings; unparseable programmatic values report badInput.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      timeValidation(this.value, this.required && !this.disabled),
+      this.#input,
+    );
   }
 
   #handleChange(e: Event): void {
     const target = e.target as HTMLInputElement;
     this.value = target.value;
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(new CustomEvent("change", {
       detail: { value: this.value },
       bubbles: true,
@@ -84,7 +102,17 @@ export class MetroTimePicker extends LitElement {
 
   formResetCallback(): void {
     this.value = "";
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string") {
+      this.value = state;
+      this.#updateState();
+    }
   }
 }
 

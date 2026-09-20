@@ -1,8 +1,10 @@
 import { assert } from "chai";
 import { registerMetroButton, MetroButton } from "./button.ts";
+import { registerMetroTextBox, MetroTextBox } from "../input/text-box.ts";
 
 suite("metro-button", () => {
   registerMetroButton();
+  registerMetroTextBox();
   let button: MetroButton;
   let innerButton: HTMLButtonElement | null;
 
@@ -91,5 +93,122 @@ suite("metro-button", () => {
     const event = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     innerButton?.dispatchEvent(event);
     assert.isTrue(clicked);
+  });
+
+  test("default type is submit", () => {
+    assert.equal(button.type, "submit");
+  });
+
+  test("clicking submits the owner form", async () => {
+    const form = document.createElement("form");
+    const input = document.createElement("metro-text-box") as MetroTextBox;
+    input.setAttribute("name", "field");
+    form.appendChild(input);
+    const submitButton = document.createElement("metro-button") as MetroButton;
+    form.appendChild(submitButton);
+    document.body.appendChild(form);
+
+    await input.updateComplete;
+    await submitButton.updateComplete;
+
+    let submitted = false;
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitted = true;
+    });
+
+    const inner = submitButton.shadowRoot?.querySelector("button") as HTMLElement;
+    assert.exists(inner);
+    inner.click();
+    assert.isTrue(submitted);
+
+    form.remove();
+  });
+
+  test("keyboard activation submits the owner form", async () => {
+    const form = document.createElement("form");
+    const submitButton = document.createElement("metro-button") as MetroButton;
+    form.appendChild(submitButton);
+    document.body.appendChild(form);
+    await submitButton.updateComplete;
+
+    let submitted = false;
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitted = true;
+    });
+
+    const inner = submitButton.shadowRoot?.querySelector("button") as HTMLElement;
+    inner.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    assert.isTrue(submitted);
+
+    form.remove();
+  });
+
+  test("type button does not submit the owner form", async () => {
+    const form = document.createElement("form");
+    const plainButton = document.createElement("metro-button") as MetroButton;
+    plainButton.setAttribute("type", "button");
+    form.appendChild(plainButton);
+    document.body.appendChild(form);
+    await plainButton.updateComplete;
+
+    let submitted = false;
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitted = true;
+    });
+
+    const inner = plainButton.shadowRoot?.querySelector("button") as HTMLElement;
+    inner.click();
+    assert.isFalse(submitted);
+
+    form.remove();
+  });
+
+  test("disabled button does not submit the owner form", async () => {
+    const form = document.createElement("form");
+    const submitButton = document.createElement("metro-button") as MetroButton;
+    submitButton.disabled = true;
+    form.appendChild(submitButton);
+    document.body.appendChild(form);
+    await submitButton.updateComplete;
+
+    let submitted = false;
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitted = true;
+    });
+
+    const inner = submitButton.shadowRoot?.querySelector("button") as HTMLElement;
+    inner.click();
+    assert.isFalse(submitted);
+
+    form.remove();
+  });
+
+  test("clicking a reset button resets the owner form", async () => {
+    const form = document.createElement("form");
+    const input = document.createElement("metro-text-box") as MetroTextBox;
+    input.setAttribute("name", "field");
+    form.appendChild(input);
+    const resetButton = document.createElement("metro-button") as MetroButton;
+    resetButton.setAttribute("type", "reset");
+    form.appendChild(resetButton);
+    document.body.appendChild(form);
+
+    await input.updateComplete;
+    await resetButton.updateComplete;
+
+    input.value = "typed";
+    await input.updateComplete;
+    assert.equal(input.value, "typed");
+
+    const inner = resetButton.shadowRoot?.querySelector("button") as HTMLElement;
+    inner.click();
+    await input.updateComplete;
+    assert.equal(input.value, "");
+
+    form.remove();
   });
 });

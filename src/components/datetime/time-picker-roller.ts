@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, formLabel, pickerRollerBase } from "../../styles/shared.ts";
+import { timeValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 const HOURS_12 = ["12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
 const HOURS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -97,6 +98,7 @@ export class MetroTimePickerRoller extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #container?: HTMLDivElement;
   #hourOffset = 0;
   #minuteOffset = 0;
   #periodOffset = 0;
@@ -259,7 +261,7 @@ export class MetroTimePickerRoller extends LitElement {
       this.value = `${hour}:${minute}`;
     }
 
-    this.#internals.setFormValue(this.value);
+    this.#updateState();
 
     this.dispatchEvent(
       new CustomEvent("change", {
@@ -347,17 +349,34 @@ export class MetroTimePickerRoller extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#container = this.shadowRoot?.querySelector(".picker-container") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. Accepts both the
+   * roller's "H:MM AM/PM" output and 24-hour values; other shapes report
+   * badInput.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      timeValidation(this.value, this.required && !this.disabled),
+      this.#container,
+    );
   }
 
   formDisabledCallback(disabled: boolean): void {
@@ -375,7 +394,17 @@ export class MetroTimePickerRoller extends LitElement {
     this.value = this.hourFormat === "12"
       ? `${hour}:${minute} ${period}`
       : `${hour}:${minute}`;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string") {
+      this.value = state;
+      this.#updateState();
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { LitElement, html, type PropertyValues } from "lit";
 import { inputBase } from "../../styles/shared.ts";
+import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 /**
  * Metro Text Box Component
@@ -88,6 +89,7 @@ export class MetroTextBox extends LitElement {
   static styles = inputBase;
 
   #internals: ElementInternals;
+  #input?: HTMLInputElement;
 
   constructor() {
     super();
@@ -116,30 +118,41 @@ export class MetroTextBox extends LitElement {
   }
 
   /**
-   * Called on first update to set initial form value.
+   * Called on first update to cache the inner input and set initial form state.
    * @returns void
    */
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#input = this.shadowRoot?.querySelector("input") ?? undefined;
+    this.#updateState();
   }
 
   /**
-   * Updates form value when the value property changes.
+   * Updates form state when a validation-relevant property changes.
    * @param changedProperties - Map of changed properties
    * @returns void
    */
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
   /**
-   * Updates the internal form value for form submission.
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale.
    * @returns void
    */
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      textValidation(this.value, this.required && !this.disabled),
+      this.#input,
+    );
   }
 
   /**
@@ -150,7 +163,7 @@ export class MetroTextBox extends LitElement {
   #handleInput(e: InputEvent): void {
     const target = e.target as HTMLInputElement;
     this.value = target.value;
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(
       new CustomEvent("input", {
         detail: { value: this.value },
@@ -168,7 +181,7 @@ export class MetroTextBox extends LitElement {
   #handleChange(e: Event): void {
     const target = e.target as HTMLInputElement;
     this.value = target.value;
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(
       new CustomEvent("change", {
         detail: { value: this.value },
@@ -199,7 +212,7 @@ export class MetroTextBox extends LitElement {
    */
   formResetCallback(): void {
     this.value = "";
-    this.#updateFormValue();
+    this.#updateState();
   }
 
   /**
@@ -214,7 +227,7 @@ export class MetroTextBox extends LitElement {
   ): void {
     if (typeof state === "string") {
       this.value = state;
-      this.#updateFormValue();
+      this.#updateState();
     }
   }
 }

@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { toggleControlBase } from "../../styles/shared.ts";
+import { checkedValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 /**
  * Metro Check Box Component
@@ -60,12 +61,19 @@ export class MetroCheckBox extends LitElement {
      * @default "on"
      */
     value: { type: String, reflect: true },
+    /**
+     * When true, the checkbox must be checked for the owner form to
+     * validate and submit.
+     * @default false
+     */
+    required: { type: Boolean, reflect: true },
   };
 
   declare checked: boolean;
   declare disabled: boolean;
   declare name: string;
   declare value: string;
+  declare required: boolean;
 
   static styles = [
     toggleControlBase,
@@ -117,6 +125,7 @@ export class MetroCheckBox extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #box?: HTMLDivElement;
 
   constructor() {
     super();
@@ -124,6 +133,7 @@ export class MetroCheckBox extends LitElement {
     this.disabled = false;
     this.name = "";
     this.value = "on";
+    this.required = false;
     this.#internals = this.attachInternals();
   }
 
@@ -144,31 +154,41 @@ export class MetroCheckBox extends LitElement {
   }
 
   /**
-   * Called on first update to set initial form value.
+   * Called on first update to cache the box element and set initial form state.
    * @returns void
    */
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#box = this.shadowRoot?.querySelector(".checkbox") ?? undefined;
+    this.#updateState();
   }
 
   /**
-   * Updates form value when the checked property changes.
+   * Updates form state when a validation-relevant property changes.
    * @param changedProperties - Map of changed properties
    * @returns void
    */
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("checked")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("checked") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
   /**
-   * Updates the internal form value based on checked state.
-   * Sets value when checked, null when unchecked.
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale.
    * @returns void
    */
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.checked ? this.value : null);
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.checked ? this.value : null,
+      checkedValidation(this.checked, this.required && !this.disabled),
+      this.#box,
+    );
   }
 
   /**
@@ -179,7 +199,7 @@ export class MetroCheckBox extends LitElement {
   #toggle(): void {
     if (this.disabled) return;
     this.checked = !this.checked;
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(new CustomEvent("change", {
       detail: { checked: this.checked },
       bubbles: true,
@@ -209,7 +229,24 @@ export class MetroCheckBox extends LitElement {
    */
   formResetCallback(): void {
     this.checked = false;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  /**
+   * Called when form state is restored (e.g., session history restore).
+   * Re-checks the checkbox when the restored state matches its value.
+   * @param state - The restored state value
+   * @param _mode - The restoration mode
+   * @returns void
+   */
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string" && state === this.value) {
+      this.checked = true;
+      this.#updateState();
+    }
   }
 }
 

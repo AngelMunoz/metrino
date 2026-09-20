@@ -46,21 +46,54 @@ suite("metro-radio-button", () => {
   test("radios with same name are mutually exclusive", async () => {
     const radio1 = await createRadio({ name: "group1", value: "a" });
     const radio2 = await createRadio({ name: "group1", value: "b" });
-    
+
     const radio1El = radio1.shadowRoot?.querySelector(".radio") as HTMLElement;
     const radio2El = radio2.shadowRoot?.querySelector(".radio") as HTMLElement;
-    
+
     radio1El.click();
     await radio1.updateComplete;
-    
+
     assert.isTrue(radio1.checked);
     assert.isFalse(radio2.checked);
-    
+
     radio2El.click();
     await radio2.updateComplete;
-    
+
     assert.isFalse(radio1.checked);
     assert.isTrue(radio2.checked);
+  });
+
+  test("radios inside a shadow root are mutually exclusive", async () => {
+    const host = document.createElement("div");
+    const shadow = host.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
+      <metro-radio-button name="shadow-group" value="a">A</metro-radio-button>
+      <metro-radio-button name="shadow-group" value="b">B</metro-radio-button>
+      <metro-radio-button name="shadow-group" value="c">C</metro-radio-button>
+    `;
+    container.appendChild(host);
+
+    const radios = Array.from(
+      shadow.querySelectorAll<MetroRadioButton>("metro-radio-button"),
+    );
+    assert.equal(radios.length, 3);
+    for (const radio of radios) {
+      await radio.updateComplete;
+    }
+
+    for (const radio of radios) {
+      const target = radio.shadowRoot?.querySelector(".radio") as HTMLElement;
+      target.click();
+    }
+    for (const radio of radios) {
+      await radio.updateComplete;
+    }
+
+    assert.isFalse(radios[0].checked);
+    assert.isFalse(radios[1].checked);
+    assert.isTrue(radios[2].checked);
+
+    host.remove();
   });
 
   test("checked state applies checked class", async () => {
@@ -121,7 +154,40 @@ suite("metro-radio-button", () => {
     
     const formData = new FormData(form);
     assert.equal(formData.get("choice"), "option2");
-    
+
+    form.remove();
+  });
+
+  test("only the selected radio contributes to form data", async () => {
+    const form = document.createElement("form");
+    container.appendChild(form);
+
+    const radio1 = document.createElement("metro-radio-button") as MetroRadioButton;
+    radio1.setAttribute("name", "choice2");
+    radio1.setAttribute("value", "option1");
+
+    const radio2 = document.createElement("metro-radio-button") as MetroRadioButton;
+    radio2.setAttribute("name", "choice2");
+    radio2.setAttribute("value", "option2");
+
+    form.appendChild(radio1);
+    form.appendChild(radio2);
+    await radio1.updateComplete;
+    await radio2.updateComplete;
+
+    const radio1El = radio1.shadowRoot?.querySelector(".radio") as HTMLElement;
+    const radio2El = radio2.shadowRoot?.querySelector(".radio") as HTMLElement;
+
+    radio1El.click();
+    await radio1.updateComplete;
+    assert.equal(new FormData(form).get("choice2"), "option1");
+
+    radio2El.click();
+    await radio2.updateComplete;
+    const entries = new FormData(form).getAll("choice2");
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0], "option2");
+
     form.remove();
   });
 
@@ -150,15 +216,27 @@ suite("metro-radio-button", () => {
   test("formResetCallback resets to unchecked", async () => {
     const el = await createRadio();
     const radio = el.shadowRoot?.querySelector(".radio") as HTMLElement;
-    
+
     radio.click();
     await el.updateComplete;
     assert.isTrue(el.checked);
-    
+
     el.formResetCallback();
     await el.updateComplete;
-    
+
     assert.isFalse(el.checked);
+  });
+
+  test("formStateRestoreCallback re-checks matching value", async () => {
+    const el = await createRadio({ name: "restore", value: "opt2" });
+    el.formStateRestoreCallback("opt2", "restore");
+    await el.updateComplete;
+    assert.isTrue(el.checked);
+
+    const other = await createRadio({ name: "restore", value: "opt3" });
+    other.formStateRestoreCallback("opt2", "restore");
+    await other.updateComplete;
+    assert.isFalse(other.checked);
   });
 
   test("radio is focusable via tabindex", async () => {

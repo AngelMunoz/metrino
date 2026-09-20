@@ -1,4 +1,4 @@
-import { LitElement, html, css, type PropertyValues } from "lit";
+import { LitElement, html, nothing, css, type PropertyValues } from "lit";
 import { focusRing, disabledState, baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import {
   updateAriaDisabled,
@@ -36,8 +36,9 @@ function navigate(el: MetroHyperlinkButton): void {
 }
 
 /**
- * Returns the href to render on the anchor, or an empty string when the
- * value uses an unsafe scheme.
+ * Returns the href to render on the anchor, or an empty string when unset
+ * or when the value uses an unsafe scheme; the render template turns an
+ * empty string into an omitted href attribute.
  * @param el - The MetroHyperlinkButton instance
  * @returns string
  */
@@ -148,8 +149,12 @@ export class MetroHyperlinkButton extends LitElement {
 
   render() {
     const href = renderedHref(this);
-    const rel = this.target === "_blank" ? "noopener noreferrer" : "";
-    return html`<a class="button" role=${href ? "link" : "button"} href=${href} target=${this.target || ""} rel=${rel} ?aria-disabled=${this.disabled} tabindex=${this.disabled ? -1 : 0} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></a>`;
+    // Attributes are omitted entirely when absent: an anchor with
+    // href="" is a link to the current page and reloads on click, while
+    // an anchor without href is a placeholder that does nothing — which
+    // is what the button-without-href mode needs.
+    const rel = this.target === "_blank" ? "noopener noreferrer" : nothing;
+    return html`<a class="button" role=${href ? "link" : "button"} href=${href || nothing} target=${this.target || nothing} rel=${rel} ?aria-disabled=${this.disabled} tabindex=${this.disabled ? -1 : 0} @click=${this.#handleClick} @keydown=${this.#handleKeydown} @mousedown=${this.#handlePointerDown} @touchstart=${this.#handlePointerDown}><slot></slot></a>`;
   }
 
   protected firstUpdated(): void {
