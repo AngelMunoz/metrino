@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase } from "../../styles/shared.ts";
+import { numberValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroNumberBox extends LitElement {
   static formAssociated = true;
@@ -13,6 +14,7 @@ export class MetroNumberBox extends LitElement {
     disabled: { type: Boolean, reflect: true },
     label: { type: String, reflect: true },
     name: { type: String, reflect: true },
+    required: { type: Boolean, reflect: true },
   };
 
   declare value: number;
@@ -23,6 +25,7 @@ export class MetroNumberBox extends LitElement {
   declare disabled: boolean;
   declare label: string;
   declare name: string;
+  declare required: boolean;
 
   static styles = [
     inputBase,
@@ -80,6 +83,7 @@ export class MetroNumberBox extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #input?: HTMLInputElement;
 
   constructor() {
     super();
@@ -91,6 +95,7 @@ export class MetroNumberBox extends LitElement {
     this.disabled = false;
     this.label = "";
     this.name = "";
+    this.required = false;
     this.#internals = this.attachInternals();
   }
 
@@ -118,17 +123,41 @@ export class MetroNumberBox extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#input = this.shadowRoot?.querySelector("input") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("min") ||
+      changedProperties.has("max") ||
+      changedProperties.has("step") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(String(this.value));
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      String(this.value),
+      numberValidation({
+        value: this.value,
+        required: this.required && !this.disabled,
+        min: this.min,
+        max: this.max,
+        step: this.step,
+      }),
+      this.#input,
+    );
   }
 
   #handleInput(e: InputEvent): void {
@@ -136,7 +165,7 @@ export class MetroNumberBox extends LitElement {
     const newValue = parseFloat(target.value);
     if (!isNaN(newValue)) {
       this.value = this.#clamp(newValue);
-      this.#updateFormValue();
+      this.#updateState();
       this.dispatchEvent(new CustomEvent("input", {
         detail: { value: this.value },
         bubbles: true,
@@ -150,7 +179,7 @@ export class MetroNumberBox extends LitElement {
     const newValue = parseFloat(target.value);
     if (!isNaN(newValue)) {
       this.value = this.#clamp(newValue);
-      this.#updateFormValue();
+      this.#updateState();
       this.dispatchEvent(new CustomEvent("change", {
         detail: { value: this.value },
         bubbles: true,
@@ -161,7 +190,7 @@ export class MetroNumberBox extends LitElement {
 
   #increment(): void {
     this.value = this.#clamp(this.value + this.step);
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(new CustomEvent("change", {
       detail: { value: this.value },
       bubbles: true,
@@ -171,7 +200,7 @@ export class MetroNumberBox extends LitElement {
 
   #decrement(): void {
     this.value = this.#clamp(this.value - this.step);
-    this.#updateFormValue();
+    this.#updateState();
     this.dispatchEvent(new CustomEvent("change", {
       detail: { value: this.value },
       bubbles: true,
@@ -189,7 +218,18 @@ export class MetroNumberBox extends LitElement {
 
   formResetCallback(): void {
     this.value = 0;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    const restored = typeof state === "string" ? parseFloat(state) : Number.NaN;
+    if (!Number.isNaN(restored)) {
+      this.value = this.#clamp(restored);
+      this.#updateState();
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
+import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroComboBox extends LitElement {
   static formAssociated = true;
@@ -11,6 +12,7 @@ export class MetroComboBox extends LitElement {
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
     open: { type: Boolean, reflect: true },
+    required: { type: Boolean, reflect: true },
   };
 
   declare value: string;
@@ -18,6 +20,7 @@ export class MetroComboBox extends LitElement {
   declare disabled: boolean;
   declare name: string;
   declare open: boolean;
+  declare required: boolean;
 
   static styles = [
     inputBase,
@@ -82,6 +85,7 @@ export class MetroComboBox extends LitElement {
   #internals: ElementInternals;
   #options: string[] = [];
   #selectedIndex = -1;
+  #input?: HTMLInputElement;
 
   constructor() {
     super();
@@ -90,6 +94,7 @@ export class MetroComboBox extends LitElement {
     this.disabled = false;
     this.name = "";
     this.open = false;
+    this.required = false;
     this.#internals = this.attachInternals();
   }
 
@@ -126,17 +131,32 @@ export class MetroComboBox extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#input = this.shadowRoot?.querySelector("input") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      textValidation(this.value, this.required && !this.disabled),
+      this.#input,
+    );
   }
 
   #toggle(): void {
@@ -148,7 +168,7 @@ export class MetroComboBox extends LitElement {
     this.value = option;
     this.#selectedIndex = index;
     this.open = false;
-    this.#updateFormValue();
+    this.#updateState();
 
     this.dispatchEvent(
       new CustomEvent("selectionchanged", {
@@ -207,7 +227,17 @@ export class MetroComboBox extends LitElement {
   formResetCallback(): void {
     this.value = "";
     this.#selectedIndex = -1;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string") {
+      this.value = state;
+      this.#updateState();
+    }
   }
 }
 

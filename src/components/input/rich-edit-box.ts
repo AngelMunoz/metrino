@@ -1,6 +1,7 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, formLabel, disabledState } from "../../styles/shared.ts";
 import { sanitizeHtmlFragment } from "../../utils/sanitize.ts";
+import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 /**
  * Metro Rich Edit Box Component
@@ -21,6 +22,7 @@ export class MetroRichEditBox extends LitElement {
     readonly: { type: Boolean, reflect: true },
     label: { type: String, reflect: true },
     name: { type: String, reflect: true },
+    required: { type: Boolean, reflect: true },
     sanitize: { attribute: false },
   };
 
@@ -30,6 +32,7 @@ export class MetroRichEditBox extends LitElement {
   declare readonly: boolean;
   declare label: string;
   declare name: string;
+  declare required: boolean;
   /**
    * Optional sanitizer applied to programmatic values and pasted markup
    * before the built-in sanitizer runs, e.g.
@@ -123,6 +126,7 @@ export class MetroRichEditBox extends LitElement {
     this.readonly = false;
     this.label = "";
     this.name = "";
+    this.required = false;
     this.#internals = this.attachInternals();
   }
 
@@ -192,15 +196,20 @@ export class MetroRichEditBox extends LitElement {
 
   firstUpdated(): void {
     this.#writeValue(this.value);
-    this.#updateFormValue();
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      if (this.value !== this.#lastSyncedValue) {
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled") ||
+      changedProperties.has("readonly")
+    ) {
+      if (changedProperties.has("value") && this.value !== this.#lastSyncedValue) {
         this.#writeValue(this.value);
       }
-      this.#updateFormValue();
+      this.#updateState();
     }
   }
 
@@ -228,8 +237,19 @@ export class MetroRichEditBox extends LitElement {
     editor.replaceChildren(...Array.from(probe.childNodes));
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. Like a native
+   * readonly input, a readonly editor is barred from validation.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      textValidation(this.value, this.required && !this.disabled && !this.readonly),
+      this.#getEditor(),
+    );
   }
 
   #execCommand(command: string): void {
@@ -242,7 +262,7 @@ export class MetroRichEditBox extends LitElement {
     if (editor) {
       this.#lastSyncedValue = editor.innerHTML;
       this.value = editor.innerHTML;
-      this.#updateFormValue();
+      this.#updateState();
     }
   }
 
@@ -331,7 +351,7 @@ export class MetroRichEditBox extends LitElement {
   formResetCallback(): void {
     this.value = "";
     this.#writeValue("");
-    this.#updateFormValue();
+    this.#updateState();
   }
 
   formStateRestoreCallback(
@@ -341,7 +361,7 @@ export class MetroRichEditBox extends LitElement {
     if (typeof state === "string") {
       this.value = state;
       this.#writeValue(state);
-      this.#updateFormValue();
+      this.#updateState();
     }
   }
 }

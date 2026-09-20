@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { toggleControlBase } from "../../styles/shared.ts";
+import { checkedValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroRadioButton extends LitElement {
   static formAssociated = true;
@@ -9,12 +10,14 @@ export class MetroRadioButton extends LitElement {
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
     value: { type: String, reflect: true },
+    required: { type: Boolean, reflect: true },
   };
 
   declare checked: boolean;
   declare disabled: boolean;
   declare name: string;
   declare value: string;
+  declare required: boolean;
 
   static styles = [
     toggleControlBase,
@@ -56,6 +59,7 @@ export class MetroRadioButton extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #control?: HTMLDivElement;
 
   constructor() {
     super();
@@ -63,6 +67,7 @@ export class MetroRadioButton extends LitElement {
     this.disabled = false;
     this.name = "";
     this.value = "";
+    this.required = false;
     this.#internals = this.attachInternals();
   }
 
@@ -83,37 +88,82 @@ export class MetroRadioButton extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#control = this.shadowRoot?.querySelector(".radio") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("checked")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("checked") ||
+      changedProperties.has("required") ||
+      changedProperties.has("disabled") ||
+      changedProperties.has("name")
+    ) {
+      // Checkedness of one member changes the group-wide validity of all
+      // others (required groups become valid once any member is checked),
+      // so the whole group resyncs whenever this member's state changes.
+      for (const member of this.#groupMembers()) {
+        member.#updateState();
+      }
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.checked ? this.value : null);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. Validity is
+   * group-wide: when any member of the group is required, the group needs a
+   * selection before any member validates.
+   * @returns void
+   */
+  #updateState(): void {
+    const members = this.#groupMembers();
+    const groupRequired = members.some(member => member.required);
+    const groupChecked = members.some(member => member.checked);
+    updateFormControlState(
+      this.#internals,
+      this.checked ? this.value : null,
+      checkedValidation(groupChecked, groupRequired && !this.disabled),
+      this.#control,
+    );
   }
 
   #select(): void {
     if (this.disabled || this.checked) return;
     this.checked = true;
-    this.#updateFormValue();
+    // Uncheck the group before dispatching so change listeners observe the
+    // final state. Like native radios, the group is scoped to the tree the
+    // button lives in (its root node), not the document, so groups work
+    // inside shadow roots as well as light DOM.
+    for (const member of this.#groupMembers()) {
+      if (member !== this && member.checked) {
+        member.checked = false;
+      }
+      member.#updateState();
+    }
     this.dispatchEvent(new CustomEvent("change", {
       detail: { checked: this.checked, value: this.value },
       bubbles: true,
       composed: true,
     }));
-    
-    // Uncheck other radio buttons in the same group
-    if (this.name) {
-      document.querySelectorAll(`metro-radio-button[name="${this.name}"]`).forEach(rb => {
-        if (rb !== this && rb instanceof MetroRadioButton) {
-          rb.checked = false;
-        }
-      });
+  }
+
+  /**
+   * Returns every radio button in this button's group: the same-named
+   * buttons in the tree this button lives in (its root node), including
+   * this one.
+   * @returns MetroRadioButton[]
+   */
+  #groupMembers(): MetroRadioButton[] {
+    const members: MetroRadioButton[] = [];
+    if (!this.name) return [this];
+    const root = this.getRootNode();
+    if (!(root instanceof Document || root instanceof ShadowRoot || root instanceof Element)) {
+      return [this];
     }
+    root.querySelectorAll<MetroRadioButton>("metro-radio-button").forEach(rb => {
+      if (rb.name === this.name) members.push(rb);
+    });
+    return members.length > 0 ? members : [this];
   }
 
   #handleKeydown(e: KeyboardEvent): void {
@@ -129,7 +179,17 @@ export class MetroRadioButton extends LitElement {
 
   formResetCallback(): void {
     this.checked = false;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string" && state === this.value) {
+      this.checked = true;
+      this.#updateState();
+    }
   }
 }
 

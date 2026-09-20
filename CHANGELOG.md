@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added
+
+- **form controls** (text-box, password-box, number-box, check-box, toggle-switch, radio-button, rating, combo-box, auto-suggest-box, rich-edit-box, date-picker, time-picker, calendar-date-picker, date-picker-roller, time-picker-roller): constraint validation through the ElementInternals API. An invalid control now blocks form submission and fires `invalid`, and `form.reportValidity()` focuses the control's inner input. Values are validated according to each control's shape: dates compare as calendar dates against their bounds and flag `badInput` for unparseable values, numbers honor `min`/`max`/`step` (`stepMismatch` is measured from `min`) and flag `badInput` for non-finite values, an unrated `metro-rating` counts as missing while `0` remains a valid value for optional use, and a required radio group validates group-wide — any selection in the group satisfies it. Every control re-computes its validity whenever its value or constraints change, on form reset and on state restore, so validity can never go stale.
+- **check-box**, **toggle-switch**, **number-box**, **rating**, **combo-box**, **auto-suggest-box**, **rich-edit-box**, **calendar-date-picker**: new `required` attribute, joining the ones text-box, password-box, the date pickers and the rollers already declared (and now honor)
+- **all form controls**: `formStateRestoreCallback` restores the submitted value (and checked state for checkable controls) on session history restore; previously only text-box and rich-edit-box implemented it
+- **button**: form-associated — new `type` attribute with native button semantics: `submit` (the default) submits the owner form through `form.requestSubmit()` so constraint validation runs, `reset` clears it, `button` performs no form action. The button also disables together with its form via `formDisabledCallback`. `formaction`/`formmethod` submitter overrides are not supported (the spec restricts `requestSubmit(submitter)` to native buttons)
+- **form-control**: new shared `src/utils/form-control.ts` module — `updateFormControlState` writes the submitted value and validity together so neither can go stale, alongside shape-specific validators (`textValidation`, `numberValidation`, `dateValidation`, `timeValidation`, `checkedValidation`) and a strict `parseISODate` that rejects impossible dates like `2026-02-31` instead of rolling them over
+
+### Changed
+
+- **radio-button**: group exclusivity is scoped to the tree the button lives in (its root node) instead of the document, so mutually exclusive groups now work inside shadow roots as well as light DOM; the `change` event is dispatched after the group is synchronized so listeners observe the final state
+
+### Fixed
+
+- **hyperlink-button**: `href`, `target` and `rel` are omitted from the anchor when not set. An anchor with `href=""` is a link to the current page address, so clicking a hyperlink button without `href` reloaded the page; it now renders a placeholder anchor that does nothing (role stays `button`, it remains focusable)
+
 ## [0.5.0] - 2026-09-20
 
 ### Changed

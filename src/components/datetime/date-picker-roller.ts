@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, formLabel, pickerRollerBase } from "../../styles/shared.ts";
+import { dateValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -92,6 +93,7 @@ export class MetroDatePickerRoller extends LitElement {
   ];
 
   #internals: ElementInternals;
+  #container?: HTMLDivElement;
   #day = 1;
   #month = 0;
   #year: number;
@@ -279,7 +281,7 @@ export class MetroDatePickerRoller extends LitElement {
     const year = this.#year;
 
     this.value = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    this.#internals.setFormValue(this.value);
+    this.#updateState();
 
     this.dispatchEvent(
       new CustomEvent("change", {
@@ -367,17 +369,41 @@ export class MetroDatePickerRoller extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#container = this.shadowRoot?.querySelector(".picker-container") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("minYear") ||
+      changedProperties.has("maxYear") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. The roller's
+   * min-year/max-year bounds translate to date bounds; values outside them
+   * report range flags.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      dateValidation({
+        value: this.value,
+        required: this.required && !this.disabled,
+        min: `${this.minYear}-01-01`,
+        max: `${this.maxYear}-12-31`,
+      }),
+      this.#container,
+    );
   }
 
   formDisabledCallback(disabled: boolean): void {
@@ -387,7 +413,17 @@ export class MetroDatePickerRoller extends LitElement {
   formResetCallback(): void {
     const today = new Date();
     this.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string") {
+      this.value = state;
+      this.#updateState();
+    }
   }
 }
 

@@ -126,8 +126,37 @@ suite("metro-hyperlink-button", () => {
   test("unsafe href is not rendered on the anchor", async () => {
     button.href = "javascript:alert(1)";
     await button.updateComplete;
-    assert.equal(innerButton?.getAttribute("href"), "");
+    assert.isFalse(innerButton?.hasAttribute("href") ?? false);
     assert.equal(innerButton?.getAttribute("role"), "button");
+  });
+
+  test("no href renders a placeholder anchor without href", async () => {
+    assert.isFalse(innerButton?.hasAttribute("href") ?? false);
+    assert.equal(innerButton?.getAttribute("role"), "button");
+
+    button.href = "https://example.com";
+    await button.updateComplete;
+    assert.equal(innerButton?.getAttribute("href"), "https://example.com");
+    assert.equal(innerButton?.getAttribute("role"), "link");
+
+    button.href = undefined;
+    await button.updateComplete;
+    assert.isFalse(innerButton?.hasAttribute("href") ?? false);
+    assert.equal(innerButton?.getAttribute("role"), "button");
+  });
+
+  test("clicking without href does not navigate", async () => {
+    const before = window.location.href;
+    innerButton?.click();
+    await button.updateComplete;
+    assert.equal(window.location.href, before);
+  });
+
+  test("target and rel are omitted without target", async () => {
+    button.href = "https://example.com";
+    await button.updateComplete;
+    assert.isFalse(innerButton?.hasAttribute("target") ?? false);
+    assert.isFalse(innerButton?.hasAttribute("rel") ?? false);
   });
 
   test("target=_blank adds rel=noopener noreferrer", async () => {

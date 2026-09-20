@@ -2,6 +2,7 @@ import { LitElement, html, css, type PropertyValues } from "lit";
 import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { registerMetroCalendar } from "./calendar.ts";
+import { dateValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroCalendarDatePicker extends LitElement {
   static formAssociated = true;
@@ -15,6 +16,7 @@ export class MetroCalendarDatePicker extends LitElement {
     format: { type: String, reflect: true },
     name: { type: String, reflect: true },
     open: { type: Boolean, reflect: true },
+    required: { type: Boolean, reflect: true },
   };
 
   declare value: string;
@@ -25,6 +27,7 @@ export class MetroCalendarDatePicker extends LitElement {
   declare format: string;
   declare name: string;
   declare open: boolean;
+  declare required: boolean;
 
   static styles = [
     inputBase,
@@ -71,6 +74,7 @@ export class MetroCalendarDatePicker extends LitElement {
 
   #internals: ElementInternals;
   #formatter: Intl.DateTimeFormat;
+  #input?: HTMLInputElement;
 
   constructor() {
     super();
@@ -82,6 +86,7 @@ export class MetroCalendarDatePicker extends LitElement {
     this.format = "YYYY-MM-DD";
     this.name = "";
     this.open = false;
+    this.required = false;
     this.#internals = this.attachInternals();
     this.#formatter = new Intl.DateTimeFormat(undefined, {
       year: "numeric",
@@ -118,17 +123,41 @@ export class MetroCalendarDatePicker extends LitElement {
   }
 
   firstUpdated(): void {
-    this.#updateFormValue();
+    this.#input = this.shadowRoot?.querySelector("input") ?? undefined;
+    this.#updateState();
   }
 
   updated(changedProperties: PropertyValues<this>): void {
-    if (changedProperties.has("value")) {
-      this.#updateFormValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("minDate") ||
+      changedProperties.has("maxDate") ||
+      changedProperties.has("disabled")
+    ) {
+      this.#updateState();
     }
   }
 
-  #updateFormValue(): void {
-    this.#internals.setFormValue(this.value);
+  /**
+   * Syncs both halves of form state — the submitted value and the
+   * constraint-validation state — so neither can go stale. Bounds are
+   * compared as calendar dates and unparseable programmatic values report
+   * badInput.
+   * @returns void
+   */
+  #updateState(): void {
+    updateFormControlState(
+      this.#internals,
+      this.value,
+      dateValidation({
+        value: this.value,
+        required: this.required && !this.disabled,
+        min: this.minDate,
+        max: this.maxDate,
+      }),
+      this.#input,
+    );
   }
 
   #getTodayISO(): string {
@@ -194,7 +223,7 @@ export class MetroCalendarDatePicker extends LitElement {
   #handleDateSelected(e: CustomEvent<{ date: Date; value: string }>): void {
     this.value = e.detail.value;
     this.open = false;
-    this.#updateFormValue();
+    this.#updateState();
 
     this.dispatchEvent(
       new CustomEvent("change", {
@@ -236,7 +265,17 @@ export class MetroCalendarDatePicker extends LitElement {
 
   formResetCallback(): void {
     this.value = "";
-    this.#updateFormValue();
+    this.#updateState();
+  }
+
+  formStateRestoreCallback(
+    state: string | File | FormData | null,
+    _mode: "restore" | "autocomplete",
+  ): void {
+    if (typeof state === "string") {
+      this.value = state;
+      this.#updateState();
+    }
   }
 }
 
