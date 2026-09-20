@@ -10322,7 +10322,7 @@
         },
         {
           "kind": "class",
-          "description": "Metro Hub Component\n\nA horizontal scrolling container that groups related sections with headers.\nFree panning with content peek is the default and canonical behavior, as in\nthe Windows 8 / Windows Phone hub: the hub is a passive canvas of related\nsections, and the pivot is the pager.\n\nFeatures:\n- Optional main title displayed above the section container\n- Horizontal scrolling for sections with hidden scrollbar\n- Large, typography-focused section headers\n- Content-sized sections of different widths\n- Programmatic scroll API: `sections`, `selectedIndex`, `scrollToSection()`\n- Opt-in `[snap]` section boundary settling (off by default)\n- Keyboard focus and arrow-key scrolling on the section container\n\nThe hub owns no selection state. `selectedIndex` reads the section whose\nstart is nearest the scroll position; the setter scrolls to that section's\nstart. This differs from metro-pivot, whose `selectedIndex` stores state:\nthe pivot event fires at once, while the hub event fires when the pan\nsettles.\n\nSection header clicks belong to the app: attach listeners on the light-DOM\n`metro-hub-section` elements.",
+          "description": "Metro Hub Component\n\nA horizontal scrolling container that groups related sections with headers.\nFree panning with content peek is the default and canonical behavior, as in\nthe Windows 8 / Windows Phone hub: the hub is a passive canvas of related\nsections, and the pivot is the pager.\n\nFeatures:\n- Optional main title displayed above the section container\n- Horizontal scrolling for sections with hidden scrollbar\n- Large, typography-focused section headers\n- Content-sized sections of different widths\n- Programmatic scroll API: `sections`, `selectedIndex`, `scrollToSection()`\n- Smooth programmatic navigation with the Metro easing and duration\n  tokens; instant under `prefers-reduced-motion: reduce`\n- Opt-in `[snap]` section boundary settling (off by default)\n- Keyboard focus and arrow-key scrolling on the section container\n\nThe hub owns no selection state. `selectedIndex` reads the section whose\nstart is nearest the scroll position; the setter scrolls to that section's\nstart. This differs from metro-pivot, whose `selectedIndex` stores state:\nthe pivot event fires at once, while the hub event fires when the pan\nsettles.\n\nSection header clicks belong to the app: attach listeners on the light-DOM\n`metro-hub-section` elements.",
           "name": "MetroHub",
           "cssProperties": [
             {
@@ -10427,6 +10427,24 @@
             },
             {
               "kind": "field",
+              "name": "#animating",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#restoreSnap",
+              "privacy": "private",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
               "name": "#lastReportedIndex",
               "privacy": "private",
               "type": {
@@ -10469,14 +10487,14 @@
                 },
                 {
                   "name": "behavior",
-                  "default": "\"auto\"",
+                  "default": "\"smooth\"",
                   "type": {
                     "text": "ScrollBehavior"
                   },
-                  "description": "Scroll behavior; \"auto\" by default"
+                  "description": "Scroll behavior; \"smooth\" by default, \"auto\" for instant"
                 }
               ],
-              "description": "Scrolls a section's start to the container's padding line.\n\nThe index is clamped into range. `behavior` defaults to \"auto\" (instant);\n\"smooth\" animates with the Metro easing and duration tokens, and any\nvalue is downgraded to \"auto\" under `prefers-reduced-motion: reduce`."
+              "description": "Scrolls a section's inline start to the container's padding line.\n\nThe index is clamped into range. `behavior` defaults to \"smooth\", which\nanimates with the Metro easing and duration tokens; \"auto\" scrolls\ninstantly. Under `prefers-reduced-motion: reduce` every scroll is\ninstant, whatever the caller passed."
             },
             {
               "kind": "method",
@@ -10487,7 +10505,7 @@
                   "text": "number[]"
                 }
               },
-              "description": "The scroll offset that puts section i's start on the padding line.\n\nBoth section rects move with the content, so\n`rect_i.left - rect_0.left` does not depend on the current scroll\nposition, needs no padding term, and is direction-agnostic: in RTL the\nvalue is negative, matching the spec's negative RTL `scrollLeft`."
+              "description": "The scroll offset that puts section i's inline start on the padding line.\n\nThe offset is measured between the same edge of two sections, so it does\nnot depend on the current scroll position and needs no padding term: in\nLTR the value is positive; in RTL it is negative, matching the spec's\nnegative RTL `scrollLeft`. The edge follows the direction — in RTL the\ninline start is the right edge, and left-edge differences would\naccumulate the wrong section widths."
             },
             {
               "kind": "method",

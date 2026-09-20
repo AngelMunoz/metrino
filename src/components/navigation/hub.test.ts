@@ -52,13 +52,18 @@ suite("metro-hub", () => {
     return inner as HTMLElement;
   }
 
-  /** Scroll offsets that put each section's start on the container padding line. */
+  /** Scroll offsets that put each section's inline start on the padding line. */
   function sectionTargets(el: MetroHub): number[] {
     const sections = el.sections;
     const first = sections[0];
     assert.exists(first);
-    const base = (first as MetroHubSection).getBoundingClientRect().left;
-    return sections.map((section) => section.getBoundingClientRect().left - base);
+    const rtl = getComputedStyle(getContainer(el)).direction === "rtl";
+    const firstRect = (first as MetroHubSection).getBoundingClientRect();
+    const base = rtl ? firstRect.right : firstRect.left;
+    return sections.map((section) => {
+      const rect = section.getBoundingClientRect();
+      return (rtl ? rect.right : rect.left) - base;
+    });
   }
 
   function assertClose(actual: number, expected: number, delta = 1): void {
@@ -67,6 +72,11 @@ suite("metro-hub", () => {
 
   function settle(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, 200));
+  }
+
+  /** Long enough for the default Metro-eased smooth scroll (333ms) to finish. */
+  function settleSmooth(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 700));
   }
 
   test("renders hub container", async () => {
@@ -165,7 +175,7 @@ suite("metro-hub", () => {
     const targets = sectionTargets(el);
 
     el.selectedIndex = 2;
-    await settle();
+    await settleSmooth();
     assertClose(getContainer(el).scrollLeft, targets[2]);
   });
 
@@ -175,11 +185,11 @@ suite("metro-hub", () => {
     const targets = sectionTargets(el);
 
     el.selectedIndex = 99;
-    await settle();
+    await settleSmooth();
     assertClose(getContainer(el).scrollLeft, targets[3]);
 
     el.selectedIndex = -5;
-    await settle();
+    await settleSmooth();
     assertClose(getContainer(el).scrollLeft, targets[0]);
   });
 
@@ -192,7 +202,7 @@ suite("metro-hub", () => {
     });
 
     el.selectedIndex = 1;
-    await settle();
+    await settleSmooth();
 
     assert.lengthOf(events, 1);
     assert.property(events[0], "selectedIndex");
@@ -263,9 +273,16 @@ suite("metro-hub", () => {
     await addSections(el);
     const targets = sectionTargets(el);
 
-    el.scrollToSection(2);
+    el.scrollToSection(2, "auto");
     await settle();
     assertClose(getContainer(el).scrollLeft, targets[2]);
+
+    // Design intent, not just self-consistency: the section's inline start
+    // (the left edge in LTR) sits on the container's content-box line.
+    const containerRect = getContainer(el).getBoundingClientRect();
+    const gutter = Number.parseFloat(getComputedStyle(getContainer(el)).paddingInlineStart);
+    const rect = (el.sections[2] as MetroHubSection).getBoundingClientRect();
+    assertClose(rect.left - (containerRect.left + gutter), 0);
   });
 
   test("scrollToSection out of range clamps", async () => {
@@ -273,7 +290,7 @@ suite("metro-hub", () => {
     await addSections(el);
     const targets = sectionTargets(el);
 
-    el.scrollToSection(-3);
+    el.scrollToSection(-3, "auto");
     await settle();
     assertClose(getContainer(el).scrollLeft, targets[0]);
   });
@@ -288,16 +305,43 @@ suite("metro-hub", () => {
     assertClose(getContainer(el).scrollLeft, targets[2]);
   });
 
+  test("smooth glides under snap and lands on the boundary", async () => {
+    const el = await createHub({ snap: "" });
+    el.style.setProperty("--metro-transition-slow", "600ms");
+    await addSections(el);
+    const targets = sectionTargets(el);
+    const hubContainer = getContainer(el);
+
+    el.scrollToSection(2, "smooth");
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    // Mid-glide the position must be strictly between sections: mandatory
+    // snap must not yank the animation to the boundary (snap governs where
+    // gestures settle, not how programmatic navigation moves).
+    const mid = hubContainer.scrollLeft;
+    assert.isAbove(mid, 20);
+    assert.isBelow(mid, targets[2] - 20);
+
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    assertClose(getContainer(el).scrollLeft, targets[2]);
+  });
+
   test("scrollToSection lands identically under dir rtl", async () => {
     const el = await createHub({ dir: "rtl" });
     await addSections(el);
     const targets = sectionTargets(el);
     assert.isBelow(targets[2], 0);
 
-    el.scrollToSection(2);
+    el.scrollToSection(2, "auto");
     await settle();
     assertClose(getContainer(el).scrollLeft, targets[2]);
     assert.equal(el.selectedIndex, 2);
+
+    // In RTL the inline start is the RIGHT edge; it must sit on the
+    // content-box line measured from the container's right edge.
+    const containerRect = getContainer(el).getBoundingClientRect();
+    const gutter = Number.parseFloat(getComputedStyle(getContainer(el)).paddingInlineStart);
+    const rect = (el.sections[2] as MetroHubSection).getBoundingClientRect();
+    assertClose(rect.right - (containerRect.right - gutter), 0);
   });
 
   test("container has no snap by default", async () => {
@@ -309,8 +353,15 @@ suite("metro-hub", () => {
 
   test("snap attribute enables mandatory snapping", async () => {
     const el = await createHub({ snap: "" });
-    const style = getComputedStyle(getContainer(el));
-    assert.include(style.scrollSnapType, "mandatory");
+    await addSections(el);
+    const hubContainer = getContainer(el);
+    assert.include(getComputedStyle(hubContainer).scrollSnapType, "mandatory");
+    // The section is the snap area; without its alignment there are no snap
+    // positions and mandatory snapping does nothing. "start" is the valid
+    // keyword; it resolves to the inline-start edge in a horizontal scroller.
+    const section = el.sections[0];
+    assert.exists(section);
+    assert.equal(getComputedStyle(section as MetroHubSection).scrollSnapAlign, "start");
   });
 
   test("snap keeps the settle line aligned to the gutter", async () => {
@@ -326,7 +377,7 @@ suite("metro-hub", () => {
     // start aligned to the 16px gutter).
     assert.include(getComputedStyle(hubContainer).scrollSnapType, "mandatory");
 
-    el.scrollToSection(2);
+    el.scrollToSection(2, "auto");
     await settle();
     assertClose(getContainer(el).scrollLeft, targets[2]);
 
@@ -380,7 +431,7 @@ suite("metro-hub", () => {
     const event = new KeyboardEvent("keydown", { key: "ArrowRight", cancelable: true });
     hubContainer.dispatchEvent(event);
     assert.isTrue(event.defaultPrevented);
-    await settle();
+    await settleSmooth();
     assertClose(getContainer(el).scrollLeft, targets[1]);
   });
 
@@ -391,11 +442,11 @@ suite("metro-hub", () => {
     const hubContainer = getContainer(el);
 
     hubContainer.dispatchEvent(new KeyboardEvent("keydown", { key: "End", cancelable: true }));
-    await settle();
+    await settleSmooth();
     assertClose(getContainer(el).scrollLeft, targets[3]);
 
     hubContainer.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", cancelable: true }));
-    await settle();
+    await settleSmooth();
     assertClose(getContainer(el).scrollLeft, targets[0]);
   });
 
@@ -406,7 +457,7 @@ suite("metro-hub", () => {
     const hubContainer = getContainer(el);
 
     hubContainer.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", cancelable: true }));
-    await settle();
+    await settleSmooth();
     assertClose(getContainer(el).scrollLeft, targets[1]);
   });
 

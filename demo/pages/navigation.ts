@@ -38,6 +38,7 @@ export class MetrinoNavigationPage extends LitElement {
     appBarExpanded: { state: true },
     hubSnap: { state: true },
     hubRtl: { state: true },
+    hubSmooth: { state: true },
     hubSelectedIndex: { state: true },
   };
 
@@ -46,6 +47,7 @@ export class MetrinoNavigationPage extends LitElement {
   declare appBarExpanded: boolean;
   declare hubSnap: boolean;
   declare hubRtl: boolean;
+  declare hubSmooth: boolean;
   declare hubSelectedIndex: number;
 
   static styles = css`
@@ -189,6 +191,7 @@ export class MetrinoNavigationPage extends LitElement {
     this.appBarExpanded = false;
     this.hubSnap = false;
     this.hubRtl = false;
+    this.hubSmooth = true;
     this.hubSelectedIndex = 0;
   }
 
@@ -241,6 +244,9 @@ export class MetrinoNavigationPage extends LitElement {
         <div class="hub-controls">
           <button class="control-btn ${this.hubSnap ? "active" : ""}" @click=${this.#toggleHubSnap}>
             ${this.hubSnap ? "Snap: On" : "Snap: Off"}
+          </button>
+          <button class="control-btn ${this.hubSmooth ? "active" : ""}" @click=${this.#toggleHubSmooth}>
+            ${this.hubSmooth ? "Motion: Smooth" : "Motion: Instant"}
           </button>
           <button class="control-btn ${this.hubRtl ? "active" : ""}" @click=${this.#toggleHubRtl}>
             ${this.hubRtl ? "RTL" : "LTR"}
@@ -516,7 +522,14 @@ export class MetrinoNavigationPage extends LitElement {
     if (hub === null) {
       return;
     }
-    hub.scrollToSection(clampIndex(index, hub.sections.length));
+    hub.scrollToSection(
+      clampIndex(index, hub.sections.length),
+      this.hubSmooth ? "smooth" : "auto",
+    );
+  }
+
+  #toggleHubSmooth(): void {
+    this.hubSmooth = !this.hubSmooth;
   }
 
   #handleHubSelection(event: CustomEvent<HubSelectionChangedEventDetail>): void {

@@ -109,6 +109,8 @@ export function metroEase(t: number): number {
  * - Large, typography-focused section headers
  * - Content-sized sections of different widths
  * - Programmatic scroll API: `sections`, `selectedIndex`, `scrollToSection()`
+ * - Smooth programmatic navigation with the Metro easing and duration
+ *   tokens; instant under `prefers-reduced-motion: reduce`
  * - Opt-in `[snap]` section boundary settling (off by default)
  * - Keyboard focus and arrow-key scrolling on the section container
  *
@@ -165,6 +167,9 @@ export class MetroHub extends LitElement {
   #supportsScrollEnd = false;
   #debounceTimer: ReturnType<typeof setTimeout> | undefined;
   #animationToken = 0;
+  #animating = false;
+  /* Inline scroll-snap-type saved while a glide suppresses mandatory snap. */
+  #restoreSnap: string | null = null;
   #lastReportedIndex = -1;
 
   static styles = [
@@ -195,13 +200,16 @@ export class MetroHub extends LitElement {
       ::slotted(metro-hub-section) {
         flex: 0 0 auto;
         min-width: 250px;
+        /* Inert unless the container has scroll-snap-type (the [snap]
+           attribute). "start" resolves to the inline-start edge in a
+           horizontal scroller; "inline-start" is not a valid
+           scroll-snap-align keyword. It lives on the bare ::slotted() form
+           because :host([snap]) ::slotted() does not match in engines. */
+        scroll-snap-align: start;
       }
       :host([snap]) .hub-container {
         scroll-snap-type: x mandatory;
         scroll-padding-inline: var(--metro-spacing-lg, 16px);
-      }
-      :host([snap]) ::slotted(metro-hub-section) {
-        scroll-snap-align: inline-start;
       }
     `,
   ];
@@ -228,7 +236,7 @@ export class MetroHub extends LitElement {
   }
 
   set selectedIndex(index: number) {
-    this.scrollToSection(index, "auto");
+    this.scrollToSection(index);
   }
 
   render() {
@@ -252,16 +260,17 @@ export class MetroHub extends LitElement {
   }
 
   /**
-   * Scrolls a section's start to the container's padding line.
+   * Scrolls a section's inline start to the container's padding line.
    *
-   * The index is clamped into range. `behavior` defaults to "auto" (instant);
-   * "smooth" animates with the Metro easing and duration tokens, and any
-   * value is downgraded to "auto" under `prefers-reduced-motion: reduce`.
+   * The index is clamped into range. `behavior` defaults to "smooth", which
+   * animates with the Metro easing and duration tokens; "auto" scrolls
+   * instantly. Under `prefers-reduced-motion: reduce` every scroll is
+   * instant, whatever the caller passed.
    *
    * @param index - Zero-based index of the target section
-   * @param behavior - Scroll behavior; "auto" by default
+   * @param behavior - Scroll behavior; "smooth" by default, "auto" for instant
    */
-  scrollToSection(index: number, behavior: ScrollBehavior = "auto"): void {
+  scrollToSection(index: number, behavior: ScrollBehavior = "smooth"): void {
     const container = this.#container();
     if (container === null) {
       return;
@@ -297,21 +306,32 @@ export class MetroHub extends LitElement {
   }
 
   /**
-   * The scroll offset that puts section i's start on the padding line.
+   * The scroll offset that puts section i's inline start on the padding line.
    *
-   * Both section rects move with the content, so
-   * `rect_i.left - rect_0.left` does not depend on the current scroll
-   * position, needs no padding term, and is direction-agnostic: in RTL the
-   * value is negative, matching the spec's negative RTL `scrollLeft`.
+   * The offset is measured between the same edge of two sections, so it does
+   * not depend on the current scroll position and needs no padding term: in
+   * LTR the value is positive; in RTL it is negative, matching the spec's
+   * negative RTL `scrollLeft`. The edge follows the direction — in RTL the
+   * inline start is the right edge, and left-edge differences would
+   * accumulate the wrong section widths.
    */
   #targets(): number[] {
+    const container = this.#container();
+    if (container === null) {
+      return [];
+    }
     const sections = this.sections;
     const first = sections[0];
     if (first === undefined) {
       return [];
     }
-    const base = first.getBoundingClientRect().left;
-    return sections.map((section) => section.getBoundingClientRect().left - base);
+    const rtl = getComputedStyle(container).direction === "rtl";
+    const firstRect = first.getBoundingClientRect();
+    const base = rtl ? firstRect.right : firstRect.left;
+    return sections.map((section) => {
+      const rect = section.getBoundingClientRect();
+      return (rtl ? rect.right : rect.left) - base;
+    });
   }
 
   #container(): HTMLElement | null {
@@ -336,6 +356,13 @@ export class MetroHub extends LitElement {
       return;
     }
     const token = ++this.#animationToken;
+    this.#animating = true;
+    // Mandatory snap re-snaps every scripted write, which yanks the glide to
+    // the boundary and turns it into a jump. Suppress snap for the glide:
+    // the final frame lands exactly on the boundary (the snap position), so
+    // restoring it never shifts the content.
+    this.#restoreSnap = container.style.scrollSnapType;
+    container.style.scrollSnapType = "none";
     const duration = this.#smoothDuration();
     const startTime = performance.now();
     const step = (now: number) => {
@@ -346,6 +373,13 @@ export class MetroHub extends LitElement {
       container.scrollLeft = start + delta * metroEase(progress);
       if (progress < 1) {
         requestAnimationFrame(step);
+      } else {
+        this.#animating = false;
+        container.style.scrollSnapType = this.#restoreSnap ?? "";
+        this.#restoreSnap = null;
+        // Scrollend is not dependable for scripted per-frame writes; the
+        // animation owns its settle. A later native scrollend dedupes.
+        this.#settle();
       }
     };
     requestAnimationFrame(step);
@@ -353,6 +387,14 @@ export class MetroHub extends LitElement {
 
   #cancelSmoothScroll(): void {
     this.#animationToken++;
+    this.#animating = false;
+    if (this.#restoreSnap !== null) {
+      const container = this.#container();
+      if (container !== null) {
+        container.style.scrollSnapType = this.#restoreSnap;
+      }
+      this.#restoreSnap = null;
+    }
   }
 
   #handleScroll(): void {
@@ -396,10 +438,15 @@ export class MetroHub extends LitElement {
       return;
     }
     event.preventDefault();
-    this.scrollToSection(target, "auto");
+    this.scrollToSection(target);
   }
 
   #settle(): void {
+    // Browsers emit scrollend between the per-frame writes of a scripted
+    // animation; only the settle after the animation ends may report.
+    if (this.#animating) {
+      return;
+    }
     const index = this.selectedIndex;
     if (index === this.#lastReportedIndex) {
       return;

@@ -7,8 +7,19 @@ Programmatic API for `metro-hub`: parts, `sections`, `selectedIndex`,
 The proposal analysis is settled. This plan carries the four decisions that
 amend the proposal:
 
-1. The default `behavior` of `scrollToSection()` is `"auto"`, not `"smooth"`.
-   `"smooth"` is opt-in and uses the Metro tokens, not the browser curve.
+1. The default `behavior` of `scrollToSection()` is `"smooth"`, animated with
+   the Metro tokens (333ms, `cubic-bezier(0.1, 0.9, 0.2, 1)`), never the
+   browser curve. `behavior: "auto"` opts into an instant jump, and
+   `prefers-reduced-motion: reduce` always forces instant. (Revised during
+   implementation review: smooth is the expected default; reduced motion is
+   the only instant path by default.)
+2. Snap and motion are orthogonal. Snap governs where gestures settle;
+   programmatic navigation always glides with the Metro easing and lands on
+   the boundary, with or without `[snap]`. During the glide the container's
+   inline `scroll-snap-type` is `none` (mandatory snap would re-snap every
+   scripted write and turn the glide into a jump); it is restored on
+   completion and on interrupt, where the target or the takeover point is
+   already the snap position.
 2. The scroll target is measured from the **first section rect**, not from the
    container rect. The proposal formula
    (`section.rect - container.rect + scrollLeft`) misses the 16px padding and
