@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-20
+
 ### Added
 
 - **form controls** (text-box, password-box, number-box, check-box, toggle-switch, radio-button, rating, combo-box, auto-suggest-box, rich-edit-box, date-picker, time-picker, calendar-date-picker, date-picker-roller, time-picker-roller): constraint validation through the ElementInternals API. An invalid control now blocks form submission and fires `invalid`, and `form.reportValidity()` focuses the control's inner input when that element is focusable (`metro-rating` and the picker rollers report their message without moving focus). Values are validated according to each control's shape: dates compare as calendar dates against their bounds and flag `badInput` for unparseable values, numbers honor `min`/`max`/`step` (`stepMismatch` is measured from `min`) and flag `badInput` for non-finite values, which are also withheld from submission, a required `rich-edit-box` needs visible text (formatting-only markup such as `<br>` counts as missing), an unrated `metro-rating` counts as missing while `0` remains a valid value for optional use, and a required radio group validates group-wide — any selection among the same-named buttons in the same tree and form owner satisfies it. Every control re-computes its validity whenever its value or constraints change, on form reset and on state restore, so validity can never go stale.
