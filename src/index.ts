@@ -45,6 +45,7 @@ export { MetroAppBarButton, registerMetroAppBarButton } from "./components/navig
 export { MetroAppBarSeparator, registerMetroAppBarSeparator } from "./components/navigation/app-bar-separator.ts";
 export { MetroAppBarToggleButton, registerMetroAppBarToggleButton } from "./components/navigation/app-bar-toggle-button.ts";
 export { MetroHub, registerMetroHub } from "./components/navigation/hub.ts";
+export type { HubSelectionChangedEventDetail } from "./components/navigation/hub.ts";
 export { MetroHubSection, registerMetroHubSection } from "./components/navigation/hub-section.ts";
 export { MetroPanorama, registerMetroPanorama } from "./components/navigation/panorama.ts";
 export { MetroPanoramaItem, registerMetroPanoramaItem } from "./components/navigation/panorama-item.ts";
