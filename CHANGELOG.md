@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-20
+
 ### Changed
 
 - **hyperlink-button**: renders as a content-sized text hyperlink — underlined accent-colored text, 2px/4px padding with a 24px minimum hit area, and color-only hover/press feedback (theme-aware accent, no background block). Previously it kept the MetroButton footprint (120×40 hit area, 12px/24px padding) with a hover underline and an opacity press state.
