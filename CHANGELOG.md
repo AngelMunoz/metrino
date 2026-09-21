@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- **menu-flyout**: `hide()` method. The menu now exposes `role="menu"`, receives focus when shown and returns focus to the trigger when dismissed, and Escape dismisses it. The `show` and `close` events now compose across shadow boundaries.
+
+### Changed
+
+- **menu-flyout**: the flyout is imperative-only, following the Metro popup menu pattern — `show()`/`hide()` drive it, the `open` attribute no longer controls it, and `open` is read-only state. **Breaking:** assigning `flyout.open = true` throws and `<metro-menu-flyout open>` no longer opens the flyout; call `show()` instead.
+
+### Fixed
+
+- **menu-flyout**: the fixed backdrop painted over the in-flow menu container, so real clicks and hover on slotted items resolved to the backdrop — items were unclickable and `show()` positioning was inert on the static box. The menu container is now positioned absolutely inside the fixed host and `show()` converts its coordinates to host-relative offsets, and the backdrop is transparent so it no longer dims the page.
+
 ## [0.5.1] - 2026-09-20
 
 ### Added

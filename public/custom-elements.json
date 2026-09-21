@@ -8,7 +8,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Button Component\n\nA standard push button implementing the Metro design language with distinctive\nvisual feedback and interactions. Features include:\n- Color inversion on hover (foreground becomes background)\n- Accent color variant for primary actions\n- Tilt animation effect on pointer interaction\n- Keyboard navigation support (Enter/Space activation)\n- Full ARIA accessibility support\n\nUse this component for standard button actions in forms, toolbars, or any\ninteractive UI element that triggers an action when clicked.",
+          "description": "Metro Button Component\n\nA standard push button implementing the Metro design language with distinctive\nvisual feedback and interactions. Features include:\n- Color inversion on hover (foreground becomes background)\n- Accent color variant for primary actions\n- Tilt animation effect on pointer interaction\n- Keyboard navigation support (Enter/Space activation)\n- Full ARIA accessibility support\n\nUse this component for standard button actions in forms, toolbars, or any\ninteractive UI element that triggers an action when clicked.\n\nThe button is form-associated: inside a `<form>` it follows native button\nsemantics. The `type` property controls behavior (`submit` by default,\n`reset` clears the owner form, `button` performs no form action). The form\nowner is submitted via `requestSubmit()` so constraint validation runs;\nnote that `formaction`/`formmethod` submitter overrides are not supported.",
           "name": "MetroButton",
           "cssProperties": [
             {
@@ -63,6 +63,21 @@
           "members": [
             {
               "kind": "field",
+              "name": "formAssociated",
+              "type": {
+                "text": "boolean"
+              },
+              "static": true,
+              "default": "true"
+            },
+            {
+              "kind": "field",
+              "name": "VALID_TYPES",
+              "static": true,
+              "default": "new Set([\"button\", \"submit\", \"reset\"])"
+            },
+            {
+              "kind": "field",
               "name": "disabled",
               "privacy": "public",
               "type": {
@@ -87,6 +102,18 @@
             },
             {
               "kind": "field",
+              "name": "type",
+              "privacy": "public",
+              "type": {
+                "text": "\"button\" | \"submit\" | \"reset\""
+              },
+              "description": "Form behavior, following native button semantics: `submit` submits the\nowner form, `reset` resets it, `button` performs no form action.",
+              "default": "\"submit\"",
+              "attribute": "type",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#cleanupTilt",
               "privacy": "private",
               "type": {
@@ -95,9 +122,17 @@
             },
             {
               "kind": "field",
+              "name": "#internals",
+              "privacy": "private",
+              "type": {
+                "text": "ElementInternals"
+              }
+            },
+            {
+              "kind": "field",
               "name": "#handleClick",
               "privacy": "private",
-              "description": "Handles click events on the button, preventing interaction when disabled.",
+              "description": "Handles click events on the button, preventing interaction when disabled\nand performing the form action for the current type when owned by a form.",
               "parameters": [
                 {
                   "description": "The click event",
@@ -126,6 +161,34 @@
                   "text": ""
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#submitOrResetForm",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Submits or resets the owner form according to the type property.\nA no-op when the button is not owned by a form or type is \"button\"."
+            },
+            {
+              "kind": "method",
+              "name": "formDisabledCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "disabled",
+                  "type": {
+                    "text": "boolean"
+                  }
+                }
+              ]
             },
             {
               "kind": "field",
@@ -169,6 +232,15 @@
               "description": "Sets the button to use accent color styling. When present, the button\nuses the Metro accent color (blue by default) for the background.\nUse this for primary actions to make them visually prominent.",
               "default": "undefined",
               "fieldName": "accent"
+            },
+            {
+              "name": "type",
+              "type": {
+                "text": "\"button\" | \"submit\" | \"reset\""
+              },
+              "description": "Form behavior, following native button semantics: `submit` submits the\nowner form, `reset` resets it, `button` performs no form action.",
+              "default": "\"submit\"",
+              "fieldName": "type"
             }
           ],
           "superclass": {
@@ -1500,6 +1572,17 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
@@ -1516,14 +1599,23 @@
               "default": "new Intl.DateTimeFormat(undefined, { year: \"numeric\", month: \"2-digit\", day: \"2-digit\", })"
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. Bounds are\ncompared as calendar dates and unparseable programmatic values report\nbadInput."
             },
             {
               "kind": "method",
@@ -1657,6 +1749,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -1731,6 +1846,14 @@
               },
               "default": "false",
               "fieldName": "open"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -2364,6 +2487,14 @@
             },
             {
               "kind": "field",
+              "name": "#container",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLDivElement | undefined"
+              }
+            },
+            {
+              "kind": "field",
               "name": "#day",
               "privacy": "private",
               "type": {
@@ -2615,13 +2746,14 @@
             },
             {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. The roller's\nmin-year/max-year bounds translate to date bounds; values outside them\nreport range flags."
             },
             {
               "kind": "method",
@@ -2648,6 +2780,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -2841,14 +2996,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. Values are\nnative ISO date strings; unparseable programmatic values report badInput."
             },
             {
               "kind": "method",
@@ -2893,6 +3057,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -3082,6 +3269,14 @@
             },
             {
               "kind": "field",
+              "name": "#container",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLDivElement | undefined"
+              }
+            },
+            {
+              "kind": "field",
               "name": "#hourOffset",
               "privacy": "private",
               "type": {
@@ -3266,13 +3461,14 @@
             },
             {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. Accepts both the\nroller's \"H:MM AM/PM\" output and 24-hour values; other shapes report\nbadInput."
             },
             {
               "kind": "method",
@@ -3299,6 +3495,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -3485,14 +3704,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. Values are\nnative \"HH:MM\" strings; unparseable programmatic values report badInput."
             },
             {
               "kind": "method",
@@ -3537,6 +3765,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -4850,10 +5101,29 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
                 "text": "ElementInternals"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
               }
             },
             {
@@ -4885,13 +5155,14 @@
             },
             {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale."
             },
             {
               "kind": "method",
@@ -5029,6 +5300,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -5085,6 +5379,14 @@
               },
               "default": "\"\"",
               "fieldName": "name"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -5233,6 +5535,18 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When true, the checkbox must be checked for the owner form to\nvalidate and submit.",
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
@@ -5240,15 +5554,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#box",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLDivElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
                   "text": ""
                 }
               },
-              "description": "Updates the internal form value based on checked state.\nSets value when checked, null when unchecked."
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale."
             },
             {
               "kind": "method",
@@ -5307,6 +5629,32 @@
                 }
               },
               "description": "Called when the form is reset. Unchecks the checkbox."
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  },
+                  "description": "The restored state value"
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  },
+                  "description": "The restoration mode"
+                }
+              ],
+              "description": "Called when form state is restored (e.g., session history restore).\nRe-checks the checkbox when the restored state matches its value."
             }
           ],
           "events": [
@@ -5354,6 +5702,15 @@
               "description": "Value submitted with the form when checked.",
               "default": "\"on\"",
               "fieldName": "value"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When true, the checkbox must be checked for the owner form to\nvalidate and submit.",
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -5475,6 +5832,17 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
@@ -5500,14 +5868,23 @@
               "default": "-1"
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale."
             },
             {
               "kind": "method",
@@ -5608,6 +5985,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -5658,6 +6058,14 @@
               },
               "default": "false",
               "fieldName": "open"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -5807,6 +6215,17 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
@@ -5814,14 +6233,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale."
             },
             {
               "kind": "method",
@@ -5922,6 +6350,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -6000,6 +6451,14 @@
               },
               "default": "\"\"",
               "fieldName": "name"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -6212,15 +6671,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
                   "text": ""
                 }
               },
-              "description": "Updates the internal form value for form submission."
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale."
             },
             {
               "kind": "method",
@@ -6301,6 +6768,32 @@
                 }
               },
               "description": "Called when the form is reset. Clears the value to empty string."
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  },
+                  "description": "The restored state value"
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  },
+                  "description": "The restoration mode"
+                }
+              ],
+              "description": "Called when form state is restored (e.g., session history restore)."
             }
           ],
           "events": [
@@ -6492,6 +6985,17 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
@@ -6499,14 +7003,54 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#control",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLDivElement | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#group",
+              "privacy": "private",
+              "type": {
+                "text": "MetroRadioButton[]"
+              },
+              "default": "[]",
+              "description": "Snapshot of the group this button belonged to after the last sync, used\nto resync the members it leaves behind on a name or form-owner change."
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#syncGroup",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "parameters": [
+                {
+                  "name": "previous",
+                  "default": "[]",
+                  "type": {
+                    "text": "MetroRadioButton[]"
+                  },
+                  "description": "Members of the group before this update, if any"
+                }
+              ],
+              "description": "Recomputes this button's group and writes form state on every member,\nincluding the members of a group it just left, because group-wide\nvalidity can change for them too."
+            },
+            {
+              "kind": "method",
+              "name": "#updateState",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. Validity is\ngroup-wide: when any member of the group is required, the group needs a\nselection before any member validates."
             },
             {
               "kind": "method",
@@ -6517,6 +7061,17 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#groupMembers",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Returns every radio button in this button's group: the same-named\nbuttons in the tree this button lives in (its root node) that share its\nform owner, including this one."
             },
             {
               "kind": "method",
@@ -6535,6 +7090,15 @@
                   }
                 }
               ]
+            },
+            {
+              "kind": "method",
+              "name": "formAssociatedCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
             },
             {
               "kind": "method",
@@ -6561,6 +7125,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -6603,6 +7190,14 @@
               },
               "default": "\"\"",
               "fieldName": "value"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -6723,6 +7318,17 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
@@ -6739,14 +7345,23 @@
               "default": "0"
             },
             {
+              "kind": "field",
+              "name": "#star",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLSpanElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. An unrated\nrating reports \"0\", so required treats 0 — not an empty string — as\nthe missing value."
             },
             {
               "kind": "method",
@@ -6809,6 +7424,29 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  }
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  }
+                }
+              ]
             }
           ],
           "events": [
@@ -6859,6 +7497,14 @@
               },
               "default": "false",
               "fieldName": "readonly"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -6990,6 +7636,17 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "sanitize",
               "privacy": "public",
               "type": {
@@ -7046,13 +7703,14 @@
             },
             {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. Like a native\nreadonly input, a readonly editor is barred from validation. Required is\nchecked against visible text, not markup, so an editor emptied with\nCtrl+A / Delete (which can leave \"<br>\" behind) still reports missing."
             },
             {
               "kind": "method",
@@ -7339,6 +7997,14 @@
               },
               "default": "\"\"",
               "fieldName": "name"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -7517,15 +8183,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
                   "text": ""
                 }
               },
-              "description": "Updates the internal form value for form submission."
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale. The slider always\nreports a value (like a native range input), so only range and step\nconstraints apply — they catch programmatic values outside min/max or\noff the step grid."
             },
             {
               "kind": "method",
@@ -7575,6 +8249,32 @@
                 }
               },
               "description": "Called when the form is reset. Resets value to minimum."
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  },
+                  "description": "The restored state value"
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  },
+                  "description": "The restoration mode"
+                }
+              ],
+              "description": "Called when form state is restored (e.g., session history restore).\nRestores the numeric value from the saved state."
             }
           ],
           "events": [
@@ -7841,15 +8541,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#input",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLInputElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
                   "text": ""
                 }
               },
-              "description": "Updates the internal form value for form submission."
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale."
             },
             {
               "kind": "method",
@@ -8183,6 +8891,18 @@
             },
             {
               "kind": "field",
+              "name": "required",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When true, the switch must be on for the owner form to validate and\nsubmit (for example, an agreement toggle).",
+              "default": "false",
+              "attribute": "required",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#internals",
               "privacy": "private",
               "type": {
@@ -8190,15 +8910,23 @@
               }
             },
             {
+              "kind": "field",
+              "name": "#switch",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLDivElement | undefined"
+              }
+            },
+            {
               "kind": "method",
-              "name": "#updateFormValue",
+              "name": "#updateState",
               "privacy": "private",
               "return": {
                 "type": {
                   "text": ""
                 }
               },
-              "description": "Updates the internal form value based on on state.\nSets value when on, null when off."
+              "description": "Syncs both halves of form state — the submitted value and the\nconstraint-validation state — so neither can go stale."
             },
             {
               "kind": "method",
@@ -8257,6 +8985,32 @@
                 }
               },
               "description": "Called when the form is reset. Turns the switch off."
+            },
+            {
+              "kind": "method",
+              "name": "formStateRestoreCallback",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "state",
+                  "type": {
+                    "text": "string | File | FormData | null"
+                  },
+                  "description": "The restored state value"
+                },
+                {
+                  "name": "_mode",
+                  "type": {
+                    "text": "\"restore\" | \"autocomplete\""
+                  },
+                  "description": "The restoration mode"
+                }
+              ],
+              "description": "Called when form state is restored (e.g., session history restore).\nTurns the switch on when the restored state matches its value."
             }
           ],
           "events": [
@@ -8304,6 +9058,15 @@
               "description": "Value submitted with the form when on.",
               "default": "\"on\"",
               "fieldName": "value"
+            },
+            {
+              "name": "required",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When true, the switch must be on for the owner form to validate and\nsubmit (for example, an agreement toggle).",
+              "default": "false",
+              "fieldName": "required"
             }
           ],
           "superclass": {
@@ -13290,19 +14053,23 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "",
+          "description": "Displays a menu of commands anchored to a trigger element, following the\nMetro popup menu pattern: flyouts open imperatively (show/hide), are\nanchored to a trigger, and dismiss on outside interaction.",
           "name": "MetroMenuFlyout",
+          "slots": [
+            {
+              "description": "Menu rows (.menu-item) and separators (.menu-divider)",
+              "name": ""
+            }
+          ],
           "members": [
             {
               "kind": "field",
-              "name": "open",
-              "privacy": "public",
+              "name": "#open",
+              "privacy": "private",
               "type": {
                 "text": "boolean"
               },
-              "default": "false",
-              "attribute": "open",
-              "reflects": true
+              "default": "false"
             },
             {
               "kind": "field",
@@ -13312,6 +14079,23 @@
                 "text": "Element | null"
               },
               "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#boundDocumentKeyDown",
+              "privacy": "private",
+              "type": {
+                "text": "(e: KeyboardEvent) => void"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "open",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether the flyout is currently shown. State is read-only; use show()/hide().",
+              "readonly": true
             },
             {
               "kind": "method",
@@ -13342,7 +14126,18 @@
                     "text": "number"
                   }
                 }
-              ]
+              ],
+              "description": "Shows the flyout, anchored below the target element (or at the given\nviewport coordinates when x and y are provided)."
+            },
+            {
+              "kind": "method",
+              "name": "hide",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Hides the flyout. Does nothing when the flyout is already hidden."
             },
             {
               "kind": "method",
@@ -13372,6 +14167,44 @@
             },
             {
               "kind": "method",
+              "name": "#focusMenu",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#restoreFocus",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#handleDocumentKeyDown",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
               "name": "#close",
               "privacy": "private",
               "return": {
@@ -13386,23 +14219,15 @@
               "name": "show",
               "type": {
                 "text": "CustomEvent"
-              }
+              },
+              "description": "Fired when the flyout opens"
             },
             {
               "name": "close",
               "type": {
                 "text": "CustomEvent"
-              }
-            }
-          ],
-          "attributes": [
-            {
-              "name": "open",
-              "type": {
-                "text": "boolean"
               },
-              "default": "false",
-              "fieldName": "open"
+              "description": "Fired when the flyout closes"
             }
           ],
           "superclass": {
