@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { baseTypography, modalBackdrop } from "../../styles/shared.ts";
+import { baseTypography } from "../../styles/shared.ts";
 
 /**
  * Displays a menu of commands anchored to a trigger element, following the
@@ -13,6 +13,8 @@ import { baseTypography, modalBackdrop } from "../../styles/shared.ts";
  */
 export class MetroMenuFlyout extends LitElement {
   #open = false;
+  #target: Element | null = null;
+  #boundDocumentKeyDown: (e: KeyboardEvent) => void;
 
   /** Whether the flyout is currently shown. State is read-only; use show()/hide(). */
   get open(): boolean {
@@ -21,12 +23,16 @@ export class MetroMenuFlyout extends LitElement {
 
   static styles = [
     baseTypography,
-    modalBackdrop,
     css`
       :host {
         display: block;
         position: fixed;
         z-index: 1000;
+      }
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: transparent;
       }
       /* Positioned so it paints above the backdrop; left/top anchor it to the host box */
       .menu-flyout {
@@ -69,10 +75,9 @@ export class MetroMenuFlyout extends LitElement {
     `,
   ];
 
-  #target: Element | null = null;
-
   constructor() {
     super();
+    this.#boundDocumentKeyDown = this.#handleDocumentKeyDown.bind(this);
   }
 
   render() {
@@ -81,7 +86,12 @@ export class MetroMenuFlyout extends LitElement {
     }
     return html`
       <div class="backdrop" @click=${this.#close}></div>
-      <div class="menu-flyout">
+      <div
+        class="menu-flyout"
+        role="menu"
+        aria-label=${this.getAttribute("aria-label") ?? "Menu"}
+        tabindex="-1"
+      >
         <slot></slot>
       </div>
     `;
@@ -94,17 +104,31 @@ export class MetroMenuFlyout extends LitElement {
   show(target: Element, x?: number, y?: number): void {
     this.#target = target;
     this.#open = true;
+    document.addEventListener("keydown", this.#boundDocumentKeyDown);
     this.requestUpdate();
-    this.updateComplete.then(() => this.#positionMenu(x, y));
-    this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+    this.updateComplete.then(() => {
+      this.#positionMenu(x, y);
+      this.#focusMenu();
+    });
+    this.dispatchEvent(new CustomEvent("show", { bubbles: true, composed: true }));
   }
 
   /** Hides the flyout. Does nothing when the flyout is already hidden. */
   hide(): void {
     if (!this.#open) return;
     this.#open = false;
+    document.removeEventListener("keydown", this.#boundDocumentKeyDown);
+    this.#restoreFocus();
+    this.#target = null;
     this.requestUpdate();
-    this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("keydown", this.#boundDocumentKeyDown);
+    this.#open = false;
+    this.#target = null;
   }
 
   #positionMenu(x?: number, y?: number): void {
@@ -121,6 +145,23 @@ export class MetroMenuFlyout extends LitElement {
       const rect = this.#target.getBoundingClientRect();
       menu.style.left = `${rect.left - hostRect.left}px`;
       menu.style.top = `${rect.bottom - hostRect.top}px`;
+    }
+  }
+
+  #focusMenu(): void {
+    const menu = this.shadowRoot?.querySelector(".menu-flyout") as HTMLElement | null;
+    menu?.focus();
+  }
+
+  #restoreFocus(): void {
+    if (this.#target instanceof HTMLElement) {
+      this.#target.focus({ preventScroll: true });
+    }
+  }
+
+  #handleDocumentKeyDown(e: KeyboardEvent): void {
+    if (e.key === "Escape") {
+      this.hide();
     }
   }
 

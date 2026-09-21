@@ -14073,21 +14073,29 @@
             },
             {
               "kind": "field",
-              "name": "open",
-              "type": {
-                "text": "boolean"
-              },
-              "description": "Whether the flyout is currently shown. State is read-only; use show()/hide().",
-              "readonly": true
-            },
-            {
-              "kind": "field",
               "name": "#target",
               "privacy": "private",
               "type": {
                 "text": "Element | null"
               },
               "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#boundDocumentKeyDown",
+              "privacy": "private",
+              "type": {
+                "text": "(e: KeyboardEvent) => void"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "open",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether the flyout is currently shown. State is read-only; use show()/hide().",
+              "readonly": true
             },
             {
               "kind": "method",
@@ -14153,6 +14161,44 @@
                   "optional": true,
                   "type": {
                     "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "#focusMenu",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#restoreFocus",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#handleDocumentKeyDown",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
                   }
                 }
               ]

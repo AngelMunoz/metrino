@@ -162,6 +162,59 @@ suite("metro-menu-flyout", () => {
     assert.notExists(flyout.shadowRoot?.querySelector(".backdrop"));
   });
 
+  test("the backdrop is transparent so it does not dim the page", async () => {
+    await openFlyout();
+    assert.equal(getComputedStyle(backdropBox()).backgroundColor, "rgba(0, 0, 0, 0)");
+  });
+
+  test("the menu exposes role=menu and receives focus on open", async () => {
+    await openFlyout();
+    const menu = menuBox();
+    assert.equal(menu.getAttribute("role"), "menu");
+    assert.equal(menu.getAttribute("tabindex"), "-1");
+    assert.equal(flyout.shadowRoot?.activeElement, menu);
+  });
+
+  test("show and close events compose across the shadow boundary", () => {
+    let showComposed: boolean | undefined;
+    let closeComposed: boolean | undefined;
+    flyout.addEventListener("show", (e) => {
+      showComposed = e.composed;
+    });
+    flyout.addEventListener("close", (e) => {
+      closeComposed = e.composed;
+    });
+    flyout.show(trigger);
+    assert.isTrue(showComposed);
+    flyout.hide();
+    assert.isTrue(closeComposed);
+  });
+
+  test("Escape closes the flyout and restores focus to the trigger", async () => {
+    await openFlyout();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    assert.isFalse(flyout.open);
+    assert.equal(closeEvents, 1);
+    assert.equal(document.activeElement, trigger);
+    await flyout.updateComplete;
+    assert.notExists(flyout.shadowRoot?.querySelector(".backdrop"));
+  });
+
+  test("Escape does nothing while the flyout is closed", () => {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    assert.isFalse(flyout.open);
+    assert.equal(closeEvents, 0);
+  });
+
+  test("the keydown listener is removed with the flyout", async () => {
+    await openFlyout();
+    flyout.remove();
+    await flyout.updateComplete;
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    assert.isFalse(flyout.open);
+    assert.equal(closeEvents, 0);
+  });
+
   test("open is read-only state", () => {
     assert.throws(() => {
       (flyout as unknown as { open: boolean }).open = true;
