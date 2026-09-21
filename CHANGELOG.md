@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-09-20
+
 ### Added
 
 - **menu-flyout**: `hide()` method. The menu now exposes `role="menu"`, receives focus when shown and returns focus to the trigger when dismissed, and Escape dismisses it. The `show` and `close` events now compose across shadow boundaries.
