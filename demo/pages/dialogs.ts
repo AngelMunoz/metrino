@@ -319,20 +319,20 @@ export class MetrinoDialogsPage extends LitElement {
           >
         </div>
         <metro-menu-flyout id="demo-menu-flyout">
-          <div class="menu-item">
+          <div class="menu-item" @click=${() => this.#menuFlyoutAction("New Item")}>
             <metro-icon icon="add" size="normal"></metro-icon> New Item
           </div>
-          <div class="menu-item">
+          <div class="menu-item" @click=${() => this.#menuFlyoutAction("Open Folder")}>
             <metro-icon icon="folder" size="normal"></metro-icon> Open Folder
           </div>
-          <div class="menu-item">
+          <div class="menu-item" @click=${() => this.#menuFlyoutAction("Save")}>
             <metro-icon icon="save" size="normal"></metro-icon> Save
           </div>
           <div class="menu-divider"></div>
-          <div class="menu-item">
+          <div class="menu-item" @click=${() => this.#menuFlyoutAction("Settings")}>
             <metro-icon icon="settings" size="normal"></metro-icon> Settings
           </div>
-          <div class="menu-item">
+          <div class="menu-item" @click=${() => this.#menuFlyoutAction("Help")}>
             <metro-icon icon="help" size="normal"></metro-icon> Help
           </div>
         </metro-menu-flyout>
@@ -508,6 +508,23 @@ export class MetrinoDialogsPage extends LitElement {
       show: (target: Element) => void;
     };
     menuFlyout?.show(e.target as Element);
+  }
+
+  #menuFlyoutAction(label: string): void {
+    const toast = this.shadowRoot?.querySelector(
+      "#page-toast",
+    ) as HTMLElement & {
+      show: (options: { title?: string; message: string; duration?: number }) => string;
+    };
+    toast?.show({
+      title: label,
+      message: `"${label}" selected from the menu flyout.`,
+      duration: 3000,
+    });
+    const menuFlyout = this.shadowRoot?.querySelector(
+      "#demo-menu-flyout",
+    ) as HTMLElement & { hide: () => void };
+    menuFlyout?.hide();
   }
 }
 
