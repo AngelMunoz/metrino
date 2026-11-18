@@ -13,7 +13,7 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "packageManager": "pnpm@11.5.2",
+  "packageManager": "pnpm@12.21.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -351,6 +351,7 @@
     "preview": "vite preview",
     "test": "web-test-runner \"src/**/*.test.ts\" --node-resolve",
     "test:watch": "web-test-runner \"src/**/*.test.ts\" --node-resolve --watch",
+    "test:e2e": "playwright test",
     "prepublishOnly": "pnpm run build",
     "analyze": "cem analyze --litelement --globs \"src/components/**/*.ts\" --outdir public && node scripts/sort-manifest.mjs"
   },
@@ -360,6 +361,7 @@
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "0.11.0",
+    "@playwright/test": "1.63.0",
     "@types/chai": "5.2.3",
     "@types/mocha": "10.0.10",
     "@web/dev-server-esbuild": "2.0.0",

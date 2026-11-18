@@ -32,16 +32,30 @@ pnpm test:watch
 
 # Run specific test file
 pnpx web-test-runner src/components/button.test.ts --node-resolve
+
+# Run e2e use-case tests against the demo app (Chromium + Firefox)
+pnpm test:e2e
+
+# Run e2e tests for one browser project
+pnpx playwright test --project=chromium
 ```
 
 ## Testing
 
-Tests use **@web/test-runner** which runs tests in real browsers via Playwright. This ensures components behave identically to production environments.
+One rule: **tests exercise use cases, not implementation internals.**
 
-- Test files use `.test.ts` suffix (e.g., `button.test.ts`)
-- Tests are placed alongside the source files they test
-- The test framework uses TDD mode (suite/test setup)
-- All three browser engines (Chromium, Firefox, WebKit) run by default
+- **E2e (mandatory for all component, flow, and demo-page work):** Playwright
+  drives the real demo app (`e2e/*.spec.ts`). Real clicks, keys, and touch;
+  assertions on observable outcomes — visible text, focus, page-level events,
+  computed styles, geometry, `animationend`. Motion gates are deterministic
+  assertions; screenshots and traces are review artifacts, never pixel-diff
+  gates. New behavior ships with a use-case test that fails before the fix and
+  passes after.
+- **Logic tests (non-DOM utils only):** `@web/test-runner` for pure functions
+  (`touch-physics`, `sanitize`, `virtualization`). Files use `.test.ts` beside
+  the source, TDD mode (suite/test). The config loads `.css` as empty, so this
+  suite cannot verify styles — never use it for motion or spacing.
+- Both suites run Chromium + Firefox.
 
 ## Code Style Guidelines
 
