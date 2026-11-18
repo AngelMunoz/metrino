@@ -29,6 +29,10 @@ registerMetroIcon();
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
+/** The four groups the semantic-zoom demo shares between its two views. */
+const ZOOM_GROUP_KEYS = ["A", "B", "C", "D"];
+const ZOOM_GROUP_SIZE = 12;
+
 function generateNames(count: number): { name: string; category: string }[] {
   const names = [
     "Alice",
@@ -329,6 +333,73 @@ export class MetrinoSelectionPage extends LitElement {
         border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
       }
 
+      /* Grouped semantic-zoom content: the scroller is the slotted container,
+         so the component has to align a group against it, not against its own
+         layer. No padding above the first header, or it can never reach the top. */
+      .zoom-groups {
+        height: 100%;
+        overflow: auto;
+        padding-inline: var(--metro-spacing-md, 12px);
+        box-sizing: border-box;
+      }
+
+      /* Not sticky: the zoom aligns a group by the position it draws at, and a
+         pinned header always reads as if it were already at the top. */
+      .zoom-group-header {
+        margin: 0;
+        padding-block: var(--metro-spacing-sm, 8px);
+      }
+
+      .zoom-group-rows {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .zoom-group-rows li {
+        display: flex;
+        align-items: center;
+        height: 32px;
+        color: var(--metro-foreground, #ffffff);
+        border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
+        font-size: var(--metro-font-size-normal, 14px);
+      }
+
+      .zoom-tiles {
+        height: 100%;
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        align-content: start;
+        gap: var(--metro-spacing-sm, 8px);
+        padding: var(--metro-spacing-md, 12px);
+      }
+
+      .zoom-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        min-height: 72px;
+        padding: var(--metro-spacing-sm, 8px);
+        border: none;
+        background: var(--metro-accent, #0078d4);
+        color: #ffffff;
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+      }
+
+      .zoom-tile-key {
+        font-size: var(--metro-font-size-large, 20px);
+        font-weight: 600;
+      }
+
+      .zoom-tile-count {
+        font-size: var(--metro-font-size-small, 12px);
+        opacity: 0.8;
+      }
+
       .selection-info {
         margin-top: var(--metro-spacing-sm, 8px);
         padding: var(--metro-spacing-sm, 8px);
@@ -356,6 +427,7 @@ export class MetrinoSelectionPage extends LitElement {
     gridViewMode: { state: true },
     longListItems: { state: true },
     longListMode: { state: true },
+    zoomGroups: { state: true },
     treeSelected: { state: true },
     renderedListViewCount: { state: true },
     renderedGridViewCount: { state: true },
@@ -373,6 +445,7 @@ export class MetrinoSelectionPage extends LitElement {
   declare gridViewMode: "none" | "single" | "multiple" | "extended";
   declare longListItems: { name: string; category: string }[];
   declare longListMode: "none" | "single" | "multiple";
+  declare zoomGroups: { key: string; items: { name: string }[] }[];
   declare treeSelected: string;
   declare renderedListViewCount: number;
   declare renderedGridViewCount: number;
@@ -391,6 +464,12 @@ export class MetrinoSelectionPage extends LitElement {
     this.gridViewMode = "none";
     this.longListItems = generateAlphabeticalNames(10000);
     this.longListMode = "none";
+    this.zoomGroups = ZOOM_GROUP_KEYS.map((key, index) => ({
+      key,
+      items: this.listViewItems
+        .slice(index * ZOOM_GROUP_SIZE, (index + 1) * ZOOM_GROUP_SIZE)
+        .map((item) => ({ name: item.name })),
+    }));
     this.treeSelected = "";
     this.renderedListViewCount = 0;
     this.renderedGridViewCount = 0;
@@ -691,7 +770,8 @@ export class MetrinoSelectionPage extends LitElement {
         <p>
           Virtualized long list with 10,000 items grouped alphabetically.
           Features jump list sidebar for quick navigation. Try scrolling and
-          clicking letters on the right.
+          clicking letters on the right. With jump-grid, clicking a group header
+          or a letter opens a full-screen grid of every group instead.
         </p>
 
         <div class="controls">
@@ -724,6 +804,7 @@ export class MetrinoSelectionPage extends LitElement {
           display-member="name"
           selection-mode=${this.longListMode}
           show-jump-list
+          jump-grid
           max-height="400px"
           @selectionchange=${this.#handleLongListSelection}
         ></metro-long-list-selector>
@@ -738,27 +819,43 @@ export class MetrinoSelectionPage extends LitElement {
       <div class="section">
         <h2>metro-semantic-zoom</h2>
         <p>
-          Zoom between two views using pinch gesture or Ctrl+Scroll. Click the
-          button or use touch gestures to toggle views.
+          Zoom between a grouped list and its overview using a pinch gesture,
+          Ctrl+Scroll or the button. Both views carry the same
+          <code>data-group-key</code> values, so tapping a group in the overview
+          re-enters the list at that group, and scrolling the list reports the
+          group it is on.
         </p>
 
         <div class="semantic-zoom-container">
           <metro-semantic-zoom>
-            <metro-list-view
-              slot="zoomed-in"
-              .items=${this.listViewItems.slice(0, 50)}
-              item-height="44"
-              selection-mode="none"
-              display-member="name"
-            ></metro-list-view>
-            <metro-grid-view
-              slot="zoomed-out"
-              .items=${this.gridViewItems.slice(0, 50)}
-              item-width="100"
-              item-height="100"
-              selection-mode="none"
-              display-member="name"
-            ></metro-grid-view>
+            <div class="zoom-groups" slot="zoomed-in">
+              ${this.zoomGroups.map(
+                (group) => html`
+                  <div class="zoom-group">
+                    <h3 class="zoom-group-header" data-group-key=${group.key}>
+                      ${group.key}
+                    </h3>
+                    <ul class="zoom-group-rows">
+                      ${group.items.map((item) => html`<li>${item.name}</li>`)}
+                    </ul>
+                  </div>
+                `
+              )}
+            </div>
+            <div class="zoom-tiles" slot="zoomed-out">
+              ${this.zoomGroups.map(
+                (group) => html`
+                  <button
+                    type="button"
+                    class="zoom-tile"
+                    data-group-key=${group.key}
+                  >
+                    <span class="zoom-tile-key">${group.key}</span>
+                    <span class="zoom-tile-count">${group.items.length}</span>
+                  </button>
+                `
+              )}
+            </div>
           </metro-semantic-zoom>
         </div>
         <api-docs component="MetroSemanticZoom"></api-docs>
