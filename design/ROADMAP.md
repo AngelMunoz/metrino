@@ -1,358 +1,285 @@
-# Metrino Roadmap: Remaining Large Effort Items
+# Metrino Roadmap
 
-This document tracks the remaining work needed to achieve full Metro Design Language compliance. These items require significant engineering effort (L = Large) and are prioritized for future implementation.
+Status source of truth for Metro Design Language fidelity, motion correctness, and the
+docs site. Execution steps and ordering live in
+[METRO_COMPLIANCE_PLAN.md](METRO_COMPLIANCE_PLAN.md).
 
-## Current Status
+Last verified against code: **2026-11-17, v0.5.2** (`5dbb11a`, clean tree). Every "done"
+and "bug" entry below was checked against source, not against prior roadmap text.
 
-The following S (Small) and M (Medium) effort fixes have been completed:
-- Typography type ramp (15px body, 26px header-2, 56px display, 11px badge)
-- Dark theme background (#000000)
-- Secondary text opacity (60%)
-- Metro easing function applied to all transitions
-- Turnstile animation (correct rotation angles, scale transforms, timing)
-- Continuum stagger (logarithmic pattern)
-- Flip tile horizontal axis (rotateY)
-- Toggle switch spring animation
-- Touch target padding for toggle controls
-- Settings flyout width (346px)
-- Border default thickness (2px)
-- Live tile pseudo-random interval (6-10s)
-- Panorama parallax ratio (0.2:1)
-- Tilt effect applied to buttons
-- Keyboard accessibility for toggle-switch, check-box, radio-button (tabindex, Enter/Space activation)
-- Focus trap and Escape key handling in content-dialog, message-dialog, flyout
-- ARIA roles for list-view (role="listbox"), grid-view (role="grid"), panorama (role="region")
-- App bar Escape key to close menu, aria-controls linking
-- Tilt effects applied to tiles (flip-tile, live-tile, cycle-tile, iconic-tile) and app-bar-button
-- Hover/press states for toggle-switch, check-box, flip-tile
-- Fixed TypeScript errors in test files (test-helpers.ts, dropdown-button.test.ts)
-- Fixed implicit any type in icon.ts
-- View Transition API for route changes (demo), pivot tab switching, semantic-zoom
-- Removed fallback patterns — View Transition API used directly (no polyfill)
-- Turnstile animations for ::view-transition-old(root) and ::view-transition-new(root)
-- Hub programmatic API (part attributes, sections, selectedIndex, selectionchanged, scrollToSection with Metro-eased smooth scroll, opt-in snap, keyboard + ARIA, overscroll containment)
+Progressive enhancement (a no-JS HTML+CSS tier) is a **separate track** and is not part of
+this roadmap. See the component audit summary at the bottom for the hand-off facts only.
 
 ---
 
-## PRIORITY 1: Touch Physics Engine
+## 1. Verified complete
 
-**Effort:** L (Large)  
-**Impact:** Critical - Core Metro "fast and fluid" feel
+| Item | Evidence |
+|---|---|
+| Metro easing curve `cubic-bezier(0.1, 0.9, 0.2, 1)` | `src/styles/tokens.css`; matches the documented WinJS transform curve |
+| Duration family 167 / 250 / 333 ms | `tokens.css`; Microsoft standard control durations |
+| Touch physics engine (inertia, spring, gesture, rails) + tests | `src/utils/touch-physics.ts`, `touch-physics.test.ts` |
+| Auto-hide scrollbars (`scrollbarMode` auto/visible/hidden, 1.5 s idle) | `src/components/layout/scroll-viewer.ts` |
+| Tilt on 9 components | `applyTiltEffect(this)`: button, hyperlink-button, repeat-button, app-bar-button, app-bar-toggle-button, flip-tile, live-tile, cycle-tile, iconic-tile |
+| Hub programmatic API: Metro-eased glide, snap suppression, RTL, `scrollend`, reduced motion | `src/components/navigation/hub.ts` |
+| Message dialog swivel entrance (rotateX 90°) | `src/styles/animations.css` `metro-msg-dialog-enter` |
+| Settings flyout widths 346 px (narrow) / 646 px (wide) | `src/components/dialogs/settings-flyout.ts:108,122` |
+| ARIA roles: list-view `listbox`, grid-view `grid`, panorama `region` | `list-view.ts:101`, `grid-view.ts:132`, `panorama.ts` |
+| App bar Escape + `aria-controls` | `src/components/navigation/app-bar.ts:167,190` |
+| Keyboard activation: toggle-switch, check-box, radio-button | tabindex + Enter/Space handlers |
+| Dialog focus trap + Escape (with a known gap, see §4) | `content-dialog.ts`, `message-dialog.ts`, `flyout.ts` |
+| Panorama parallax ratio 0.2, opacity 0.15 | `panorama.ts` |
+| Live tile pseudo-random cycle 6–10 s (property bug, see §4) | `live-tile.ts` |
+| Border default thickness 2 px | `border.ts` |
+| Toggle switch spring thumb `cubic-bezier(0.34, 1.56, 0.64, 1)` | `toggle-switch.ts` |
+| Dark background `#000000`, secondary text 60% | `tokens.css` |
+| Typography classes exist (`.display`, `.title`, `.body`, …) | `src/styles/typography.css` (ramp conflict, see §5) |
+| Side-effect-free registration; CSS-only bundle ships | `register*()` functions; `dist/metrino.css` via `./styles.css` export |
 
-### Missing Features
+### Touch physics adoption (engine is done; adoption is partial)
 
-| Feature | Spec Reference | Components Affected |
-|---------|----------------|---------------------|
-| **Inertia Scrolling** | `v(t) = v₀ × e^(-kt)`, k≈0.97 per frame | list-view, grid-view, flip-view, long-list-selector, panorama |
-| **Boundary Bounce** | Spring compression with resistance, critically damped return | All scrollable components |
-| **Tap vs Drag Threshold** | ~2.7mm / 10px radius | All interactive components |
-| **Cross-Slide Selection** | 10-30px perpendicular drag locks item | list-view, grid-view, long-list-selector |
-| **Rails (Axis Lock)** | Lock to primary axis unless deviation > 30-45° | All scrollable containers |
-
-### Implementation Plan
-
-Create `/src/utils/touch-physics.ts`:
-
-```typescript
-// InertiaScroller - exponential deceleration
-export class InertiaScroller {
-  private velocity = 0;
-  private friction = 0.97; // k coefficient per frame
-  
-  start(initialVelocity: number): void;
-  update(deltaTime: number): number; // returns new position offset
-  isMoving(): boolean;
-  stop(): void;
-}
-
-// GestureDisambiguator - tap/drag/cross-slide detection  
-export class GestureDisambiguator {
-  private tapThreshold = 10; // pixels
-  private crossSlideThreshold = 10; // pixels perpendicular
-  
-  onPointerDown(e: PointerEvent): void;
-  onPointerMove(e: PointerEvent): GestureType; // 'tap' | 'drag' | 'cross-slide' | null
-  onPointerUp(e: PointerEvent): GestureResult;
-}
-
-// BoundarySpring - bounce physics
-export class BoundarySpring {
-  private stiffness = 0.1;
-  private damping = 0.7; // critical damping
-  
-  compress(overScroll: number): number;
-  release(): { position: number; velocity: number };
-}
-
-// AxisRail - directional locking
-export class AxisRail {
-  private lockAngle = 30; // degrees
-  private locked: 'x' | 'y' | null = null;
-  
-  feedMovement(dx: number, dy: number): { x: number; y: number };
-  reset(): void;
-}
-```
-
-### Affected Files
-- `src/components/selection/list-view.ts`
-- `src/components/selection/grid-view.ts`
-- `src/components/selection/flip-view.ts`
-- `src/components/selection/long-list-selector.ts`
-- `src/components/navigation/panorama.ts`
-- `src/components/layout/scroll-viewer.ts`
+| Component | Gesture | Inertia | Spring | Rails |
+|---|---|---|---|---|
+| scroll-viewer (opt-in `touch-physics`) | yes | yes | yes | yes |
+| panorama | yes | yes | yes | no |
+| flip-view | yes | no | boundary compress | no |
+| list-view / grid-view / long-list-selector | cross-slide | native scroll | no | no |
 
 ---
 
-## PRIORITY 2: Pivot Circular Loop
+## 2. Corrections to prior roadmap claims
 
-**Effort:** M (Medium-Large)  
-**Impact:** High - Key navigation pattern
+These were listed as done or missing in the previous roadmap and are **wrong**:
 
-### Current Behavior
-Headers stop at first/last item. No wrap-around.
-
-### Required Behavior
-Per spec Section 7.2: "The headers loop infinitely (circular buffer)"
-
-### Implementation Plan
-
-1. Implement virtual header list with duplicated endpoints
-2. Add seamless wrap animation when crossing boundary
-3. Maintain selection state across wrap
-
-### Affected Files
-- `src/components/navigation/pivot.ts`
+| Old claim | Reality |
+|---|---|
+| "Touch physics engine missing" (old P1) | Engine exists and is consumed by 6 components. Remaining work is the integrator bug (§3) and adoption gaps |
+| "Auto-hide scrollbars missing" (old P8) | Implemented in scroll-viewer |
+| "Turnstile animations for `::view-transition-old(root)` / `new(root)`" | No root selectors exist anywhere. `metro-view-transition-in/out` keyframes are **dead CSS**. Demo routes use the UA default cross-fade |
+| "View Transition API for pivot tab switching" | Pivot uses CSS transitions only |
+| "Typography type ramp (15px body …)" | `typography.css .body` is 15 px but `tokens.css --metro-font-size-normal` is 14 px. Demo pages bypass the ramp |
+| "Turnstile correct rotation angles" | Unverified against any primary source. Library uses 10° in / −15° out; the demo page uses ±90°. Not a fidelity claim |
+| P9 lists app-bar-toggle-button as missing tilt | It has tilt |
+| "21 accent colors" | 20 `[accent="…"]` blocks in `tokens.css`; blue is the implicit `:root` default with no block |
+| RTL "~86 instances" | Scoped measurement: 29 side-property sites + 33 bare offsets in component CSS bodies (excluding `shared.ts`), plus JS style writes in `border.ts`. See §6 |
 
 ---
 
-## PRIORITY 3: SemanticZoom Scroll Coordination
+## 3. Open priorities (re-ranked)
 
-**Effort:** M (Medium)  
-**Impact:** High - Core feature incomplete
+Rationale: defects that disable motion page-wide come first, then shipped motion defects,
+then missing Metro interactions, then bugs, packaging, docs, RTL.
 
-### Current Behavior
-Zoom in/out works but scroll position is not synchronized between views.
+### P0 — Page-wide motion killer + cheap wins
 
-### Required Behavior
-Per spec Section 6.1: "The control automatically synchronizes the scroll position. If user zooms out from 'W' section and taps 'A', ZoomedInView re-enters at 'A' section."
+| Item | Detail |
+|---|---|
+| **View-transition-name collision** | 12 hardcoded names across 5 files (`content-dialog`, `message-dialog`, `flyout`, `settings-flyout`, `semantic-zoom`), set unconditionally on always-rendered elements. Per MDN, duplicate names on rendered elements reject `ViewTransition.ready` and skip the transition. Two instances of one component disable **all** view transitions on the page, including route changes. Fix: per-instance names assigned only while active |
+| **Wire root turnstile** | Add `::view-transition-old(root)` / `new(root)` rules using the existing dead keyframes; pass `types` from `demo/main.ts`. Pairing job, not a feature build |
+| **Content dialog swivel** | Replace `scale(0.85) translateY(20px)` with rotateX swivel to match message-dialog. **Owner decision: fix** |
 
-### Implementation Plan
+### P1 — Motion correctness (shipped defects)
 
-1. Add `scrollToGroup(key: string)` method to zoomed-in view
-2. Track current group key during scroll
-3. On zoom-out item tap, pass key to zoomed-in view
-4. Animate scroll to target group
+| Item | File(s) |
+|---|---|
+| Panorama: mandatory scroll-snap re-snaps scripted inertia; reuse the hub snap-suppression pattern. Remove the 0.1 s parallax transition lag | `panorama.ts` |
+| Semantic zoom: host `touch-action: none` blocks inner touch scrolling | `semantic-zoom.ts` |
+| Integrator is frame-rate dependent: `stepInertia`/`stepSpring` take no deltaTime; `calculateVelocity` hardcodes `* 16.67` | `touch-physics.ts`, `scroll-viewer.ts`, `panorama.ts` |
+| Indeterminate progress dots animate `left` (layout), not transform | `progress-bar.ts` |
+| Three progress-ring geometries disagree (component 3 s orbit; CSS class 1.5 s linear spin; demo 167 ms border spinner). Canonical = component orbit | `progress-ring.ts`, `animations.css`, demo |
+| Flip axis disagrees: component rotateY vs global keyframe rotateX. Default: component wins | `flip-tile.ts`, `animations.css` |
+| Animation sources duplicated: 14 keyframes in both `animations.css` and `utils/animations.ts` (bodies currently identical). `playAnimation` resolves on setTimeout, not animationend | both files |
+| Semantic zoom: `transition-duration` property declared but never read; no animated fallback without View Transitions (hard cut on older browsers) | `semantic-zoom.ts` |
 
-### Affected Files
-- `src/components/selection/semantic-zoom.ts`
+### P2 — Metro interaction completeness
 
----
+| Item | Old ref |
+|---|---|
+| Pivot: swipe gesture + keyboard navigation + circular loop. The doc already claims keyboard support that does not exist | P2 |
+| Continuum to the **Metro design language** behavior (tapped item flies from its origin into the page), not a WinJS-specific implementation. Bounded research first; see §7 | — |
+| Semantic zoom scroll synchronization (`scrollToGroup`, group tracking, zoom-out tap re-enters at group) | P3 |
+| Panorama circular wrap | P4 |
+| Long-list-selector jump grid with turnstile transition | P6 |
+| Hub + semantic zoom integration | P5 |
+| Reduced-motion policy across all keyframe and JS motion (only hub honors it today) | — |
 
-## PRIORITY 4: Panorama Circular Wrapping
+### P3 — Component bugs
 
-**Effort:** M (Medium)  
-**Impact:** Medium - Navigation completeness
+See §4.
 
-### Current Behavior
-Stops at first/last panel.
+### P4 — Packaging and tokens
 
-### Required Behavior
-Per spec Section 7.1: "The control is circular - scrolling past the last panel wraps seamlessly back to the first"
+See §5.
 
-### Implementation Plan
+### P5 — Docs site
 
-1. Clone first/last panels for seamless wrap illusion
-2. Implement jump-back animation after reaching clone
-3. Maintain multi-layer parallax across wrap
+See §8.
 
-### Affected Files
-- `src/components/navigation/panorama.ts`
-- `src/components/navigation/panorama-item.ts`
+### P6 — RTL (scoped)
 
----
-
-## PRIORITY 5: Hub + SemanticZoom Integration
-
-**Effort:** M (Medium)  
-**Impact:** Medium - Feature completeness
-
-### Current Behavior
-Hub and SemanticZoom exist but are not integrated.
-
-### Required Behavior
-Per spec Section 6.4: "Hubs almost always support Semantic Zoom to navigate sections"
-
-### Implementation Plan
-
-1. Add `zoomable` attribute to Hub
-2. Wrap Hub content in SemanticZoom automatically
-3. Generate zoomed-out view from section headers
-4. Coordinate scroll between views
-
-### Affected Files
-- `src/components/navigation/hub.ts`
-- `src/components/navigation/hub-section.ts`
+See §6.
 
 ---
 
-## PRIORITY 6: LongListSelector Jump Grid Transition
+## 4. Bug inventory (verified)
 
-**Effort:** M (Medium)  
-**Impact:** Medium - UX enhancement
+### A. Motion / interaction
 
-### Current Behavior
-Jump list is a sidebar strip, always visible.
+| Bug | File |
+|---|---|
+| View-transition-name collision (P0) | 5 dialog/zoom files |
+| Dead root-turnstile keyframes | `animations.css` |
+| Panorama snap vs inertia conflict; parallax lag | `panorama.ts` |
+| Semantic zoom blocks inner touch scroll; unused `transition-duration`; no non-VT fallback | `semantic-zoom.ts` |
+| Content dialog entrance is scale+translate, not swivel; fallback is fade only | `content-dialog.ts`, `animations.css` |
+| Frame-rate-dependent inertia/spring | `touch-physics.ts` |
+| Progress dots animate `left` | `progress-bar.ts` |
+| Three ring geometries; flip axis mismatch | `progress-ring.ts`, `flip-tile.ts`, `animations.css` |
+| Duplicated keyframes; setTimeout-based animation completion | `utils/animations.ts`, `animations.css` |
 
-### Required Behavior
-Per spec Section 5.4: "Tapping a header triggers a 'Turnstile' transition to a grid of available headers (the 'Jump List')"
+### B. Components
 
-### Implementation Plan
+| Bug | File |
+|---|---|
+| Image placeholder never hides: `#handleLoad` sets a private field without `requestUpdate` (error path re-renders, load path does not) | `image.ts` |
+| Live tile `interval` property ignored; timer hardcodes 6–10 s | `live-tile.ts` |
+| Cycle tile and iconic tile dispatch a synthetic non-composed `click` that doubles the native click | `cycle-tile.ts`, `iconic-tile.ts` |
+| Expander: no `aria-expanded`, no tabindex, no key handler; doc claims ARIA support; 500 px max-height clips tall content | `expander.ts` |
+| Content dialog focus trap queries shadow DOM only; slotted buttons escape | `content-dialog.ts` |
+| Wrap panel `orientation="vertical"` has no CSS effect | `wrap-panel.ts` |
+| Separator doc says hidden preserves layout space; CSS `display:none` removes it | `app-bar-separator.ts` |
+| App bar button label uses `:host-context()` (1 usage); Firefox does not support it | `app-bar-button.ts:118` |
+| Media control styling targets `::-webkit-media-controls` only | `media-element.ts` |
+| Pivot doc claims keyboard support; none exists | `pivot.ts` |
+| Toast documents `@fires toastshown` / `@fires toashidden` (typo) but dispatches no events | `toast.ts:52–53` |
 
-1. Add full-screen jump grid mode
-2. Implement Turnstile transition to/from grid
-3. Keep current sidebar mode as compact option
+### C. Demo / docs
 
-### Affected Files
-- `src/components/selection/long-list-selector.ts`
-
----
-
-## PRIORITY 7: Swivel Transition for Dialogs
-
-**Effort:** S-M (Small-Medium)  
-**Impact:** Medium - Animation completeness
-
-### Current Behavior
-Dialogs use scale + translate animation.
-
-### Required Behavior
-Per spec Section 5.2: "Swivel: The element rotates into view around its center horizontal axis... rotates from 90 degrees to 0 degrees. Duration: 250-300ms"
-
-### Implementation Plan
-
-Add swivel keyframes:
-```css
-@keyframes swivelIn {
-  from {
-    opacity: 0;
-    transform: perspective(1000px) rotateX(90deg);
-  }
-  to {
-    opacity: 1;
-    transform: perspective(1000px) rotateX(0deg);
-  }
-}
-```
-
-### Affected Files
-- `src/styles/animations.css`
-- `src/components/dialogs/content-dialog.ts`
-- `src/components/dialogs/message-dialog.ts`
-- `src/components/dialogs/flyout.ts`
+| Bug | File |
+|---|---|
+| Deep-link scroll uses `document.getElementById`; all pages render in shadow DOM; only `navigation.ts` has 8 `metro-*` ids | `demo/router/index.ts:77` |
+| API viewer badges every attribute without "undefined" in its type as required: **256 of 265** | `demo/components/api-docs.ts` |
+| CSS property Default column always "-": **0 of 188** manifest cssProperties carry a structured default | `public/custom-elements.json` |
+| Manifest descriptions render as raw text; markdown/paragraphs lost | `api-docs.ts` |
+| **35 of 71** element declarations ship an empty description | manifest |
+| Animations page redefines keyframes with different values; invalid `translateX(0);` in slideRight; lists non-existent `metro-animate-slide-down`; stagger toggle never read | `demo/pages/animations.ts` |
+| `templates/index.ts` has zero imports; every page hand-writes CSS | `demo/templates/index.ts` |
+| Spacing drift: double 24 px padding on 4 pages; home 200 px bottom; token fallbacks disagree (32/24/48/20); three code-block styles; duplicate `.ring-row` padding | `demo/pages/*` |
+| Loading text hardcodes white at 60% opacity; fails on light theme | `demo/main.ts` |
+| Hyperlink demo targets `#/home`; route is `/` (masked by router fallback) | `demo/pages/buttons.ts` |
+| Demo settings panel hand-rolled at 320 px instead of the library flyout | `demo/components/app-shell.ts` |
 
 ---
 
-## PRIORITY 8: ScrollViewer Auto-Hide Scrollbars
+## 5. Packaging and token defects (verified)
 
-**Effort:** S (Small)  
-**Impact:** Low - Polish
-
-### Current Behavior
-Scrollbars are always visible (8px width).
-
-### Required Behavior
-Per spec Section 9.2: "Scrollbars should be hidden when not interacting, or styled to be minimal overlay bars"
-
-### Implementation Plan
-
-1. Add `scrollbarMode="auto" | "visible" | "hidden"` attribute
-2. Use CSS overlay scrollbar properties where supported
-3. Implement JS-based show/hide on scroll interaction
-
-### Affected Files
-- `src/components/layout/scroll-viewer.ts`
+| Item | Evidence |
+|---|---|
+| Utils modules ship in `dist/utils` (5 modules) but have **0 entries** in the 53-entry exports map; not exported from `src/index.ts` | `package.json`, `dist/utils` |
+| `customElements` field points to `public/custom-elements.json`, which is not in `files: ["dist","README.md","LICENSE"]` → manifest never published | `package.json` |
+| View-transition rules live only in `animations.css`; cherry-pick component imports carry the names with no rules → silent UA default fade | `src/index.ts` is the only src importer of `animations.css` |
+| `--metro-gap` is defined nowhere; `grid.ts` falls back 8 px, `stack-panel.ts` 0 | token scan |
+| Fallbacks encode the dark theme: 60 `--metro-foreground` sites in components fall back to white; light token value is `#1f1f1f`. `--metro-foreground-secondary` / `--metro-border` / `--metro-highlight` carry 3–5 different fallback literals each | component scan (630 `var()` sites, 6 tokens with 2+ fallbacks) |
+| Type ramp conflict: token normal 14 px vs `typography.css .body` 15 px; home title 72 px vs `.display` 56 px | `tokens.css`, `typography.css`, `demo/pages/home.ts` |
 
 ---
 
-## PRIORITY 9: Tilt Effect for Remaining Components
+## 6. RTL scope (P6)
 
-**Effort:** M (Medium)  
-**Impact:** Low - Micro-interaction completeness
+Do not use a single total as a KPI. Measured in component CSS bodies (excluding `shared.ts`):
 
-### Components Missing Tilt
-- `metro-check-box`
-- `metro-radio-button`
-- `metro-flip-tile`, `metro-live-tile`, `metro-cycle-tile`, `metro-iconic-tile`
-- `metro-app-bar-button`, `metro-app-bar-toggle-button`
-- List items in `metro-list-view`, `metro-grid-view`, `metro-long-list-selector`
+- **29** side-property sites (`margin/padding/border-left/right`).
+- **33** bare `left:`/`right:` offsets — many are symmetric `left:0;right:0` or circular centering, not direction defects.
+- JS style writes in `border.ts` (`borderLeftWidth`, `paddingLeft`, …) are also RTL work.
 
-### Implementation
-Apply `applyTiltEffect()` from `shared.ts` in `connectedCallback()`.
+Concentration: split-view (12), info-bar (5), combo-box (4), auto-suggest-box (4),
+number-box (3), tree-view (2). Convert to logical properties; exclude symmetric inset
+patterns and circular centering.
 
 ---
 
-## PRIORITY 10: RTL Support
+## 7. Research and decisions
 
-**Effort:** L (Large)  
-**Impact:** Low - Accessibility/Internationalization
+### Closed by owner (2026-11-17)
 
-### Current State
-~86 instances of `left`/`right` CSS properties should use logical properties.
+| Topic | Decision |
+|---|---|
+| Default accent | Keep `#0078d4`. Palette fidelity is not a goal |
+| Iconography | Keep MDI; proprietary Segoe/MDL2 assets cannot be used |
+| Continuum target | The Metro design language behavior, not WinJS specifically |
+| Turnstile angles | No reference, no invented numbers. Internal consistency only |
+| Content dialog entrance | Fix to swivel |
+| Test baseline / browser repro | Not a gate; treated as noise |
+| Progressive enhancement | Separate track |
 
-### Implementation Plan
-Replace:
-- `left` → `inset-inline-start`
-- `right` → `inset-inline-end`
-- `margin-left` → `margin-inline-start`
-- `margin-right` → `margin-inline-end`
-- `padding-left` → `padding-inline-start`
-- `padding-right` → `padding-inline-end`
-- `border-left` → `border-inline-start`
-- `border-right` → `border-inline-end`
+### Defaults chosen for execution (override if needed)
+
+| Topic | Default |
+|---|---|
+| Flip axis | Component (rotateY) wins; align the keyframe |
+| Body size | Single ramp in tokens; keep 14 px; fix `.body` to consume the token |
+| Wrap panel vertical | Implement the vertical wrap rule |
+| Separator hidden | `visibility:hidden`, preserve space (match the doc) |
+| Toast events | Implement `toastshown`/`toasthidden` (fix typo) |
+| Canonical ring | The 5-dot orbit component |
+
+### Still open (bounded)
+
+- **Continuum primary reference.** Retrieve archived Windows Phone design guidance for the
+  continuum transition. The roadmap previously cited "spec Section 5.2 / 7.2" — **no such
+  spec file exists in the repo**; locate it or treat those citations as ungrounded. Fallback
+  evidence: the WP7 toolkit reproduction (150 ms, translate-only, ExponentialEase, item
+  origin). Cite whatever is used; do not invent values.
+- WP type ramp and original turnstile/tilt values are **not pursued** (owner decision).
 
 ---
 
-## Missing Components (Future Work)
+## 8. Docs site track (P5)
 
-These components from the Metro design language are not yet implemented:
+The demo is a hash-routed SPA with no deployment. CI (`.github/workflows/release.yml`)
+publishes the package only. Work items:
+
+1. Fix deep links (render-root query or light-DOM docs content) + stable per-component ids.
+2. One shared docs stylesheet on tokens; delete or revive `templates/index.ts`.
+3. api-docs: correct required detection, markdown rendering, structured cssprop defaults
+   (extract in `scripts/sort-manifest.mjs`).
+4. Generate code samples from the live demo DOM.
+5. Side navigation, manifest search (71 elements, 265 attributes), per-component routes.
+6. Prerender/SSG, meta tags, deploy workflow.
+7. Rebuild the animations page on the library's real classes and durations; remove the
+   invalid declaration, phantom class, and dead toggle.
+8. Normalize spacing (double padding, fallback drift, code-block styles).
+9. Light-theme loading text; `#/home` link.
+10. Dogfood library components (settings-flyout, pivot, hub) in the docs shell.
+11. Write the 35 empty element descriptions.
+
+---
+
+## 9. Missing components (future work, unchanged)
 
 | Component | Description | Effort |
-|-----------|-------------|--------|
-| **Command Bar** | Win8.1 app bar with primary/secondary commands | M |
-| **Charms Bar** | Edge swipe panels (Search, Share, Settings, Devices, Start) | L |
-| **Status Bar** | System status (clock, battery, signal) | S |
-| **Lock Screen** | Showcase component with time/date | M |
-| **Breadcrumb Bar** | Navigation trail | S |
-| **Tab View** | Tab strip (distinct from Pivot) | M |
-| **Color Picker** | Color selection control | M |
-| **Teaching Tip** | Contextual tutorial popup | M |
-| **Ink Canvas** | Drawing surface | L |
+|---|---|---|
+| Command Bar | Win8.1 app bar with primary/secondary commands | M |
+| Charms Bar | Edge swipe panels | L |
+| Status Bar | System status | S |
+| Lock Screen | Showcase time/date | M |
+| Breadcrumb Bar | Navigation trail | S |
+| Tab View | Tab strip distinct from Pivot | M |
+| Color Picker | Color selection | M |
+| Teaching Tip | Contextual tutorial popup | M |
+| Ink Canvas | Drawing surface | L |
 
 ---
 
-## Summary
+## 10. Separate track: progressive enhancement (hand-off facts only)
 
-| Priority | Count | Total Effort |
-|----------|-------|--------------|
-| P1 Touch Physics | 1 | L |
-| P2 Pivot Loop | 1 | M |
-| P3 SemanticZoom Sync | 1 | M |
-| P4 Panorama Wrap | 1 | M |
-| P5 Hub+Zoom | 1 | M |
-| P6 Jump Grid | 1 | M |
-| P7 Swivel | 1 | S-M |
-| P8 Auto-hide | 1 | S |
-| P9 Tilt | 9 components | M |
-| P10 RTL | 86 instances | L |
+Not part of this roadmap. Component audit (2026-11-17, 71 elements):
 
-**Recommended Order:**
-1. Touch Physics Engine (highest impact)
-2. SemanticZoom Scroll Coordination
-3. Pivot Circular Loop
-4. Swivel Transition
-5. ScrollViewer Auto-hide
-6. Remaining tilt effects
-7. Panorama wrap
-8. Hub integration
-9. RTL support
+- **13 CSS-only candidates**: stack-panel, wrap-panel, canvas, text-block, grid, tile-grid,
+  variable-sized-wrap-grid, border, pivot-item, panorama-item, hub-section,
+  app-bar-separator, progress-ring.
+- **38 hybrid** (native HTML/CSS baseline + JS for Metro behavior).
+- **20 JS-required** (pickers, dialogs/flyouts, virtualized lists, semantic zoom, timer
+  tiles, viewbox, repeat-button, rich-edit-box, tooltip, pivot).
+- The CSS tier already partly ships (`dist/metrino.css`). Shadow DOM is the structural
+  constraint: a class-based light-DOM tier is required, not `::part` overrides.

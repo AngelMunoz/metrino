@@ -1,483 +1,206 @@
-# Metro Design Language Compliance Plan
+# Metro Compliance Plan — Execution Checklist
 
-## Methodology
+Derived from [ROADMAP.md](ROADMAP.md), which is the status source of truth. This file holds
+the ordered, checkable execution steps. Update checkboxes here as work lands; update status
+and evidence in the roadmap.
 
-Each phase follows this workflow:
-1. **Fix** - Make the code change
-2. **Test** - Add/update unit tests for the behavior
-3. **Type Check** - Run `./node_modules/.bin/tsc --noEmit`
-4. **Visual Verify** - Use MCP browser to confirm visual correctness
-5. **Regression Check** - Run full test suite to ensure nothing broke
+Baseline: **v0.5.2 (`5dbb11a`), verified 2026-11-17.**
 
----
-
-## Phase 1: Fix Broken Test Files
-
-**Goal:** Get clean TypeScript compilation so we have a reliable baseline.
-
-### 1.1 Fix `test-helpers.ts`
-
-The file at `src/components/buttons/test-helpers.ts` is actually the content of `dropdown-button.test.ts` — it's been misplaced/overwritten. The real test helpers (like `createButton`) are defined locally in each test file.
-
-**Action:** Replace `test-helpers.ts` with a proper helper module exporting shared utilities used across button tests.
-
-**Verify:** `./node_modules/.bin/tsc --noEmit src/components/buttons/test-helpers.ts`
-
-### 1.2 Fix `dropdown-button.test.ts`
-
-The file has structural syntax errors — mismatched braces, missing `setup()` call body, references to undefined `el`.
-
-**Action:** Rewrite the test file following the pattern from `toggle-switch.test.ts`:
-- Proper `suite`/`setup`/`teardown` structure
-- Local `createButton` helper
-- All tests use the helper
-
-**Verify:** `./node_modules/.bin/tsc --noEmit src/components/buttons/dropdown-button.test.ts`
+The previous phase plan (Phases 1–13) is retired. Its disposition is at the bottom.
 
 ---
 
-## Phase 2: Keyboard Accessibility for Toggle Controls
+## Method
 
-**Goal:** `metro-toggle-switch`, `metro-check-box`, and `metro-radio-button` must be keyboard-operable.
+Per task:
 
-### Problem
-The interactive `.switch`/`.checkbox`/`.radio` divs have `role` and `aria-checked` but no `tabindex`, so keyboard users cannot focus or activate them.
+1. Implement the change.
+2. Type check: `pnpx tsc --noEmit`.
+3. Run existing logic tests where they cover the change:
+   `pnpx web-test-runner src/components/<file>.test.ts --node-resolve`.
+4. Visual check in the demo (`pnpm dev`) for motion/spacing tasks.
 
-### 2.1 Fix `metro-toggle-switch`
+Constraint: `web-test-runner.config.mjs` sets `loaders: { ".css": "empty" }`, so the suite
+cannot see styles. Motion and spacing are verified manually, not by the suite. The config
+runs chromium + firefox only. Do **not** gate work on installing browsers or establishing a
+full test baseline (owner decision).
 
-**Code changes in `src/components/input/toggle-switch.ts`:**
-- Add `tabindex="0"` to the `.switch` div
-- Add `@keydown` handler for Enter and Space keys to call `#toggle`
-- Add `:host(:focus-visible)` outline style (use `focusRing` from shared.ts or inline)
+## Execution rules
 
-**Tests to add in `toggle-switch.test.ts`:**
-```typescript
-test("switch is focusable via tabindex", async () => {
-  const el = await createToggle();
-  const switchEl = el.shadowRoot?.querySelector(".switch");
-  assert.equal(switchEl?.getAttribute("tabindex"), "0");
-});
-
-test("Enter key toggles switch", async () => {
-  const el = await createToggle();
-  const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
-  const event = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
-  switchEl.dispatchEvent(event);
-  await el.updateComplete;
-  assert.isTrue(el.on);
-});
-
-test("Space key toggles switch", async () => {
-  const el = await createToggle();
-  const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
-  const event = new KeyboardEvent("keydown", { key: " ", bubbles: true });
-  switchEl.dispatchEvent(event);
-  await el.updateComplete;
-  assert.isTrue(el.on);
-});
-
-test("disabled switch ignores keyboard", async () => {
-  const el = await createToggle({ disabled: "" });
-  const switchEl = el.shadowRoot?.querySelector(".switch") as HTMLElement;
-  switchEl.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-  await el.updateComplete;
-  assert.isFalse(el.on);
-});
-```
-
-**MCP verification:** Navigate to `http://localhost:5173/#/input`, Tab to a toggle switch, press Space/Enter to toggle.
-
-### 2.2 Fix `metro-check-box`
-
-Same pattern as toggle-switch:
-- Add `tabindex="0"` to `.checkbox` div
-- Add `@keydown` for Enter/Space
-- Add focus outline
-
-**Tests:** Same pattern — tabindex, Enter, Space, disabled.
-
-### 2.3 Fix `metro-radio-button`
-
-Same pattern:
-- Add `tabindex="0"` to `.radio` div
-- Add `@keydown` for Enter/Space
-- Add focus outline
-
-**Tests:** tabindex, Enter, Space, disabled, already-checked does nothing.
+- Create a work branch before the first commit (main is the default branch). No branch for
+  work that ends without a commit.
+- Never push without explicit permission. Never force push.
+- Changelog (KeepAChangelog): released behavior → `Fixed` / `Changed` (mark breakage with
+  **Breaking:**); new capability → `Added`. Bold-prefix the affected surface; group by
+  user-facing concern.
+- Style per `AGENTS.md`: 2 spaces, double quotes, no trailing commas, named exports,
+  `import type`, logical properties where touched.
+- Comments belong in doc/signature positions; keep implementation quirks noted inline only
+  where the why is non-obvious.
 
 ---
 
-## Phase 3: Dialog Accessibility
+## Phase 0 — Correct the record
 
-**Goal:** `metro-content-dialog` gets focus trap, Escape key, and ARIA labelling.
+- [x] Rewrite `ROADMAP.md` to verified status (this pass).
+- [x] Replace this compliance plan with the execution checklist (this pass).
+- [ ] Fix false published JSDoc (ships in the manifest):
+  - [ ] `pivot.ts` — remove "keyboard navigation support" claim until P2.1 lands.
+  - [ ] `expander.ts` — remove "ARIA expanded state support" claim until P3 lands.
+  - [ ] `app-bar-separator.ts` — align doc with actual hidden behavior (or fix behavior in P3).
+  - [ ] `toast.ts` — remove or implement phantom `@fires toastshown` / `toashidden` (implement in P3).
+- [ ] `README.md` — accent count 21 → 20 named blocks + implicit blue default.
+- [ ] Locate the "spec" the old roadmap cited (Sections 5.2 / 7.2). No such file exists in
+      the repo. Find it or mark those citations ungrounded in the roadmap.
+- [ ] `AGENTS.md` — reconcile the "all three browser engines" claim with the chromium+firefox config.
 
-### 3.1 Escape Key Handling
-
-**Code changes in `content-dialog.ts`:**
-- Add `@keydown` handler on the `.dialog` div (or host) that calls `#close()` when `e.key === "Escape"` and `this.closable`
-
-**Tests to add:**
-```typescript
-test("Escape key closes dialog when closable", async () => {
-  const el = await createDialog();
-  el.show();
-  await el.updateComplete;
-  const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
-  dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-  await el.updateComplete;
-  assert.isTrue(el.closing);
-});
-
-test("Escape key does nothing when not closable", async () => {
-  const el = await createDialog({ closable: "false" });
-  el.show();
-  await el.updateComplete;
-  const dialog = el.shadowRoot?.querySelector(".dialog") as HTMLElement;
-  dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-  await el.updateComplete;
-  assert.isTrue(el.open);
-  assert.isFalse(el.closing);
-});
-```
-
-### 3.2 Focus Trap
-
-**Code changes:**
-- On `show()`, save `document.activeElement` as `#previousFocus`
-- Query all focusable elements inside `.dialog` (buttons, inputs, [tabindex])
-- On Tab at last element → wrap to first
-- On Shift+Tab at first element → wrap to last
-- On `hide()` / close, restore focus to `#previousFocus`
-
-**Tests:**
-```typescript
-test("first focusable element receives focus on open", async () => {
-  const el = await createDialog();
-  const btn = document.createElement("button");
-  btn.slot = "buttons";
-  btn.textContent = "OK";
-  el.appendChild(btn);
-  el.show();
-  await el.updateComplete;
-  await new Promise(r => setTimeout(r, 50));
-  assert.equal(document.activeElement, btn); // or assert focus is inside dialog
-});
-```
-
-### 3.3 ARIA Labelling
-
-**Code changes:**
-- Add `aria-labelledby` pointing to the title element's id when title is present
-- Add `aria-describedby` pointing to the content element's id
-- Add `aria-label="Close"` to the close button
-
-**Tests:**
-```typescript
-test("dialog has aria-labelledby when title provided", async () => {
-  const el = await createDialog({ title: "My Title" });
-  el.show();
-  await el.updateComplete;
-  const dialog = el.shadowRoot?.querySelector(".dialog");
-  const header = el.shadowRoot?.querySelector(".dialog-header");
-  assert.equal(dialog?.getAttribute("aria-labelledby"), header?.id);
-});
-
-test("close button has aria-label", async () => {
-  const el = await createDialog();
-  el.show();
-  await el.updateComplete;
-  const closeBtn = el.shadowRoot?.querySelector(".close-btn");
-  assert.equal(closeBtn?.getAttribute("aria-label"), "Close");
-});
-```
-
-**MCP verification:** Open a content-dialog via demo page, Tab through elements, verify focus stays trapped, press Escape to close.
-
-### 3.4 Apply same Escape key pattern to `metro-flyout` and `metro-message-dialog`
-
-Read both files, add Escape key handler, add tests.
+Changelog: none (docs only), unless a behavior changes.
 
 ---
 
-## Phase 4: ARIA Roles for Collection Components
+## Phase 1 — Motion correctness
 
-**Goal:** `metro-list-view`, `metro-grid-view`, and `metro-panorama` have proper ARIA roles.
+### P0 first
 
-### 4.1 `metro-list-view`
+- [ ] **1.1 Per-instance view-transition-name scoping.** Assign unique names only while the
+      component is active; remove unconditional hardcoded names from static styles.
+      Files: `content-dialog.ts`, `message-dialog.ts`, `flyout.ts`, `settings-flyout.ts`,
+      `semantic-zoom.ts`. Verify: two instances of one component on a page; a route change
+      still animates. Category: **Fixed**.
+- [ ] **1.2 Wire root turnstile.** Add `::view-transition-old(root)` / `new(root)` rules using
+      the existing `metro-view-transition-out/in` keyframes; pass `types` in `demo/main.ts`.
+      Unify the demo animations page turnstile with the library values (10° / −15°).
+      Category: **Fixed**.
+- [ ] **1.3 Content dialog swivel entrance.** Replace `metro-dialog-enter/exit`
+      scale+translate with rotateX 90°↔0 (match `metro-msg-dialog-enter`). Keep the fade
+      fallback. Category: **Changed**.
 
-**Code changes:**
-- Add `role="listbox"` to the scroll container
-- Add `aria-multiselectable="true"` when `selectionMode` is `multiple` or `extended`
-- Add `aria-activedescendant` pointing to the currently focused item
+### P1 defects
 
-**Tests:**
-```typescript
-test("container has role=listbox", async () => { ... });
-test("aria-multiselectable set for multiple mode", async () => { ... });
-test("aria-activedescendant updates on focus change", async () => { ... });
-```
-
-### 4.2 `metro-panorama`
-
-**Code changes:**
-- Add `role="region"` and `aria-label="Panorama"` to host
-- Add `aria-roledescription="panorama"` to the scroll container
-
-**Tests:**
-```typescript
-test("panorama has region role", async () => { ... });
-```
-
----
-
-## Phase 5: App Bar Keyboard Support
-
-**Goal:** `metro-app-bar` menu closes on Escape, has `aria-controls`.
-
-### 5.1 Escape Key
-
-**Code changes:**
-- Add `@keydown` handler that sets `expanded = false` on Escape when expanded
-
-### 5.2 `aria-controls`
-
-**Code changes:**
-- Generate an id for the menu panel
-- Add `aria-controls="<id>"` to the ellipsis button
-
-**Tests:**
-```typescript
-test("Escape key closes menu", async () => { ... });
-test("ellipsis button has aria-controls", async () => { ... });
-```
+- [ ] **1.4 Panorama snap ownership.** Suppress `scroll-snap-type` during scripted inertia
+      (reuse the `hub.ts` glide pattern) or switch to proximity snap. Remove the 0.1 s
+      parallax `transition`. Category: **Fixed**.
+- [ ] **1.5 Semantic zoom touch scroll.** Remove host `touch-action: none`; let inner overflow
+      pan while pinch/ctrl+wheel still zooms. Category: **Fixed**.
+- [ ] **1.6 DeltaTime integrator.** `stepInertia`/`stepSpring` accept dt; friction scaled by
+      `dt/16.67`; `calculateVelocity` returns a time-based unit. Update `scroll-viewer.ts`
+      and `panorama.ts` call sites; update `touch-physics.test.ts`. Category: **Fixed**.
+- [ ] **1.7 Progress dots transform.** Animate `transform: translateX(...)` instead of `left`.
+      Category: **Fixed**.
+- [ ] **1.8 Unify ring geometry.** Canonical = 5-dot orbit component. Align the
+      `metro-progress-ring-spin` class and the demo preview to it. Category: **Changed**.
+- [ ] **1.9 Unify flip axis.** Align the global `metro-tile-flip` keyframe to the component
+      (rotateY). Category: **Changed**.
+- [ ] **1.10 Single animation source.** Make `animations.css` canonical;
+      `utils/animations.ts` consumes it; `playAnimation` resolves on `animationend`.
+      Category: **Changed**.
+- [ ] **1.11 Semantic zoom fallback + dead property.** Wire `transition-duration` or remove
+      it; add a CSS transition fallback for non-VT browsers. Category: **Fixed**.
 
 ---
 
-## Phase 6: Tilt Effects
+## Phase 2 — Metro interaction completeness
 
-**Goal:** Apply `applyTiltEffect()` from `shared.ts` to components missing it.
-
-### Components to update:
-1. `metro-flip-tile` — import and call `applyTiltEffect` in `firstUpdated`, cleanup in `disconnectedCallback`
-2. `metro-live-tile` — same
-3. `metro-cycle-tile` — same
-4. `metro-iconic-tile` — same
-5. `metro-app-bar-button` — same
-6. `metro-app-bar-toggle-button` — same
-
-**Pattern (from `button.ts`):**
-```typescript
-#cleanupTilt?: () => void;
-
-firstUpdated(): void {
-  this.#cleanupTilt = applyTiltEffect(this);
-}
-
-disconnectedCallback(): void {
-  super.disconnectedCallback();
-  this.#cleanupTilt?.();
-}
-```
-
-**Tests:** For each component, verify that pointerdown sets a transform on the element:
-```typescript
-test("tilt effect applies on pointerdown", async () => {
-  const el = await createTile();
-  el.dispatchEvent(new PointerEvent("pointerdown", { clientX: 85, clientY: 85 }));
-  await el.updateComplete;
-  assert.notEqual(el.style.transform, "");
-});
-```
-
-**MCP verification:** Click tiles on the Tiles demo page, verify subtle 3D tilt on press.
+- [ ] **2.1 Pivot swipe + keyboard + circular loop.** Pointer-driven paging; Arrow/Home/End
+      on the tablist; wrap last↔first. Restores the keyboard claim. Category: **Added**
+      (swipe, loop) + **Fixed** (keyboard).
+- [ ] **2.2 Continuum to MDL behavior.** Research first (roadmap §7): archived WP design
+      guidance / located spec; fallback = WP7 toolkit reproduction (150 ms, translate,
+      ExponentialEase, item origin). Implement the tapped-item-flies-into-page transition.
+      Cite the source used. Category: **Changed**.
+- [ ] **2.3 Semantic zoom scroll sync.** `scrollToGroup(key)`, track current group, zoom-out
+      tap re-enters at that group. Category: **Added**.
+- [ ] **2.4 Panorama circular wrap.** Clone endpoints, seamless jump, parallax across the
+      boundary. Category: **Added**.
+- [ ] **2.5 Long-list-selector jump grid.** Full-screen header grid with turnstile in/out;
+      keep the sidebar strip as a compact option. Category: **Added**.
+- [ ] **2.6 Hub + semantic zoom integration.** `zoomable` hub, generated zoomed-out view,
+      coordinated scroll. Category: **Added**.
+- [ ] **2.7 Reduced-motion policy.** Honor `prefers-reduced-motion` across keyframe and JS
+      motion (hub already does). Category: **Added**.
 
 ---
 
-## Phase 7: Hover/Press States
+## Phase 3 — Component bugs
 
-**Goal:** Interactive components have visible hover and press feedback.
-
-### 7.1 `metro-toggle-switch`
-
-**CSS additions:**
-```css
-.switch:hover {
-  border-color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.8));
-}
-.switch:active {
-  background: var(--metro-highlight-active, rgba(255, 255, 255, 0.08));
-}
-```
-
-### 7.2 `metro-check-box`
-
-**CSS additions:**
-```css
-.checkbox:hover {
-  border-color: var(--metro-foreground, #ffffff);
-}
-.checkbox:active {
-  background: var(--metro-highlight-active, rgba(255, 255, 255, 0.08));
-}
-```
-
-### 7.3 `metro-flip-tile`
-
-**CSS additions:**
-```css
-:host(:hover) {
-  background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
-}
-:host(:active) {
-  background: var(--metro-highlight-active, rgba(255, 255, 255, 0.08));
-}
-```
-
-**MCP verification:** Hover over each component type, verify visual highlight appears.
+- [ ] **3.1** `image.ts` — `requestUpdate()` in `#handleLoad` so the placeholder hides. **Fixed**.
+- [ ] **3.2** `live-tile.ts` — honor the `interval` property (keep 6–10 s as the default). **Fixed**.
+- [ ] **3.3** `cycle-tile.ts`, `iconic-tile.ts` — remove the synthetic non-composed `click`. **Fixed**.
+- [ ] **3.4** `expander.ts` — `aria-expanded`, tabindex, Enter/Space; replace the 500 px
+      max-height clip (grid-rows 0fr→1fr or `interpolate-size`). **Fixed**.
+- [ ] **3.5** `content-dialog.ts` — focus trap includes slotted assigned nodes. **Fixed**.
+- [ ] **3.6** `wrap-panel.ts` — implement the vertical wrap rule. **Fixed**.
+- [ ] **3.7** `app-bar-separator.ts` — hidden preserves space (`visibility:hidden`). **Fixed**.
+- [ ] **3.8** `app-bar-button.ts` — replace `:host-context()` with a Firefox-safe mechanism
+      (parent-driven attribute/part or `:has()`). **Fixed**.
+- [ ] **3.9** `media-element.ts` — standard `accent-color`/`color-scheme` beyond webkit pseudos. **Fixed**.
+- [ ] **3.10** `toast.ts` — implement `toastshown`/`toasthidden` (composed; fix the typo). **Added**.
 
 ---
 
-## Phase 8: Swivel Animation for Dialogs
+## Phase 4 — Packaging and tokens
 
-**Goal:** Dialogs use Metro's swivel (rotateX) entrance instead of scale+translate.
-
-### 8.1 Verify current animation
-
-The `dialogAnimation` in `shared.ts` already has the correct swivel keyframes:
-```css
-@keyframes dialogEnter {
-  from { opacity: 0; transform: perspective(1000px) rotateX(90deg); }
-  to { opacity: 1; transform: perspective(1000px) rotateX(0deg); }
-}
-```
-
-This is already correct. No change needed — just verify visually.
-
-**MCP verification:** Open a content-dialog, verify it rotates in from 90deg on the X axis.
+- [ ] **4.1** Export utils subpaths (`animations`, `touch-physics`, `form-control`,
+      `sanitize`, `virtualization`) or stop shipping dead `dist/utils` modules. **Changed**.
+- [ ] **4.2** Ship the manifest in `dist`; fix the `customElements` field path. **Fixed**.
+- [ ] **4.3** Structured cssprop defaults: extract `(default: …)` into `default` in
+      `scripts/sort-manifest.mjs`. **Fixed**.
+- [ ] **4.4** View-transition rules travel with cherry-pick imports (shared CSSResult or
+      documented `styles.css` requirement). **Fixed**.
+- [ ] **4.5** Define `--metro-gap`; align dark-biased fallbacks; unify
+      secondary/border/highlight literals. **Changed**.
+- [ ] **4.6** Single type ramp in tokens; `typography.css` consumes vars; fix `.body` to 14 px. **Changed**.
 
 ---
 
-## Phase 9: Pivot Circular Loop
+## Phase 5 — Docs site (parallel track)
 
-**Goal:** Pivot headers wrap from last to first seamlessly.
-
-### Implementation approach:
-1. Clone first and last header elements
-2. When user scrolls past the last header, jump to the cloned first (and vice versa)
-3. Use `requestAnimationFrame` to perform the jump without visible flicker
-
-**Tests:**
-```typescript
-test("selecting past last wraps to first", async () => {
-  // Create pivot with 3 items
-  // Select item 2 (last, 0-indexed)
-  // Call next()
-  // Verify selectedIndex is 0
-});
-```
-
-**Note:** This is a medium-complexity feature. Implement after accessibility fixes.
+- [ ] **5.1** Deep links: render-root query or light-DOM content; stable per-component ids.
+- [ ] **5.2** Shared docs stylesheet on tokens; delete or revive `templates/index.ts`.
+- [ ] **5.3** api-docs: required detection, markdown rendering, defaults column.
+- [ ] **5.4** Code samples generated from live demo DOM.
+- [ ] **5.5** Side navigation + manifest search + per-component routes.
+- [ ] **5.6** Prerender/SSG, meta tags, deploy workflow.
+- [ ] **5.7** Animations page rebuilt on library classes/durations; remove invalid
+      `translateX(0);`, phantom `slide-down`, dead stagger toggle.
+- [ ] **5.8** Spacing normalization (double padding, fallback drift, code-block styles).
+- [ ] **5.9** Light-theme loading text; `#/home` link.
+- [ ] **5.10** Dogfood settings-flyout / pivot / hub in the docs shell.
+- [ ] **5.11** Write the 35 empty element descriptions.
 
 ---
 
-## Phase 10: Panorama Circular Wrapping
+## Phase 6 — RTL (scoped, last)
 
-**Goal:** Panorama scrolls seamlessly from last panel back to first.
-
-### Implementation approach:
-1. Clone first and last panorama items
-2. When scroll position reaches the clone, instantly jump to the real item
-3. Maintain parallax across the wrap boundary
-
-**Tests:**
-```typescript
-test("scrolling past last item wraps to first", async () => { ... });
-```
+- [ ] **6.1** Convert side properties + directional offsets to logical properties, starting
+      with split-view (12 sites), then info-bar, combo-box, auto-suggest-box, number-box,
+      tree-view. Include `border.ts` JS style writes. Exclude symmetric `left:0;right:0`
+      and circular centering. No single-total KPI.
 
 ---
 
-## Phase 11: RTL Support
+## Suggested first commit set
 
-**Goal:** Replace physical CSS properties with logical properties.
-
-### Scope: ~86 instances across all component files.
-
-**Replacements:**
-| Physical | Logical |
-|----------|---------|
-| `left` | `inset-inline-start` |
-| `right` | `inset-inline-end` |
-| `margin-left` | `margin-inline-start` |
-| `margin-right` | `margin-inline-end` |
-| `padding-left` | `padding-inline-start` |
-| `padding-right` | `padding-inline-end` |
-| `border-left` | `border-inline-start` |
-| `border-right` | `border-inline-end` |
-
-**Approach:**
-1. Use grep to find all instances: `rg "(left|right|margin-left|margin-right|padding-left|padding-right)" src/components/ --include="*.ts"`
-2. Fix each file, verifying no visual regression via MCP
-3. Run type check after each batch
-
-**Important:** Keep `left: 0; right: 0` patterns for `position: absolute; inset: 0` — replace with `inset: 0` or `inset-inline: 0`.
+Phase 0 + 1.1 + 1.2 + 1.3. Corrects the record, removes the page-wide motion killer, wires
+the existing turnstile, and fixes the content dialog entrance the owner asked for — one
+reviewable batch.
 
 ---
 
-## Phase 12: ScrollViewer Auto-Hide Scrollbars
+## Disposition of the retired phase plan
 
-**Goal:** `metro-scroll-viewer` supports `scrollbarMode="auto"` with show-on-interact behavior.
-
-### Implementation:
-1. Add `scrollbarMode` property: `"auto" | "visible" | "hidden"`
-2. In `auto` mode, add a class `scrollbar-visible` on scroll/touch, remove after 1.5s idle
-3. Use CSS transitions for opacity fade
-
-**Tests:**
-```typescript
-test("scrollbarMode=auto shows scrollbar on scroll", async () => { ... });
-test("scrollbarMode=auto hides scrollbar after idle", async () => { ... });
-test("scrollbarMode=visible always shows scrollbar", async () => { ... });
-test("scrollbarMode=hidden never shows scrollbar", async () => { ... });
-```
-
----
-
-## Phase 13: Final Verification
-
-**Goal:** Confirm all changes work together without regressions.
-
-### Steps:
-1. Run `./node_modules/.bin/tsc --noEmit` — must be clean (0 errors)
-2. Run `pnpm test` (if Playwright installed) — all tests pass
-3. MCP visual sweep:
-   - Home page renders correctly
-   - Buttons page: hover states, tilt, keyboard focus
-   - Input page: toggle/checkbox/radio keyboard operable
-   - Dialog page: focus trap, Escape key
-   - Tiles page: tilt effects
-   - Navigation page: app bar Escape key
-   - Light theme: all above still work
-4. Update `design/ROADMAP.md` to mark completed items
-
----
-
-## Execution Order
-
-```
-Phase 1  → Phase 2  → Phase 3  → Phase 4  → Phase 5
-   ↓          ↓          ↓          ↓          ↓
-Fix TS    Keyboard   Dialog     ARIA       App Bar
-errors    toggle     a11y       roles      keyboard
-
-Phase 6  → Phase 7  → Phase 8  → Phase 9  → Phase 10
-   ↓          ↓          ↓          ↓          ↓
-Tilt      Hover/     Swivel     Pivot      Panorama
-effects   press      verify     loop       wrap
-
-Phase 11 → Phase 12 → Phase 13
-   ↓          ↓          ↓
-RTL       Scroll     Final
-support   bars       verify
-```
-
-Each phase: fix → test → typecheck → MCP verify → commit checkpoint.
+| Old phase | Status |
+|---|---|
+| 1 — fix broken test files | Done (prior release) |
+| 2 — keyboard for toggle/check/radio | Done |
+| 3 — dialog a11y (Escape, trap, ARIA) | Done, with the slotted-focus gap → 3.5 |
+| 4 — ARIA roles for collections | Done |
+| 5 — app bar keyboard | Done |
+| 6 — tilt effects | Done (9 components); remaining check-box/radio/list items optional |
+| 7 — hover/press states | Done |
+| 8 — swivel for dialogs | Partial: message-dialog done; content-dialog → 1.3. The cited `dialogAnimation` export in `shared.ts` never existed |
+| 9 — pivot circular loop | Open → 2.1 |
+| 10 — panorama circular wrap | Open → 2.4 |
+| 11 — RTL | Open → Phase 6 (scoped) |
+| 12 — scroll-viewer auto-hide | Done |
+| 13 — final verification | Superseded by the per-task method above |
