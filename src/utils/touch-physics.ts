@@ -539,6 +539,7 @@ export function attachDragPan(
   let lastX = 0;
   let lastY = 0;
   let panned = false;
+  let suppressing = false;
   let settleSent = false;
   let frame: number | null = null;
 
@@ -586,6 +587,26 @@ export function attachDragPan(
     frame = requestAnimationFrame(tick);
   };
 
+  // A mouse drag is a pan, not a text selection: once the grab commits, native
+  // selection and image drag are blocked and any range started before the tap
+  // threshold is cleared. Taps never reach this, so they select/focus as usual.
+  const blockNativeGrab = (e: Event): void => {
+    e.preventDefault();
+  };
+  const startSuppressingSelection = (): void => {
+    container.style.userSelect = "none";
+    container.style.webkitUserSelect = "none";
+    window.getSelection()?.removeAllRanges();
+    document.addEventListener("selectstart", blockNativeGrab, true);
+    document.addEventListener("dragstart", blockNativeGrab, true);
+  };
+  const stopSuppressingSelection = (): void => {
+    container.style.userSelect = "";
+    container.style.webkitUserSelect = "";
+    document.removeEventListener("selectstart", blockNativeGrab, true);
+    document.removeEventListener("dragstart", blockNativeGrab, true);
+  };
+
   const down = (e: PointerEvent): void => {
     if (e.pointerType !== "mouse" || e.button !== 0) return;
     stop();
@@ -609,8 +630,15 @@ export function attachDragPan(
     const fed = feedAxisRail(rail, dx, dy);
     rail = fed.state;
     if (!panned) {
-      // The rail locks past the tap threshold on the dominant axis; a cross-axis
-      // gesture never grabs, so taps and cross-slide selection stay untouched.
+      // Past the tap threshold the gesture is a drag on some axis: block native
+      // selection even when the rail locks cross-axis (the cross-slide direction),
+      // so no mouse drag on these scrollers paints a text selection. Taps never
+      // reach the threshold and keep selecting/focusing as usual.
+      if (rail.locked === null) return;
+      if (!suppressing) {
+        suppressing = true;
+        startSuppressingSelection();
+      }
       if (rail.locked !== axis) return;
       panned = true;
       container.setPointerCapture(e.pointerId);
@@ -628,6 +656,10 @@ export function attachDragPan(
     if (gesture === null) return;
     const result = resolveGesture(gesture);
     gesture = null;
+    if (suppressing) {
+      suppressing = false;
+      stopSuppressingSelection();
+    }
     if (!panned) return;
     if (container.hasPointerCapture(e.pointerId)) {
       container.releasePointerCapture(e.pointerId);
@@ -691,6 +723,7 @@ export function attachDragPan(
 
   return () => {
     stop();
+    stopSuppressingSelection();
     container.removeEventListener("pointerdown", down);
     container.removeEventListener("pointermove", move);
     container.removeEventListener("pointerup", up);

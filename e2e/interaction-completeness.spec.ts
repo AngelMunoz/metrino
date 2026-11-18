@@ -82,6 +82,30 @@ test.describe("grab-to-pan", () => {
     await expect(page.locator("metrino-buttons-page h1")).toBeVisible();
   });
 
+  test("a drag pans without selecting text", async ({ page }) => {
+    await page.goto("/#/");
+    await page.locator(".hub-item").first().waitFor();
+    const hub = hubScroller(page);
+    await hub.evaluate((el) => el.scrollIntoView({ block: "center" }));
+    await waitTurnstileSettled(page);
+
+    const box = await hub.boundingBox();
+    const cx = box!.x + 500;
+    const cy = box!.y + 150;
+    await page.mouse.move(cx, cy);
+    await page.mouse.down();
+    await page.mouse.move(cx - 200, cy, { steps: 10 });
+    expect(
+      await page.evaluate(() => window.getSelection()?.toString() ?? ""),
+      "the pan selected text mid-drag"
+    ).toBe("");
+    await page.mouse.up();
+    expect(
+      await page.evaluate(() => window.getSelection()?.toString() ?? ""),
+      "the pan left a text selection behind"
+    ).toBe("");
+  });
+
   test("mouse drag pans the grid vertically and taps still select", async ({
     page,
   }) => {
@@ -104,6 +128,10 @@ test.describe("grab-to-pan", () => {
     expect(await scrollOf(grid, "y"), "a horizontal drag panned vertically").toBe(
       before
     );
+    expect(
+      await page.evaluate(() => window.getSelection()?.toString() ?? ""),
+      "a cross-axis drag selected text"
+    ).toBe("");
 
     const itemClick = page.evaluate(
       () =>

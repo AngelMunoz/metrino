@@ -13,7 +13,7 @@
 - **hub**: opt-in `zoomable` section overview; tapping a tile re-enters at that section.
 - **continuum**: `beginContinuum(origin)` flies the tapped item into its destination — translate-only, 150ms, per the WP toolkit source.
 - **demo**: selection page dogfoods zoom groups and the jump grid; home tiles fly via continuum.
-- **hub**, **grid-view**, **list-view**, **long-list-selector**: mouse grab-to-pan with inertia fling; these scrollers previously answered only wheel and touch.
+- **hub**, **grid-view**, **list-view**, **long-list-selector**: mouse grab-to-pan with inertia fling, without selecting page text; these scrollers previously answered only wheel and touch.
 - **grid-view**, **list-view**, **long-list-selector**: Metro entrance stagger on first mount; recycled virtualization items no longer pop in plain.
 - **tree-view**: expanding and collapsing children glide instead of toggling display; collapsed children stay out of the tab order.
 
