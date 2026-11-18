@@ -15,6 +15,7 @@ import { registerMetroSemanticZoom } from "@src/components/selection/semantic-zo
 import { registerMetroListPicker } from "@src/components/selection/list-picker.ts";
 import { registerMetroButton } from "@src/components/buttons/button.ts";
 import { registerMetroIcon } from "@src/components/primitives/icon.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 
 registerMetroListBox();
 registerMetroListView();
@@ -26,6 +27,7 @@ registerMetroSemanticZoom();
 registerMetroListPicker();
 registerMetroButton();
 registerMetroIcon();
+registerMetroGrid();
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -261,10 +263,11 @@ export class MetrinoSelectionPage extends LitElement {
         margin-bottom: var(--metro-spacing-xl, 24px);
       }
 
+      /* metro-grid owns the column template; columns stay wide enough for the
+         API reference tables instead of newspaper-narrow cards. */
       .demo-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: var(--metro-spacing-lg, 16px);
+        align-items: start;
       }
 
       .demo-card {
@@ -570,7 +573,7 @@ export class MetrinoSelectionPage extends LitElement {
           </metro-button>
         </div>
 
-        <div class="demo-grid">
+        <metro-grid class="demo-grid" columns="repeat(auto-fit, minmax(min(640px, 100%), 1fr))">
           <div class="demo-card">
             <h3>
               Selection Mode: ${this.listBoxMode}<span class="badge"
@@ -859,7 +862,7 @@ export class MetrinoSelectionPage extends LitElement {
           </metro-semantic-zoom>
         </div>
         <api-docs component="MetroSemanticZoom"></api-docs>
-      </div>
+      </metro-grid>
 
       <div class="section">
         <h2>metro-list-picker</h2>

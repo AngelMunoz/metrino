@@ -12,6 +12,7 @@ import { registerMetroRating } from "@src/components/input/rating.ts";
 import { registerMetroComboBox } from "@src/components/input/combo-box.ts";
 import { registerMetroAutoSuggestBox } from "@src/components/input/auto-suggest-box.ts";
 import { registerMetroRichEditBox } from "@src/components/input/rich-edit-box.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 
 registerMetroTextBox();
 registerMetroPasswordBox();
@@ -24,6 +25,7 @@ registerMetroRating();
 registerMetroComboBox();
 registerMetroAutoSuggestBox();
 registerMetroRichEditBox();
+registerMetroGrid();
 
 export class MetrinoInputPage extends LitElement {
   static styles = [
@@ -49,10 +51,11 @@ export class MetrinoInputPage extends LitElement {
       margin-bottom: var(--metro-spacing-xl, 24px);
       color: var(--metro-foreground, #ffffff);
     }
+    /* metro-grid owns the column template; columns stay wide enough for the
+       API reference tables instead of newspaper-narrow cards. */
     .demo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
       gap: var(--metro-spacing-xl, 32px);
+      align-items: start;
     }
     .demo-card {
       background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
@@ -214,7 +217,7 @@ export class MetrinoInputPage extends LitElement {
   render() {
     return html`
       <h1 class="page-title">Input Components</h1>
-      <div class="demo-grid">
+      <metro-grid class="demo-grid" columns="repeat(auto-fit, minmax(min(640px, 100%), 1fr))">
         <div class="demo-card">
           <h3 class="component-title">metro-text-box</h3>
           <p class="component-desc">
@@ -612,7 +615,7 @@ export class MetrinoInputPage extends LitElement {
           >
           <api-docs component="MetroRichEditBox"></api-docs>
         </div>
-      </div>
+      </metro-grid>
     `;
   }
 }

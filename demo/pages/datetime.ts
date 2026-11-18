@@ -7,6 +7,7 @@ import { registerMetroDatePickerRoller } from "@src/components/datetime/date-pic
 import { registerMetroTimePickerRoller } from "@src/components/datetime/time-picker-roller.ts";
 import { registerMetroCalendar } from "@src/components/datetime/calendar.ts";
 import { registerMetroCalendarDatePicker } from "@src/components/datetime/calendar-date-picker.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 
 registerMetroDatePicker();
 registerMetroTimePicker();
@@ -14,6 +15,7 @@ registerMetroDatePickerRoller();
 registerMetroTimePickerRoller();
 registerMetroCalendar();
 registerMetroCalendarDatePicker();
+registerMetroGrid();
 
 export class MetrinoDatetimePage extends LitElement {
   static styles = [
@@ -39,10 +41,11 @@ export class MetrinoDatetimePage extends LitElement {
       margin-bottom: var(--metro-spacing-xl, 24px);
       color: var(--metro-foreground, #ffffff);
     }
+    /* metro-grid owns the column template; columns stay wide enough for the
+       API reference tables instead of newspaper-narrow cards. */
     .demo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
       gap: var(--metro-spacing-xl, 32px);
+      align-items: start;
     }
     .demo-card {
       background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
@@ -171,7 +174,7 @@ export class MetrinoDatetimePage extends LitElement {
   render() {
     return html`
       <h1 class="page-title">Datetime Components</h1>
-      <div class="demo-grid">
+      <metro-grid class="demo-grid" columns="repeat(auto-fit, minmax(min(640px, 100%), 1fr))">
         <div class="demo-card">
           <h3 class="component-title">metro-date-picker</h3>
           <p class="component-desc">
@@ -451,7 +454,7 @@ export class MetrinoDatetimePage extends LitElement {
           >
           <api-docs component="MetroCalendarDatePicker"></api-docs>
         </div>
-      </div>
+      </metro-grid>
     `;
   }
 }

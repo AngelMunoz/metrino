@@ -203,14 +203,21 @@ test.describe("list entrance stagger", () => {
   test("items enter staggered on load and recycling stays plain", async ({
     page,
   }) => {
-    // Commit-level goto: the read must land inside the 600ms stagger window.
+    // Poll from navigation commit: the read retries through mount and catches the
+    // 600ms stagger window whenever it occurs, even on a loaded cold engine.
     await page.goto("/#/selection", { waitUntil: "commit" });
+    await expect
+      .poll(
+        () =>
+          page
+            .locator("metro-grid-view .grid-item")
+            .first()
+            .evaluate((el) => getComputedStyle(el).animationName),
+        { timeout: 5000, intervals: [50] }
+      )
+      .toBe("metro-entrance-stagger");
     const item = page.locator("metro-grid-view .grid-item").first();
     await item.waitFor();
-    expect(
-      await item.evaluate((el) => getComputedStyle(el).animationName),
-      "the grid items popped in without the entrance stagger"
-    ).toBe("metro-entrance-stagger");
 
     // After the stagger window, virtualization recycling must not re-animate.
     await page.waitForTimeout(800);
