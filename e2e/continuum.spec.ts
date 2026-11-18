@@ -14,7 +14,10 @@ interface ContinuumFrame {
   width: number;
   height: number;
   transform: string;
-  transitionDuration: string;
+  /** Painted position of the flight's snapshot group while the turnstile runs. */
+  groupTransform: string | null;
+  /** Painted opacity of the flight's new snapshot: the fade into the arriving page. */
+  groupOpacity: string | null;
 }
 
 /**
@@ -25,9 +28,9 @@ const CLONE = "body > [data-continuum-flight]";
 
 /**
  * Samples the body-level flight clone once per animation frame, from now until it has
- * been gone for three frames. The flight itself is 150ms, so the recorder has to be
- * installed before the tap and read afterwards: an assertion that starts after the click
- * races it and loses on a warm module cache.
+ * been gone for three frames, plus the painted position of its snapshot group while the
+ * turnstile runs. The recorder has to be installed before the tap and read afterwards:
+ * an assertion that starts after the click races the flight and loses on a warm cache.
  */
 async function recordFlightFrames(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -42,13 +45,25 @@ async function recordFlightFrames(page: Page): Promise<void> {
         absentFrames = 0;
         const box = clone.getBoundingClientRect();
         const style = getComputedStyle(clone);
+        const name = (clone as HTMLElement).style.viewTransitionName;
         window.__continuumFrames?.push({
           x: box.x,
           y: box.y,
           width: box.width,
           height: box.height,
           transform: style.transform,
-          transitionDuration: style.transitionDuration,
+          groupTransform: name
+            ? getComputedStyle(
+                document.documentElement,
+                `::view-transition-group(${name})`,
+              ).transform
+            : null,
+          groupOpacity: name
+            ? getComputedStyle(
+                document.documentElement,
+                `::view-transition-new(${name})`,
+              ).opacity
+            : null,
         });
       } else if ((window.__continuumFrames?.length ?? 0) > 0) {
         absentFrames += 1;
@@ -202,11 +217,6 @@ test.describe("continuum flight", () => {
     ).toBeLessThanOrEqual(1);
 
     for (const frame of frames) {
-      expect(
-        seconds(frame.transitionDuration),
-        `the flight did not run at 150ms: ${frame.transitionDuration}`
-      ).toBeCloseTo(0.15, 3);
-
       // Translate only: a scale would be the old continuum, not the item travelling.
       const box = decompose(frame.transform);
       expect(box.a, `the flight scaled on X: ${frame.transform}`).toBeCloseTo(1, 3);
@@ -232,9 +242,73 @@ test.describe("continuum flight", () => {
       Math.abs(lastFrame.y - landing!.y),
       `the clone rested at y ${lastFrame.y}, the page title is at ${landing!.y}`
     ).toBeLessThanOrEqual(24);
+
+    // The painted travel rides the snapshot group across the swivel: it leaves the tap
+    // point gradually and lands with the page, not held until the transition ends.
+    const dx = landing!.x - origin!.x;
+    const dy = landing!.y - origin!.y;
+    const total = Math.hypot(dx, dy);
+    const group = frames
+      .map((frame) => frame.groupTransform)
+      .filter((value): value is string => !!value && value !== "none")
+      .map(decompose);
+    expect(
+      group.length,
+      "the flight never rode a snapshot group"
+    ).toBeGreaterThan(3);
+    // Group transforms are absolute viewport positions: they start at the tap point.
+    expect(
+      Math.abs(group[0].x - origin!.x) + Math.abs(group[0].y - origin!.y),
+      `the group started away from the tap: ${group[0].x}, ${group[0].y}`
+    ).toBeLessThanOrEqual(1);
+    const lastGroup = group[group.length - 1];
+    expect(
+      Math.abs(lastGroup.x - landing!.x),
+      `the group landed at x ${lastGroup.x}, the destination is ${landing!.x}`
+    ).toBeLessThanOrEqual(24);
+    expect(
+      Math.abs(lastGroup.y - landing!.y),
+      `the group landed at y ${lastGroup.y}, the destination is ${landing!.y}`
+    ).toBeLessThanOrEqual(24);
+    // Headless engines sample the group at ~10fps during a transition, so the band is
+    // wide and the count low; a teleport or a held-then-moved clone still fails both.
+    const midway = group.filter((point) => {
+      const distance = Math.hypot(point.x - origin!.x, point.y - origin!.y);
+      return distance > total * 0.05 && distance < total * 0.95;
+    });
+    const trace = group
+      .map((point) => `${Math.round(point.x)},${Math.round(point.y)}`)
+      .join(" ");
+    expect(
+      midway.length,
+      `the group teleported instead of travelling: ${trace}`
+    ).toBeGreaterThanOrEqual(2);
+    expect(
+      new Set(group.map((point) => `${Math.round(point.x)},${Math.round(point.y)}`))
+        .size,
+      `the group never moved through intermediate positions: ${trace}`
+    ).toBeGreaterThanOrEqual(4);
+
+    // The painted clone dissolves into the arriving page instead of riding over the
+    // swivel at full opacity (owner review: the opaque box looked pasted on).
+    // Only frames where the transition is still active: once it ends the pseudos are
+    // gone and computed opacity falls back to 1 while the clone awaits removal.
+    const fades = frames
+      .filter((frame) => !!frame.groupTransform && frame.groupTransform !== "none")
+      .map((frame) => Number.parseFloat(frame.groupOpacity ?? "1"));
+    expect(fades.length, "the painted flight was never sampled").toBeGreaterThan(3);
+    expect(fades[0], "the flight started already faded").toBeGreaterThanOrEqual(0.99);
+    expect(
+      fades[fades.length - 1],
+      `the flight never faded out: ${fades.join(", ")}`
+    ).toBeLessThanOrEqual(0.25);
+    expect(
+      fades.some((value) => value > 0.3 && value < 0.7),
+      `the flight jumped from opaque to gone: ${fades.join(", ")}`
+    ).toBe(true);
   });
 
-  test("the flight replaces the route cross-fade", async ({ page }) => {
+  test("the flight rides over the page turnstile undimmed", async ({ page }) => {
     await page.addInitScript(() => {
       const w = window as unknown as { __vtCalls?: number };
       w.__vtCalls = 0;
@@ -285,9 +359,11 @@ test.describe("continuum flight", () => {
     );
     expect(
       calls,
-      "the continuum is the transition; the root turnstile must not also run"
-    ).toBe(0);
+      "the tap must turn the page like any other navigation"
+    ).toBe(1);
 
+    // Live clone opacity: the intentional fade lives on the painted snapshot, so the
+    // live element staying at 1 proves no snapshot overlay dimmed it.
     const opacities = await page.evaluate(
       () => (window as unknown as { __flightOpacity: number[] }).__flightOpacity
     );

@@ -223,6 +223,18 @@
   }
 }
 
+/* Gives a flight clone's snapshot group the turnstile's duration, so the group carries
+   the clone from the tap point to the destination across the swivel, while the clone
+   fades into the arriving page instead of riding over it at full opacity. */
+@keyframes metro-continuum-flight-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 @keyframes metro-turnstile-feather {
   from {
     opacity: 0;
@@ -235,11 +247,11 @@
 }
 
 .metro-animate-turnstile-in {
-  animation: metro-turnstile-in 450ms var(--metro-easing) forwards;
+  animation: metro-turnstile-in 500ms var(--metro-easing-page, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
 }
 
 .metro-animate-turnstile-out {
-  animation: metro-turnstile-out 350ms var(--metro-easing) forwards;
+  animation: metro-turnstile-out 400ms var(--metro-easing-page, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
 }
 
 .metro-animate-continuum-enter {
@@ -412,12 +424,14 @@
   }
 }
 
+/* Feel tuning (owner review 2026-11-18): easeOutQuad at 400/500ms glides; the old
+   (0.1, 0.9, 0.2, 1) at 350/450ms read as an accelerated snap. Not a fidelity claim. */
 html:active-view-transition-type(turnstile)::view-transition-old(root) {
-  animation: metro-view-transition-out 350ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+  animation: metro-view-transition-out 400ms var(--metro-easing-page, cubic-bezier(0.25, 0.46, 0.45, 0.94)) both;
 }
 
 html:active-view-transition-type(turnstile)::view-transition-new(root) {
-  animation: metro-view-transition-in 450ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+  animation: metro-view-transition-in 500ms var(--metro-easing-page, cubic-bezier(0.25, 0.46, 0.45, 0.94)) both;
 }
 
 /* The ::view-transition-old/new rules for content-dialog, message-dialog,

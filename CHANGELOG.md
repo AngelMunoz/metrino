@@ -33,6 +33,8 @@
 - **touch-physics**: inertia and spring distance depended on frame rate.
 - **progress-bar**: indeterminate dots animated `left`, re-laying out every frame.
 - **demo**: route turnstile never ran (dead keyframes); deep-linked routes loaded no animation rules.
+- **demo**: forward navigation animated from the "Loading" placeholder instead of the previous page; the old page now stays until the new route is ready.
+- **demo**: forward navigation skipped the page transition while the continuum flight ran; every route change now turns the page, and the tapped item travels with the swivel instead of after it.
 
 ### Changed
 
@@ -43,6 +45,8 @@
 - **progress-ring**, **animations**: one 3s orbit geometry replaces the 1.5s spin class and the 167ms demo spinner.
 - **semantic-zoom**: group alignment and readout follow the scroller's axis, horizontal hubs included.
 - **animations**: continuum keyframes are translate-only at 150ms (were scale + translate at 333ms).
+- **animations**: the page turnstile read as an accelerated snap; retuned to 400/500ms on a gentler ease-out curve (`--metro-easing-page`).
+- **continuum**: the flight clone rode over the page turnstile at full opacity; it now fades into the arriving page as it travels.
 
 ## [0.5.2] - 2026-09-20
 

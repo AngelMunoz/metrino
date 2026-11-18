@@ -190,19 +190,33 @@ async function flyIntoPage(
 ): Promise<void> {
   const deadline = Date.now() + FLIGHT_TARGET_TIMEOUT_MS;
 
-  for (;;) {
+  const attempt = (): boolean => {
     const target = findFlightTarget(pageTag, componentId);
-    if (target) {
-      await flight.flyTo(target);
-      return;
+    if (!target) return false;
+    void flight.flyTo(target);
+    return true;
+  };
+  // The route renders inside the view transition's update callback; flying from there
+  // puts the clone at its destination before the new snapshot is captured, so the
+  // snapshot group carries it across the swivel instead of after it.
+  const onRendered = (): void => {
+    attempt();
+  };
+  document.addEventListener("metrino-route-rendered", onRendered);
+
+  try {
+    for (;;) {
+      if (attempt()) return;
+      if (Date.now() >= deadline) {
+        flight.cancel();
+        return;
+      }
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
     }
-    if (Date.now() >= deadline) {
-      flight.cancel();
-      return;
-    }
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => resolve());
-    });
+  } finally {
+    document.removeEventListener("metrino-route-rendered", onRendered);
   }
 }
 

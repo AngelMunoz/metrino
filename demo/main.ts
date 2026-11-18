@@ -7,7 +7,6 @@ import {
 } from "./router";
 import { initTheme } from "./state";
 import { prefersReducedMotion } from "@src/utils/reduced-motion.ts";
-import { continuumInFlight } from "@src/utils/continuum.ts";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "./components/app-shell";
 
@@ -155,13 +154,10 @@ export class MetrinoApp extends LitElement {
   }
 
   async #loadRoute(state: RouterState): Promise<void> {
+    // The old page stays on screen while the route module loads: a placeholder
+    // committed here would become the view transition's old snapshot, and the
+    // turnstile would animate from an empty screen instead of the previous page.
     if (!this.#loadedPages.has(state.path)) {
-      this.routeContent = html`<div
-        style="padding: 24px; text-align: center; color: rgba(255,255,255,0.6);"
-      >
-        Loading...
-      </div>`;
-
       const loader = pageLoaders[state.path];
       if (loader) {
         await loader();
@@ -174,15 +170,17 @@ export class MetrinoApp extends LitElement {
       ? handler(state.params)
       : html`<div style="padding: 24px;">Not Found</div>`;
 
-    if (
-      !prefersReducedMotion() &&
-      !continuumInFlight() &&
-      "startViewTransition" in document
-    ) {
+    // Every route change turns the page, continuum taps included: the flight rides
+    // over the swivel instead of replacing it, so forward reads like back.
+    if (!prefersReducedMotion() && "startViewTransition" in document) {
       document.startViewTransition({
         update: () => {
           this.routeContent = newContent;
-          return this.updateComplete;
+          return this.updateComplete.then(() => {
+            // Inside the update callback, before the new snapshot is captured: a
+            // continuum flight places its clone at the destination from here.
+            document.dispatchEvent(new CustomEvent("metrino-route-rendered"));
+          });
         },
         types: ["turnstile"],
       });

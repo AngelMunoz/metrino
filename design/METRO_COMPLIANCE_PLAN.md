@@ -162,6 +162,13 @@ Changelog: none (docs only), unless a behavior changes.
       focus to the opener on close (settings-flyout restore observed broken); include
       slotted nodes in the trap (with 3.5). Un-fixme the two Escape tests in
       `e2e/dialogs.spec.ts`. **Fixed**.
+- [x] **3.12** Route motion parity (owner review 2026-11-18): the first-visit turnstile
+      animated from the "Loading" placeholder, continuum taps popped the destination in
+      static, and the chrome swivelled with the root snapshot. The old page now stays
+      through the lazy load; every route change runs the root turnstile at 400/500ms on
+      `--metro-easing-page`, and the tapped item rides its snapshot group across the
+      swivel, fading into the page as it travels and landing as the page settles.
+      **Fixed**. (PR10; `e2e/route-motion.spec.ts`, `e2e/continuum.spec.ts`)
 
 ---
 

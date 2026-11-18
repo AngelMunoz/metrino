@@ -25,6 +25,9 @@
   --metro-transition-normal: 250ms;
   --metro-transition-slow: 333ms;
   --metro-easing: cubic-bezier(0.1, 0.9, 0.2, 1);
+  /* Page transitions glide: the micro-interaction curve above spends most of its
+     motion in the first third and reads as a snap at page scale. */
+  --metro-easing-page: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 html,
