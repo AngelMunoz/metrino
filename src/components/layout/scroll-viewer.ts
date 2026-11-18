@@ -9,6 +9,7 @@ import {
   compressBoundary,
   createSpringState,
   stepSpring,
+  frameDeltaMs,
   createAxisRailState,
   feedAxisRail,
   normalizePointerEvent,
@@ -241,13 +242,16 @@ export class MetroScrollViewer extends LitElement {
   ): void {
     const maxScrollX = container.scrollWidth - container.clientWidth;
     const maxScrollY = container.scrollHeight - container.clientHeight;
+    let lastFrame: number | null = null;
 
-    const tick = () => {
+    const tick = (timestamp: number) => {
+      const dt = frameDeltaMs(lastFrame, timestamp);
+      lastFrame = timestamp;
       let moving = false;
 
       if (inertiaX && inertiaX.moving) {
-        inertiaX = stepInertia(inertiaX);
-        container.scrollLeft += inertiaX.velocity;
+        inertiaX = stepInertia(inertiaX, dt);
+        container.scrollLeft += inertiaX.velocity * dt;
 
         // Boundary check
         if (container.scrollLeft <= 0 || container.scrollLeft >= maxScrollX) {
@@ -264,8 +268,8 @@ export class MetroScrollViewer extends LitElement {
       }
 
       if (inertiaY && inertiaY.moving) {
-        inertiaY = stepInertia(inertiaY);
-        container.scrollTop += inertiaY.velocity;
+        inertiaY = stepInertia(inertiaY, dt);
+        container.scrollTop += inertiaY.velocity * dt;
 
         if (container.scrollTop <= 0 || container.scrollTop >= maxScrollY) {
           inertiaY = createInertiaState(0, inertiaY.position);
@@ -289,15 +293,18 @@ export class MetroScrollViewer extends LitElement {
 
   #runSpringBack(container: HTMLElement, axis: "x" | "y", overscroll: number): void {
     let spring = createSpringState(overscroll);
+    let lastFrame: number | null = null;
 
-    const tick = () => {
+    const tick = (timestamp: number) => {
       if (!this.isConnected) return;
-      spring = stepSpring(spring);
+      const dt = frameDeltaMs(lastFrame, timestamp);
+      lastFrame = timestamp;
+      spring = stepSpring(spring, dt);
 
       if (axis === "x") {
-        container.scrollLeft -= spring.velocity;
+        container.scrollLeft -= spring.velocity * dt;
       } else {
-        container.scrollTop -= spring.velocity;
+        container.scrollTop -= spring.velocity * dt;
       }
 
       if (!spring.settled && this.isConnected) {
