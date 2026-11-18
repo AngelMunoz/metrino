@@ -45,15 +45,16 @@
   }
 }
 
+/* The flip axis is Y, as in `metro-flip-tile`, so the class and the component turn alike. */
 @keyframes metro-tile-flip {
   0% {
-    transform: perspective(1000px) rotateX(0deg);
+    transform: perspective(1000px) rotateY(0deg);
   }
   50% {
-    transform: perspective(1000px) rotateX(-90deg);
+    transform: perspective(1000px) rotateY(-90deg);
   }
   100% {
-    transform: perspective(1000px) rotateX(0deg);
+    transform: perspective(1000px) rotateY(0deg);
   }
 }
 
@@ -66,13 +67,27 @@
   }
 }
 
-@keyframes metro-progress-ring-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/*
+ * The one progress-ring orbit. `metro-progress-ring` animates its dots with these, and so
+ * does `.metro-animate-progress-ring` and the animations page preview. Radius per size:
+ * 9px, 14px, 21px; each dot carries its own delay, which is what spreads them around the ring.
+ */
+@keyframes metro-ring-orbit-small {
+  0%   { transform: rotate(0deg) translateY(-9px); opacity: 1; }
+  50%  { transform: rotate(180deg) translateY(-9px); opacity: 1; }
+  100% { transform: rotate(360deg) translateY(-9px); opacity: 1; }
+}
+
+@keyframes metro-ring-orbit-normal {
+  0%   { transform: rotate(0deg) translateY(-14px); opacity: 1; }
+  50%  { transform: rotate(180deg) translateY(-14px); opacity: 1; }
+  100% { transform: rotate(360deg) translateY(-14px); opacity: 1; }
+}
+
+@keyframes metro-ring-orbit-large {
+  0%   { transform: rotate(0deg) translateY(-21px); opacity: 1; }
+  50%  { transform: rotate(180deg) translateY(-21px); opacity: 1; }
+  100% { transform: rotate(360deg) translateY(-21px); opacity: 1; }
 }
 
 @keyframes metro-entrance-stagger {
@@ -114,7 +129,7 @@
 }
 
 .metro-animate-progress-ring {
-  animation: metro-progress-ring-spin 1.5s linear infinite;
+  animation: metro-ring-orbit-normal 3s cubic-bezier(0.7, 0.0, 0.3, 1.0) infinite;
 }
 
 .metro-entrance-stagger > * {

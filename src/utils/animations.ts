@@ -1,4 +1,5 @@
-import { css, type CSSResult } from "lit";
+import { css, unsafeCSS, type CSSResult } from "lit";
+import animationsSource from "../styles/animations.css?inline";
 
 export type AnimationName =
   | "fade-in"
@@ -38,168 +39,94 @@ export interface ZoomTransitionOptions extends TransitionOptions {
   fade?: boolean;
 }
 
-export const animationKeyframes: CSSResult = css`
-  @keyframes metro-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes metro-fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-  @keyframes metro-slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes metro-slide-left {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-  }
-  @keyframes metro-slide-right {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-  }
-  @keyframes metro-turnstile-in {
-    from {
-      opacity: 0;
-      transform: perspective(1000px) rotateY(10deg) scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: perspective(1000px) rotateY(0deg) scale(1);
-    }
-  }
-  @keyframes metro-turnstile-out {
-    from {
-      opacity: 1;
-      transform: perspective(1000px) rotateY(0deg) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: perspective(1000px) rotateY(-15deg) scale(0.8);
-    }
-  }
-  @keyframes metro-continuum-enter {
-    from {
-      opacity: 0;
-      transform: scale(0.8) translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-  @keyframes metro-continuum-exit {
-    from {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-    to {
-      opacity: 0;
-      transform: scale(1.2) translateY(-20px);
-    }
-  }
-  @keyframes metro-tile-flip {
-    0% { transform: perspective(1000px) rotateX(0deg); }
-    50% { transform: perspective(1000px) rotateX(-90deg); }
-    100% { transform: perspective(1000px) rotateX(0deg); }
-  }
-  @keyframes metro-zoom-in {
-    from {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-  @keyframes metro-zoom-out {
-    from {
-      opacity: 1;
-      transform: scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-  }
-  @keyframes metro-semantic-zoom-in {
-    from {
-      opacity: 0;
-      transform: scale(0.5);
-      filter: blur(4px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-      filter: blur(0);
-    }
-  }
-  @keyframes metro-semantic-zoom-out {
-    from {
-      opacity: 1;
-      transform: scale(1);
-      filter: blur(0);
-    }
-    to {
-      opacity: 0;
-      transform: scale(2);
-      filter: blur(4px);
-    }
-  }
-`;
+/** The animation rules of a stylesheet, split by what the API publishes. */
+export interface AnimationRules {
+  keyframes: string;
+  classes: string;
+}
 
-export const animationClasses: CSSResult = css`
-  .metro-animate-fade-in {
-    animation: metro-fade-in 167ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+const KEYFRAME_PREFIX = "metro-";
+const ANIMATE_PREFIX = ".metro-animate-";
+const KEYFRAMES_RULE = /^@keyframes\b/i;
+const GROUPING_AT_RULE = /^@(media|supports|container|layer)\b/i;
+const SAFETY_MARGIN_MS = 250;
+
+/**
+ * Collects the `@keyframes` blocks and the `.metro-animate-*` rules of a stylesheet, so
+ * `styles/animations.css` is the single source for both the names and the geometry that
+ * the animation API and the shadow components share.
+ *
+ * Walks rules by brace depth rather than matching over the text: a `@keyframes` block
+ * holds blocks of its own, and a rule can sit inside a grouping at-rule (`@media`), which
+ * is scanned one level deeper.
+ */
+export function extractAnimationRules(source: string): AnimationRules {
+  const statements = source.replace(/\/\*[\s\S]*?\*\//g, "");
+  const keyframes: string[] = [];
+  const classes: string[] = [];
+  collectAnimationRules(statements, keyframes, classes);
+
+  return { keyframes: keyframes.join("\n"), classes: classes.join("\n") };
+}
+
+function collectAnimationRules(
+  statements: string,
+  keyframes: string[],
+  classes: string[],
+): void {
+  let index = 0;
+
+  while (index < statements.length) {
+    const open = statements.indexOf("{", index);
+    if (open === -1) return;
+
+    const close = closingBrace(statements, open);
+    if (close === -1) return;
+
+    const block = statements.slice(open + 1, close);
+    const prelude = statements.slice(index, open).trim();
+    // A block can be preceded by a statement that has none, such as `@import url(...)`.
+    const selector = prelude.slice(prelude.lastIndexOf(";") + 1).trim();
+    const rule = `${selector} {${block}}`;
+
+    if (KEYFRAMES_RULE.test(selector)) {
+      keyframes.push(rule);
+    } else if (GROUPING_AT_RULE.test(selector)) {
+      collectAnimationRules(block, keyframes, classes);
+    } else if (animatesMetroClass(selector)) {
+      classes.push(rule);
+    }
+
+    index = close + 1;
   }
-  .metro-animate-fade-out {
-    animation: metro-fade-out 167ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+function closingBrace(statements: string, open: number): number {
+  let depth = 0;
+
+  for (let index = open; index < statements.length; index += 1) {
+    if (statements[index] === "{") {
+      depth += 1;
+    } else if (statements[index] === "}") {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
   }
-  .metro-animate-slide-up {
-    animation: metro-slide-up 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-slide-left {
-    animation: metro-slide-left 250ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-slide-right {
-    animation: metro-slide-right 250ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-turnstile-in {
-    animation: metro-turnstile-in 450ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-turnstile-out {
-    animation: metro-turnstile-out 350ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-continuum-enter {
-    animation: metro-continuum-enter 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-continuum-exit {
-    animation: metro-continuum-exit 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-tile-flip {
-    animation: metro-tile-flip 500ms ease-in-out forwards;
-  }
-  .metro-animate-zoom-in {
-    animation: metro-zoom-in 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-zoom-out {
-    animation: metro-zoom-out 333ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-semantic-zoom-in {
-    animation: metro-semantic-zoom-in 400ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-  .metro-animate-semantic-zoom-out {
-    animation: metro-semantic-zoom-out 400ms cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-  }
-`;
+
+  return -1;
+}
+
+function animatesMetroClass(selector: string): boolean {
+  return selector
+    .split(",")
+    .some((part) => part.trim().startsWith(ANIMATE_PREFIX));
+}
+
+const animationRules = extractAnimationRules(animationsSource);
+
+export const animationKeyframes: CSSResult = css`${unsafeCSS(animationRules.keyframes)}`;
+
+export const animationClasses: CSSResult = css`${unsafeCSS(animationRules.classes)}`;
 
 export const animationStyles: CSSResult = css`
   ${animationKeyframes}
@@ -223,6 +150,11 @@ const ANIMATION_CLASS_MAP: Record<AnimationName, string> = {
   "semantic-zoom-out": "metro-animate-semantic-zoom-out"
 };
 
+/**
+ * Reference durations in milliseconds, used only to bound the wait for `animationend`.
+ * The duration that runs comes from `animations.css`; this table is not what the
+ * animation is measured against.
+ */
 const ANIMATION_DURATIONS: Record<AnimationName, number> = {
   "fade-in": 167,
   "fade-out": 167,
@@ -240,10 +172,15 @@ const ANIMATION_DURATIONS: Record<AnimationName, number> = {
   "semantic-zoom-out": 400
 };
 
+/** `animationend` reports the keyframe name, which is the class name without `-animate`. */
+function keyframeName(animation: AnimationName): string {
+  return `${KEYFRAME_PREFIX}${animation}`;
+}
+
 export function playAnimation(element: Element, animation: AnimationName): Promise<void> {
   return new Promise((resolve) => {
     const className = ANIMATION_CLASS_MAP[animation];
-    const duration = ANIMATION_DURATIONS[animation];
+    const name = keyframeName(animation);
 
     element.classList.remove(className);
 
@@ -251,9 +188,23 @@ export function playAnimation(element: Element, animation: AnimationName): Promi
 
     element.classList.add(className);
 
-    setTimeout(() => {
+    const finish = () => {
+      element.removeEventListener("animationend", onEnd);
+      window.clearTimeout(safety);
       resolve();
-    }, duration);
+    };
+    const onEnd = (event: Event) => {
+      if (event.target !== element) return;
+      if ((event as AnimationEvent).animationName !== name) return;
+      finish();
+    };
+
+    // An element that is not rendered never fires `animationend`, so the wait is bounded.
+    const safety = window.setTimeout(
+      finish,
+      ANIMATION_DURATIONS[animation] + SAFETY_MARGIN_MS
+    );
+    element.addEventListener("animationend", onEnd);
   });
 }
 
@@ -265,7 +216,12 @@ export function animateChildren(
   return new Promise((resolve) => {
     const children = Array.from(container.children);
     const className = ANIMATION_CLASS_MAP[animation];
-    const duration = ANIMATION_DURATIONS[animation];
+    const name = keyframeName(animation);
+
+    if (children.length === 0) {
+      resolve();
+      return;
+    }
 
     children.forEach((child) => {
       child.classList.remove(className);
@@ -274,14 +230,38 @@ export function animateChildren(
 
     void (container as HTMLElement).offsetWidth;
 
+    const staggers: number[] = [];
+    let pending = children.length;
+
+    const finish = () => {
+      container.removeEventListener("animationend", onEnd);
+      staggers.forEach((timer) => window.clearTimeout(timer));
+      window.clearTimeout(safety);
+      resolve();
+    };
+    const onEnd = (event: Event) => {
+      if ((event as AnimationEvent).animationName !== name) return;
+      if (!children.includes(event.target as Element)) return;
+      pending -= 1;
+      if (pending === 0) finish();
+    };
+
     children.forEach((child, index) => {
-      setTimeout(() => {
-        (child as HTMLElement).style.opacity = "";
-        child.classList.add(className);
-      }, index * staggerDelay);
+      staggers.push(
+        window.setTimeout(() => {
+          (child as HTMLElement).style.opacity = "";
+          child.classList.add(className);
+        }, index * staggerDelay)
+      );
     });
 
-    setTimeout(resolve, duration + children.length * staggerDelay);
+    const safety = window.setTimeout(
+      finish,
+      ANIMATION_DURATIONS[animation] +
+        children.length * staggerDelay +
+        SAFETY_MARGIN_MS
+    );
+    container.addEventListener("animationend", onEnd);
   });
 }
 
