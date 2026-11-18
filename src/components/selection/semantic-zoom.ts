@@ -11,6 +11,49 @@ type ZoomSlot = "zoomed-in" | "zoomed-out";
 /** How far above the top of the view a group header may sit and still be current. */
 const GROUP_ALIGN_TOLERANCE_PX = 4;
 
+/** Whether a computed overflow value makes that axis scrollable. */
+function scrollsAxis(value: string): boolean {
+  return value === "auto" || value === "scroll";
+}
+
+/**
+ * The `scrollLeft` delta that puts a group's inline start on the scroller's
+ * content line, gutter included. In RTL the inline start is the right edge and
+ * the scroll offsets run negative, so the same subtraction still lands on it.
+ */
+function inlineStartOffset(
+  group: HTMLElement,
+  scroller: HTMLElement,
+  style: CSSStyleDeclaration
+): number {
+  const rtl = style.direction === "rtl";
+  const gutter = parseFloat(style.paddingInlineStart) || 0;
+  const groupEdge = group.getBoundingClientRect();
+  const scrollerEdge = scroller.getBoundingClientRect();
+  const start = rtl ? groupEdge.right : groupEdge.left;
+  const line = rtl ? scrollerEdge.right - gutter : scrollerEdge.left + gutter;
+  return start - line;
+}
+
+/** The host of the shadow tree a node sits in, or null in the document. */
+function hostOf(node: Element): Element | null {
+  const root = node.getRootNode();
+  return root instanceof ShadowRoot ? root.host : null;
+}
+
+/**
+ * The parent the node is drawn inside. Content assigned to a slot draws where
+ * the slot sits, not under its light-DOM parent, so a scroller that lives in
+ * the tree the slot belongs to is only reachable this way.
+ */
+function flatParent(node: Element): Element | null {
+  const slot = (node as HTMLElement).assignedSlot;
+  if (slot) {
+    return slot.parentElement ?? hostOf(slot);
+  }
+  return node.parentElement ?? hostOf(node);
+}
+
 /**
  * The ::view-transition rules of one semantic zoom instance, keyed to its
  * scoped part names. Both layers are always rendered, so a static name would
@@ -62,15 +105,19 @@ html:active-view-transition-type(semantic-zoom)::view-transition-new(${names.in}
  * With that in place:
  *
  * - `scrollToGroup(key)` zooms in when the overview is up, then aligns that
- *   group with the top of the element that scrolls it.
+ *   group with the start edge of the element that actually scrolls it — the
+ *   inline start of a horizontal scroller, the top edge of a vertical one.
  * - Tapping a `[data-group-key]` element of the overview re-enters the list at
  *   that group.
- * - `currentGroup` reports the group at the top of the scrolled list, and
- *   `groupchanged` fires when it changes: bubbles and composed,
- *   `detail: { key: string | null }`.
+ * - `currentGroup` reports the group at the start line of the axis the list
+ *   scrolls on (top for a vertical list, inline start for a horizontal one),
+ *   and `groupchanged` fires when it changes: bubbles and composed,
+ *   `detail: { key: string | null }`. The read measures the top edge, so it
+ *   describes a vertically scrolled list.
  *
- * Keys are matched against the elements assigned to the slot, so a group header
- * inside a slotted component counts as well as a direct child.
+ * Keys are matched against the content assigned to the slot, following the
+ * slots it passes through, so a group header inside a slotted component counts
+ * as well as a direct child.
  *
  * A group is measured where it draws, so the keyed element has to sit in the
  * normal flow of the list: a header pinned by `position: sticky` always reads
@@ -214,14 +261,16 @@ export class MetroSemanticZoom extends LitElement {
     if (changed.has("zoomed")) this.#scheduleGroupRead();
   }
 
-  /** The group whose header is at the top of the scrolled list, if it has one. */
+  /** The group at the start line of the scrolled axis, if the list has one. */
   get currentGroup(): string | null {
     return this.#currentGroup;
   }
 
   /**
-   * Shows one group at the top of the zoomed-in list, zooming in first when the
-   * overview is up.
+   * Shows one group at the start of the zoomed-in list, zooming in first when
+   * the overview is up. The alignment follows the axis the scroller actually
+   * pans on: a horizontal list — a hub, a tile row — is aligned on its inline
+   * start, everything else on its top edge.
    * @param key - The `data-group-key` value of the group to enter
    */
   async scrollToGroup(key: string): Promise<void> {
@@ -235,12 +284,19 @@ export class MetroSemanticZoom extends LitElement {
     if (!layer || !group) return;
 
     const scroller = this.#scrollerFor(group, layer);
-    const offset =
-      group.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-    scroller.scrollTo({
-      top: scroller.scrollTop + offset,
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-    });
+    const style = getComputedStyle(scroller);
+    const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
+
+    if (scrollsAxis(style.overflowX) && !scrollsAxis(style.overflowY)) {
+      scroller.scrollTo({
+        left: scroller.scrollLeft + inlineStartOffset(group, scroller, style),
+        behavior,
+      });
+    } else {
+      const offset =
+        group.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      scroller.scrollTo({ top: scroller.scrollTop + offset, behavior });
+    }
     this.#scheduleGroupRead();
   }
 
@@ -250,16 +306,23 @@ export class MetroSemanticZoom extends LitElement {
       `slot[name="${slotName}"]`
     );
     const groups: HTMLElement[] = [];
+    const visited = new Set<Element>();
 
-    for (const assigned of slot?.assignedElements() ?? []) {
-      if (!(assigned instanceof HTMLElement)) continue;
-      if (assigned.hasAttribute("data-group-key")) groups.push(assigned);
-      groups.push(
-        ...Array.from(
-          assigned.querySelectorAll<HTMLElement>("[data-group-key]")
-        )
-      );
-    }
+    const visit = (element: Element): void => {
+      if (visited.has(element)) return;
+      visited.add(element);
+      if (element instanceof HTMLElement && element.hasAttribute("data-group-key")) {
+        groups.push(element);
+      }
+      for (const child of Array.from(element.children)) visit(child);
+      // Slotted content is not a DOM child of the slot, so the walk follows the
+      // assignment too: a hub's sections live behind a component's slot.
+      if (element instanceof HTMLSlotElement) {
+        for (const assigned of element.assignedElements()) visit(assigned);
+      }
+    };
+
+    for (const assigned of slot?.assignedElements() ?? []) visit(assigned);
 
     return groups;
   }
@@ -274,17 +337,21 @@ export class MetroSemanticZoom extends LitElement {
 
   /**
    * The element that actually scrolls a group: its nearest scrollable ancestor
-   * within the zoom, or the zoomed-in layer when the content overflows that
+   * in the drawn tree — which includes the container a component slots its
+   * content into — or the zoomed-in layer when the content overflows that
    * layer directly.
    */
   #scrollerFor(group: HTMLElement, layer: HTMLElement): HTMLElement {
     for (
-      let ancestor = group.parentElement;
+      let ancestor = flatParent(group);
       ancestor && ancestor !== this;
-      ancestor = ancestor.parentElement
+      ancestor = flatParent(ancestor)
     ) {
-      const overflow = getComputedStyle(ancestor).overflowY;
-      if (overflow === "auto" || overflow === "scroll") return ancestor;
+      if (!(ancestor instanceof HTMLElement)) continue;
+      const style = getComputedStyle(ancestor);
+      if (scrollsAxis(style.overflowY) || scrollsAxis(style.overflowX)) {
+        return ancestor;
+      }
     }
     return layer;
   }
@@ -333,10 +400,14 @@ export class MetroSemanticZoom extends LitElement {
       leading ??= groupKey;
 
       const scroller = this.#scrollerFor(group, layer);
-      const offset =
-        group.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-      // The current group is the last one that crossed the top line, so of those
-      // at or above it the one nearest the line wins.
+      const style = getComputedStyle(scroller);
+      const horizontal =
+        scrollsAxis(style.overflowX) && !scrollsAxis(style.overflowY);
+      const offset = horizontal
+        ? inlineStartOffset(group, scroller, style)
+        : group.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      // The current group is the last one that crossed the start line of the
+      // axis the scroller pans on, so of those at or past it the nearest wins.
       if (offset <= GROUP_ALIGN_TOLERANCE_PX && offset > highest) {
         highest = offset;
         key = groupKey;

@@ -140,6 +140,11 @@ export class MetrinoNavigationPage extends LitElement {
     metro-hub {
       background: rgba(0, 0, 0, 0.3);
       padding: var(--metro-spacing-md, 12px);
+      /* [zoomable] hands the section container to metro-semantic-zoom, whose
+         two views are stacked layers: it needs a height to fill. The width is
+         a phone's, so every section start stays reachable. */
+      width: min(100%, 640px);
+      height: 340px;
     }
     .hub-card {
       background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
@@ -267,6 +272,7 @@ export class MetrinoNavigationPage extends LitElement {
         </div>
         <metro-hub
           title="Hub Title"
+          zoomable
           ?snap=${this.hubSnap}
           dir=${this.hubRtl ? "rtl" : "ltr"}
           @selectionchanged=${this.#handleHubSelection}
@@ -303,6 +309,7 @@ export class MetrinoNavigationPage extends LitElement {
         <h2>metro-panorama (parallax background effect)</h2>
         <metro-panorama
           title="Panorama"
+          wrap
           background-image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%230078d4'/%3E%3Cstop offset='100%25' style='stop-color:%23429ce3'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' width='1920' height='1080'/%3E%3C/svg%3E"
         >
           <metro-panorama-item header="Item One">
