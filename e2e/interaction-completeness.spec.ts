@@ -89,6 +89,10 @@ test.describe("grab-to-pan", () => {
     await hub.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await waitTurnstileSettled(page);
 
+    // A consumer-styled scroller must keep its own user-select after the drag.
+    await hub.evaluate((el) => {
+      el.style.userSelect = "text";
+    });
     const box = await hub.boundingBox();
     const cx = box!.x + 500;
     const cy = box!.y + 150;
@@ -104,6 +108,10 @@ test.describe("grab-to-pan", () => {
       await page.evaluate(() => window.getSelection()?.toString() ?? ""),
       "the pan left a text selection behind"
     ).toBe("");
+    expect(
+      await hub.evaluate((el) => el.style.userSelect),
+      "the pan clobbered a consumer-set user-select"
+    ).toBe("text");
   });
 
   test("mouse drag pans the grid vertically and taps still select", async ({
@@ -266,24 +274,37 @@ test.describe("tree-view expand glide", () => {
     ).toBe("hidden");
     expect(await rowsOf(group), "collapsed group is not at zero").toBe(0);
 
+    // Sample across the glide window: a single fixed delay can land after the
+    // 250ms transition on a loaded machine and read the settled value.
+    const sampleGlide = async (): Promise<number[]> => {
+      const samples: number[] = [];
+      for (let i = 0; i < 7; i += 1) {
+        samples.push(await rowsOf(group));
+        await page.waitForTimeout(40);
+      }
+      return samples;
+    };
+
     await parent.click();
-    await page.waitForTimeout(120);
-    const mid = await rowsOf(group);
-    await page.waitForTimeout(400);
+    const opening = await sampleGlide();
+    await page.waitForTimeout(300);
     const open = await rowsOf(group);
-    expect(mid, "the expand never glided").toBeGreaterThan(0);
-    expect(mid, "the expand jumped straight open").toBeLessThan(open);
+    expect(
+      opening.some((v) => v > 0 && v < open),
+      `the expand never glided: ${opening.join(", ")}`
+    ).toBe(true);
     expect(
       await group.locator("> .children-inner").evaluate((el) => getComputedStyle(el).visibility),
       "expanded children stay hidden"
     ).toBe("visible");
 
     await parent.click();
-    await page.waitForTimeout(120);
-    const closing = await rowsOf(group);
-    await page.waitForTimeout(400);
-    expect(closing, "the collapse never glided").toBeGreaterThan(0);
-    expect(closing, "the collapse jumped straight shut").toBeLessThan(open);
+    const closing = await sampleGlide();
+    await page.waitForTimeout(300);
+    expect(
+      closing.some((v) => v > 0 && v < open),
+      `the collapse never glided: ${closing.join(", ")}`
+    ).toBe(true);
     expect(await rowsOf(group), "the group never closed").toBe(0);
     expect(
       await group.locator("> .children-inner").evaluate((el) => getComputedStyle(el).visibility),

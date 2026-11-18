@@ -593,7 +593,13 @@ export function attachDragPan(
   const blockNativeGrab = (e: Event): void => {
     e.preventDefault();
   };
+  // Restore whatever the consumer had inline, not an empty string: a scroller styled
+  // with its own user-select must keep it after the drag.
+  let priorUserSelect = "";
+  let priorWebkitUserSelect = "";
   const startSuppressingSelection = (): void => {
+    priorUserSelect = container.style.userSelect;
+    priorWebkitUserSelect = container.style.webkitUserSelect;
     container.style.userSelect = "none";
     container.style.webkitUserSelect = "none";
     window.getSelection()?.removeAllRanges();
@@ -601,8 +607,8 @@ export function attachDragPan(
     document.addEventListener("dragstart", blockNativeGrab, true);
   };
   const stopSuppressingSelection = (): void => {
-    container.style.userSelect = "";
-    container.style.webkitUserSelect = "";
+    container.style.userSelect = priorUserSelect;
+    container.style.webkitUserSelect = priorWebkitUserSelect;
     document.removeEventListener("selectstart", blockNativeGrab, true);
     document.removeEventListener("dragstart", blockNativeGrab, true);
   };

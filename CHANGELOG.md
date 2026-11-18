@@ -16,6 +16,7 @@
 - **hub**, **grid-view**, **list-view**, **long-list-selector**: mouse grab-to-pan with inertia fling, without selecting page text; these scrollers previously answered only wheel and touch.
 - **grid-view**, **list-view**, **long-list-selector**: Metro entrance stagger on first mount; recycled virtualization items no longer pop in plain.
 - **tree-view**: expanding and collapsing children glide instead of toggling display; collapsed children stay out of the tab order.
+- **continuum**: `beginContinuum` accepts the page transition it rides over (`pageTransitionMs`, `pageTransitionEasing`); defaults match the library turnstile.
 
 ### Fixed
 
