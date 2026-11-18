@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroTextBox } from "@src/components/input/text-box.ts";
 import { registerMetroPasswordBox } from "@src/components/input/password-box.ts";
@@ -25,7 +26,9 @@ registerMetroAutoSuggestBox();
 registerMetroRichEditBox();
 
 export class MetrinoInputPage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       font-family: var(
@@ -120,7 +123,8 @@ export class MetrinoInputPage extends LitElement {
       flex-direction: column;
       gap: var(--metro-spacing-sm, 8px);
     }
-  `;
+    `,
+  ];
 
   static properties = {
     textBoxValue: { state: true },

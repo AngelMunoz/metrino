@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
+import { inputBase, dropdownAnimation, reducedMotionBlanket } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
 
@@ -23,6 +23,7 @@ export class MetroComboBox extends LitElement {
   declare required: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     inputBase,
     dropdownAnimation,
     css`

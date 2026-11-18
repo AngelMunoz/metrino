@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "../../styles/shared.ts";
 
 export class MetroGrid extends LitElement {
   static properties = {
@@ -11,10 +12,13 @@ export class MetroGrid extends LitElement {
 
   #hostStyles: CSSStyleSheet | undefined;
 
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host { display: grid; box-sizing: border-box; gap: var(--metro-gap, 8px); }
     ::slotted(*) { min-width: 0; min-height: 0; }
-  `;
+    `,
+  ];
 
   render() {
     return html`<slot></slot>`;

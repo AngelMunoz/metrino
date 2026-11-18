@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroTextBlock } from "@src/components/primitives/text-block.ts";
 import { registerMetroIcon } from "@src/components/primitives/icon.ts";
@@ -61,7 +62,9 @@ const ICON_SAMPLES = [
 ];
 
 export class MetrinoPrimitivesPage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       padding: var(--metro-spacing-xl, 24px);
@@ -163,7 +166,8 @@ export class MetrinoPrimitivesPage extends LitElement {
     .media-demo {
       max-width: 480px;
     }
-  `;
+    `,
+  ];
 
   static properties = {
     _tooltipPlacement: { state: true },

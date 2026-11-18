@@ -2,6 +2,7 @@ import { LitElement, html, css } from "lit";
 import { baseTypography, modalBackdrop, closeButton } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 
 /**
  * The ::view-transition rules of one dialog instance, keyed to its scoped part
@@ -273,39 +274,42 @@ export class MetroContentDialog extends LitElement {
    * startViewTransition skips the callback (headless browsers).
    * Awaits both updateCallbackDone and finished to properly clean up
    * the transition before returning.
+   * Under `prefers-reduced-motion: reduce` the transition is skipped rather than
+   * sped up, so the change lands with no entrance motion at all.
    */
   async #applyChange(setter: () => void): Promise<void> {
-    if ("startViewTransition" in document) {
-      let applied = false;
+    if (prefersReducedMotion() || !("startViewTransition" in document)) {
+      setter();
+      await this.updateComplete;
+      return;
+    }
+
+    let applied = false;
+    try {
+      const transition = document.startViewTransition({
+        update: () => {
+          setter();
+          applied = true;
+          return this.updateComplete;
+        },
+        types: ["content-dialog"],
+      });
       try {
-        const transition = document.startViewTransition({
-          update: () => {
-            setter();
-            applied = true;
-            return this.updateComplete;
-          },
-          types: ["content-dialog"],
-        });
-        try {
-          await transition.updateCallbackDone;
-        } catch {
-          // updateCallbackDone rejected — transition was skipped
-        }
-        // Await finished to fully clean up the transition so it
-        // doesn't block subsequent startViewTransition calls.
-        try {
-          await transition.finished;
-        } catch {
-          // finished rejected — transition was skipped
-        }
+        await transition.updateCallbackDone;
       } catch {
-        // startViewTransition threw synchronously — fall through to fallback
+        // updateCallbackDone rejected — transition was skipped
       }
-      if (!applied) {
-        setter();
-        await this.updateComplete;
+      // Await finished to fully clean up the transition so it
+      // doesn't block subsequent startViewTransition calls.
+      try {
+        await transition.finished;
+      } catch {
+        // finished rejected — transition was skipped
       }
-    } else {
+    } catch {
+      // startViewTransition threw synchronously — fall through to fallback
+    }
+    if (!applied) {
       setter();
       await this.updateComplete;
     }

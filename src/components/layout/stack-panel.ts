@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "../../styles/shared.ts";
 
 export type StackOrientation = "horizontal" | "vertical";
 
@@ -9,7 +10,9 @@ export class MetroStackPanel extends LitElement {
 
   declare orientation: StackOrientation;
 
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: flex;
       flex-direction: column;
@@ -21,7 +24,8 @@ export class MetroStackPanel extends LitElement {
     ::slotted(*) {
       flex-shrink: 0;
     }
-  `;
+    `,
+  ];
 
   constructor() {
     super();

@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { inputBase, dropdownAnimation } from "../../styles/shared.ts";
+import { inputBase, dropdownAnimation, reducedMotionBlanket } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { registerMetroCalendar } from "./calendar.ts";
 import { dateValidation, updateFormControlState } from "../../utils/form-control.ts";
@@ -30,6 +30,7 @@ export class MetroCalendarDatePicker extends LitElement {
   declare required: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     inputBase,
     dropdownAnimation,
     css`

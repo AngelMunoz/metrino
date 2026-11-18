@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { inputBase } from "../../styles/shared.ts";
+import { inputBase, reducedMotionBlanket } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
 
@@ -95,6 +95,7 @@ export class MetroPasswordBox extends LitElement {
   declare revealed: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     inputBase,
     css`
       .input-wrapper {

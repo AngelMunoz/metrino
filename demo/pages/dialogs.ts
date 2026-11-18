@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroContentDialog } from "@src/components/dialogs/content-dialog.ts";
 import { registerMetroMessageDialog } from "@src/components/dialogs/message-dialog.ts";
@@ -21,7 +22,9 @@ registerMetroIcon();
 registerMetroToggleSwitch();
 
 export class MetrinoDialogsPage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       padding: var(--metro-spacing-xl, 24px);
@@ -112,7 +115,8 @@ export class MetrinoDialogsPage extends LitElement {
       display: flex;
       gap: var(--metro-spacing-sm, 8px);
     }
-  `;
+    `,
+  ];
 
   static properties = {};
 

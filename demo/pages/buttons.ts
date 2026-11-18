@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroButton } from "@src/components/buttons/button.ts";
 import { registerMetroHyperlinkButton } from "@src/components/buttons/hyperlink-button.ts";
@@ -11,7 +12,9 @@ registerMetroRepeatButton();
 registerMetroDropdownButton();
 
 export class MetrinoButtonsPage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       font-family: var(
@@ -110,7 +113,8 @@ export class MetrinoButtonsPage extends LitElement {
       background: var(--metro-border, rgba(255, 255, 255, 0.2));
       margin: var(--metro-spacing-xs, 4px) 0;
     }
-  `;
+    `,
+  ];
 
   static properties = {
     repeatCount: { state: true },

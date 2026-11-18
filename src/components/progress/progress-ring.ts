@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "../../styles/shared.ts";
 import { animationKeyframes } from "../../utils/animations.ts";
 
 export class MetroProgressRing extends LitElement {
@@ -11,6 +12,7 @@ export class MetroProgressRing extends LitElement {
   // The orbit keyframes are the shared ones in `styles/animations.css`, adopted here so
   // their names resolve inside this shadow tree. Radius per size: 9px, 14px, 21px.
   static styles = [
+    reducedMotionBlanket,
     animationKeyframes,
     css`
       :host {

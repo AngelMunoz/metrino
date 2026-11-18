@@ -6,6 +6,8 @@ import {
   type RouterState,
 } from "./router";
 import { initTheme } from "./state";
+import { prefersReducedMotion } from "@src/utils/reduced-motion.ts";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "./components/app-shell";
 
 import "@src/styles/tokens.css";
@@ -97,12 +99,15 @@ const pageLoaders: Record<string, () => Promise<unknown>> = {
 type TemplateResult = ReturnType<typeof html>;
 
 export class MetrinoApp extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       min-height: 100vh;
     }
-  `;
+    `,
+  ];
 
   static properties = {
     routeContent: { state: true },
@@ -168,7 +173,7 @@ export class MetrinoApp extends LitElement {
       ? handler(state.params)
       : html`<div style="padding: 24px;">Not Found</div>`;
 
-    if ("startViewTransition" in document) {
+    if (!prefersReducedMotion() && "startViewTransition" in document) {
       document.startViewTransition({
         update: () => {
           this.routeContent = newContent;

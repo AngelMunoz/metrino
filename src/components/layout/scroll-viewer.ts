@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
-import { scrollbarVisible } from "../../styles/shared.ts";
+import { scrollbarVisible, reducedMotionBlanket } from "../../styles/shared.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 import {
   createGestureState,
   updateGesture,
@@ -33,6 +34,7 @@ export class MetroScrollViewer extends LitElement {
   declare touchPhysics: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     scrollbarVisible,
     css`
       :host { display: block; overflow: hidden; box-sizing: border-box; }
@@ -222,6 +224,17 @@ export class MetroScrollViewer extends LitElement {
 
     const container = this.shadowRoot?.querySelector(".scroll-container") as HTMLElement;
     if (!container) return;
+
+    // Reduced motion skips the momentum and the boundary spring instead of
+    // running them faster: the content rests where the drag left it, pulled back
+    // inside the scrollable range in one step.
+    if (prefersReducedMotion()) {
+      const maxScrollX = container.scrollWidth - container.clientWidth;
+      const maxScrollY = container.scrollHeight - container.clientHeight;
+      container.scrollLeft = Math.min(Math.max(container.scrollLeft, 0), maxScrollX);
+      container.scrollTop = Math.min(Math.max(container.scrollTop, 0), maxScrollY);
+      return;
+    }
 
     // Start inertia animation
     const canScrollX = this.scrollOrientation !== "vertical";

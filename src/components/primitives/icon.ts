@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "../../styles/shared.ts";
 import {
   mdiHome,
   mdiArrowLeft,
@@ -300,7 +301,9 @@ export class MetroIcon extends LitElement {
   declare icon: string;
   declare size: "small" | "normal" | "medium" | "large" | "xlarge";
 
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: inline-flex;
       align-items: center;
@@ -329,7 +332,8 @@ export class MetroIcon extends LitElement {
     :host([size="xlarge"]) {
       font-size: 32px;
     }
-  `;
+    `,
+  ];
 
   constructor() {
     super();

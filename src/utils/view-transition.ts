@@ -1,5 +1,6 @@
-let nextScopeId = 0;
+import { prefersReducedMotion } from "./reduced-motion.ts";
 
+let nextScopeId = 0;
 /**
  * A per-instance holder for View Transition part names.
  *
@@ -17,6 +18,8 @@ export interface TransitionScope {
   /**
    * Points each part element at its scoped name and adds `rules` to the document.
    * Idempotent: the style element is only added once.
+   * Does nothing under `prefers-reduced-motion: reduce`, where the caller skips the
+   * transition and a reserved name would only collide with the next instance.
    */
   attach(targets: Record<string, HTMLElement | null>, rules: string): void;
   /**
@@ -46,6 +49,7 @@ export function createTransitionScope(
   return {
     names,
     attach(targets, rules) {
+      if (prefersReducedMotion()) return;
       for (const part of parts) {
         const target = targets[part];
         if (target) {

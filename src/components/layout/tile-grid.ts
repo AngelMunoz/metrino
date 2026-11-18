@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "../../styles/shared.ts";
 
 const TILE_UNIT = 70;
 const TILE_GAP = 10;
@@ -10,7 +11,9 @@ export class MetroTileGrid extends LitElement {
 
   declare columns: number;
 
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: grid;
       box-sizing: border-box;
@@ -50,7 +53,8 @@ export class MetroTileGrid extends LitElement {
       grid-column: span 4;
       grid-row: span 4;
     }
-  `;
+    `,
+  ];
 
   constructor() {
     super();

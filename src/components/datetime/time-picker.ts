@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { inputBase } from "../../styles/shared.ts";
+import { inputBase, reducedMotionBlanket } from "../../styles/shared.ts";
 import { timeValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroTimePicker extends LitElement {
@@ -20,6 +20,7 @@ export class MetroTimePicker extends LitElement {
   declare disabled: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     inputBase,
     css`
       input::-webkit-calendar-picker-indicator {

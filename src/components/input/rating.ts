@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { disabledState } from "../../styles/shared.ts";
+import { disabledState, reducedMotionBlanket } from "../../styles/shared.ts";
 import { numberValidation, updateFormControlState, valueMissing } from "../../utils/form-control.ts";
 
 export class MetroRating extends LitElement {
@@ -22,6 +22,7 @@ export class MetroRating extends LitElement {
   declare required: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     disabledState,
     css`
       :host {

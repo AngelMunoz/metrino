@@ -19,7 +19,9 @@ export default defineConfig({
   webServer: {
     command: "pnpm exec vite --mode demo --strictPort --no-open",
     url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    // Never reuse a server this run did not start: a leftover server from another
+    // session can die mid-run and every later test then fails with connection refused.
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });

@@ -117,6 +117,86 @@ test.describe("panorama use cases", () => {
     ).toBeLessThanOrEqual(2);
   });
 
+  test("user drags the panorama and the content follows", async ({
+    page,
+  }) => {
+    const panorama = page.locator("#metro-panorama metro-panorama");
+    await gotoReadyRoute(page, "/#/navigation", panorama);
+    await panorama.scrollIntoViewIfNeeded();
+    const container = panorama.locator(".panorama-container");
+
+    // 10 steps of 15px, then the pointer holds: the read below happens while
+    // the gesture is still down, so only direct manipulation can pass it.
+    const box = await container.boundingBox();
+    if (!box) throw new Error("panorama container has no bounding box");
+    const y = box.y + 40;
+    let x = box.x + box.width * 0.9;
+
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let step = 0; step < 10; step++) {
+      x -= 15;
+      await page.mouse.move(x, y);
+      await page.waitForTimeout(16);
+    }
+
+    const held = await container.evaluate((el) => ({
+      scrollLeft: el.scrollLeft,
+      snapType: getComputedStyle(el).scrollSnapType,
+    }));
+    expect(
+      held.scrollLeft,
+      `the drag stayed pinned at ${held.scrollLeft}`
+    ).toBeGreaterThan(100);
+    expect(
+      held.snapType,
+      "the drag must own the scroll position"
+    ).toBe("none");
+
+    await page.mouse.up();
+
+    // The release runs inertia and hands the snap points back when it settles.
+    await expect
+      .poll(
+        () => container.evaluate((el) => getComputedStyle(el).scrollSnapType),
+        { message: "the release never handed the snap points back", timeout: 15_000 }
+      )
+      .toContain("mandatory");
+
+    const rest = await container.evaluate((el) => {
+      const host = (el.getRootNode() as ShadowRoot).host as HTMLElement;
+      const items = Array.from(
+        host.querySelectorAll<HTMLElement>("metro-panorama-item")
+      );
+      const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      const offsets = items.map((item) =>
+        Math.min(Math.max(item.offsetLeft - padding, 0), maxScroll)
+      );
+      const scrollLeft = el.scrollLeft;
+      const nearest = offsets.reduce(
+        (best, offset) =>
+          Math.abs(offset - scrollLeft) < Math.abs(best - scrollLeft)
+            ? offset
+            : best,
+        offsets[0] ?? 0
+      );
+      return {
+        scrollLeft,
+        nearest,
+        snapType: getComputedStyle(el).scrollSnapType,
+      };
+    });
+    expect(
+      Math.abs(rest.scrollLeft - rest.nearest),
+      `settled at ${rest.scrollLeft}, nearest item boundary is ${rest.nearest}`
+    ).toBeLessThanOrEqual(2);
+    expect(
+      rest.snapType,
+      "snap must be handed back to the browser"
+    ).toContain("x mandatory");
+  });
+
   test("parallax background follows the scroll without transition lag", async ({
     page,
   }) => {
