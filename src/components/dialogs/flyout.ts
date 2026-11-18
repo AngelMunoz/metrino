@@ -1,5 +1,28 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
+import { createTransitionScope } from "../../utils/view-transition.ts";
+
+/**
+ * The ::view-transition rules of one flyout instance, keyed to its scoped part
+ * names. Injected only while the flyout is active, so a second instance on the
+ * same page cannot share a view-transition-name.
+ */
+function flyoutTransitionRules(names: Record<string, string>): string {
+  return `
+html:active-view-transition-type(flyout)::view-transition-new(${names.panel}) {
+  animation: metro-flyout-enter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(flyout)::view-transition-old(${names.panel}) {
+  animation: metro-flyout-exit var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+html:active-view-transition-type(flyout)::view-transition-new(${names.backdrop}) {
+  animation: metro-fade-in var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(flyout)::view-transition-old(${names.backdrop}) {
+  animation: metro-fade-out var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+`;
+}
 
 /**
  * Flyout placement options relative to the target element.
@@ -76,7 +99,6 @@ export class MetroFlyout extends LitElement {
         transform: perspective(800px) rotateX(-15deg);
         transition: opacity var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)), transform var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         transform-origin: top center;
-        view-transition-name: flyout-panel;
       }
       :host([open]) .flyout {
         opacity: 1;
@@ -86,12 +108,13 @@ export class MetroFlyout extends LitElement {
         position: fixed;
         inset: 0;
         z-index: -1;
-        view-transition-name: flyout-backdrop;
       }
     `,
   ];
 
   #target: Element | null = null;
+  #transition = createTransitionScope("flyout", ["panel", "backdrop"]);
+  #transitionRules = flyoutTransitionRules(this.#transition.names);
 
   constructor() {
     super();
@@ -161,6 +184,8 @@ export class MetroFlyout extends LitElement {
   async show(target: Element): Promise<void> {
     this.#target = target;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+    await this.updateComplete;
+    this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
   }
 
@@ -171,7 +196,9 @@ export class MetroFlyout extends LitElement {
   async hide(): Promise<void> {
     if (!this.open) return;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
+    this.#transition.detach(this.#transitionTargets());
   }
 
   /**
@@ -218,6 +245,14 @@ export class MetroFlyout extends LitElement {
 
   #close(): void {
     void this.hide();
+  }
+
+  #transitionTargets(): Record<string, HTMLElement | null> {
+    const root = this.shadowRoot;
+    return {
+      panel: root?.querySelector<HTMLElement>(".flyout") ?? null,
+      backdrop: root?.querySelector<HTMLElement>(".backdrop") ?? null,
+    };
   }
 }
 

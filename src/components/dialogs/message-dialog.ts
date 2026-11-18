@@ -1,5 +1,28 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, modalBackdrop } from "../../styles/shared.ts";
+import { createTransitionScope } from "../../utils/view-transition.ts";
+
+/**
+ * The ::view-transition rules of one message dialog instance, keyed to its
+ * scoped part names. Injected only while the dialog is active, so a second
+ * instance on the same page cannot share a view-transition-name.
+ */
+function msgDialogTransitionRules(names: Record<string, string>): string {
+  return `
+html:active-view-transition-type(message-dialog)::view-transition-new(${names.content}) {
+  animation: metro-msg-dialog-enter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(message-dialog)::view-transition-old(${names.content}) {
+  animation: metro-msg-dialog-exit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+html:active-view-transition-type(message-dialog)::view-transition-new(${names.backdrop}) {
+  animation: metro-fade-in 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(message-dialog)::view-transition-old(${names.backdrop}) {
+  animation: metro-fade-out 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+`;
+}
 
 /**
  * Metro Message Dialog Component
@@ -87,15 +110,11 @@ export class MetroMessageDialog extends LitElement {
       :host(:active-view-transition) {
         view-transition-name: none;
       }
-      .backdrop {
-        view-transition-name: msg-dialog-backdrop;
-      }
       .dialog {
         position: relative;
         background: var(--metro-background, #1f1f1f);
         min-width: 280px;
         max-width: 400px;
-        view-transition-name: msg-dialog-content;
       }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);
@@ -118,6 +137,9 @@ export class MetroMessageDialog extends LitElement {
       }
     `,
   ];
+
+  #transition = createTransitionScope("message-dialog", ["content", "backdrop"]);
+  #transitionRules = msgDialogTransitionRules(this.#transition.names);
 
   constructor() {
     super();
@@ -155,6 +177,14 @@ export class MetroMessageDialog extends LitElement {
   #close(): void {
     if (!this.open) return;
     void this.hide();
+  }
+
+  #transitionTargets(): Record<string, HTMLElement | null> {
+    const root = this.shadowRoot;
+    return {
+      content: root?.querySelector<HTMLElement>(".dialog") ?? null,
+      backdrop: root?.querySelector<HTMLElement>(".backdrop") ?? null,
+    };
   }
 
   /**
@@ -204,6 +234,8 @@ export class MetroMessageDialog extends LitElement {
   async show(): Promise<void> {
     if (this.open) return;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+    await this.updateComplete;
+    this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
   }
 
@@ -214,7 +246,9 @@ export class MetroMessageDialog extends LitElement {
   async hide(): Promise<void> {
     if (!this.open) return;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
+    this.#transition.detach(this.#transitionTargets());
   }
 }
 

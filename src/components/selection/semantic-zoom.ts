@@ -1,7 +1,29 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
+import { createTransitionScope } from "../../utils/view-transition.ts";
 
 export type ZoomState = "in" | "out";
+
+/**
+ * The ::view-transition rules of one semantic zoom instance, keyed to its
+ * scoped part names. Both layers are always rendered, so a static name would
+ * stay reserved while the component is idle and repeated by a second instance
+ * on the same page.
+ */
+function semanticZoomTransitionRules(names: Record<string, string>): string {
+  return `
+html:active-view-transition-type(semantic-zoom)::view-transition-old(${names.out}) {
+  animation-name: metro-semantic-zoom-out;
+  animation-duration: 400ms;
+  animation-timing-function: var(--metro-easing);
+}
+html:active-view-transition-type(semantic-zoom)::view-transition-new(${names.in}) {
+  animation-name: metro-semantic-zoom-in;
+  animation-duration: 400ms;
+  animation-timing-function: var(--metro-easing);
+}
+`;
+}
 
 export class MetroSemanticZoom extends LitElement {
   static properties = {
@@ -38,14 +60,12 @@ export class MetroSemanticZoom extends LitElement {
         overflow: auto;
       }
       .zoomed-in {
-        view-transition-name: semantic-zoom-in;
         transform: scale(1);
         opacity: 1;
         filter: blur(0);
         z-index: 1;
       }
       .zoomed-out {
-        view-transition-name: semantic-zoom-out;
         transform: scale(0.5);
         opacity: 0;
         filter: blur(4px);
@@ -83,6 +103,8 @@ export class MetroSemanticZoom extends LitElement {
   #pinchStartDistance = 0;
   #isPinching = false;
   #isTransitioning = false;
+  #transition = createTransitionScope("semantic-zoom", ["in", "out"]);
+  #transitionRules = semanticZoomTransitionRules(this.#transition.names);
 
   constructor() {
     super();
@@ -112,8 +134,11 @@ export class MetroSemanticZoom extends LitElement {
       );
     };
 
+    await this.updateComplete;
+
     if ("startViewTransition" in document) {
       let applied = false;
+      this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
       const transition = document.startViewTransition({
         update: () => {
           applyChange();
@@ -122,18 +147,35 @@ export class MetroSemanticZoom extends LitElement {
         },
         types: ["semantic-zoom"],
       });
-      transition.finished.catch(() => {});
-      await transition.updateCallbackDone;
+      try {
+        await transition.updateCallbackDone;
+      } catch {
+        // updateCallbackDone rejected — transition was skipped
+      }
       if (!applied) {
         applyChange();
         await this.updateComplete;
+      }
+      try {
+        await transition.finished;
+      } catch {
+        // finished rejected — transition was skipped
       }
     } else {
       applyChange();
       await this.updateComplete;
     }
 
+    this.#transition.detach(this.#transitionTargets());
     this.#isTransitioning = false;
+  }
+
+  #transitionTargets(): Record<string, HTMLElement | null> {
+    const root = this.shadowRoot;
+    return {
+      in: root?.querySelector<HTMLElement>(".zoomed-in") ?? null,
+      out: root?.querySelector<HTMLElement>(".zoomed-out") ?? null,
+    };
   }
 
   render() {

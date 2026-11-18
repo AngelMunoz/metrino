@@ -51,14 +51,15 @@ chromium + firefox.
 
 - [x] Rewrite `ROADMAP.md` to verified status (this pass).
 - [x] Replace this compliance plan with the execution checklist (this pass).
-- [ ] Fix false published JSDoc (ships in the manifest):
-  - [ ] `pivot.ts` — remove "keyboard navigation support" claim until P2.1 lands.
-  - [ ] `expander.ts` — remove "ARIA expanded state support" claim until P3 lands.
-  - [ ] `app-bar-separator.ts` — align doc with actual hidden behavior (or fix behavior in P3).
-  - [ ] `toast.ts` — remove or implement phantom `@fires toastshown` / `toashidden` (implement in P3).
-- [ ] `README.md` — accent count 21 → 20 named blocks + implicit blue default.
-- [ ] Locate the "spec" the old roadmap cited (Sections 5.2 / 7.2). No such file exists in
-      the repo. Find it or mark those citations ungrounded in the roadmap.
+- [x] Fix false published JSDoc (ships in the manifest):
+  - [x] `pivot.ts` — remove "keyboard navigation support" claim until P2.1 lands.
+  - [x] `expander.ts` — remove "ARIA expanded state support" claim until P3 lands.
+  - [x] `app-bar-separator.ts` — align doc with actual hidden behavior (or fix behavior in P3).
+  - [x] `toast.ts` — remove or implement phantom `@fires toastshown` / `toashidden` (implement in P3).
+- [x] `README.md` — accent count 21 → 20 named blocks + implicit blue default.
+- [x] Locate the "spec" the old roadmap cited (Sections 5.2 / 7.2). No such file exists in
+      the repo. Find it or mark those citations ungrounded in the roadmap. (Searched
+      2026-11-17: not found — marked ungrounded in `ROADMAP.md` §7.)
 - [x] `AGENTS.md` — reconcile the "all three browser engines" claim with the chromium+firefox config (done in the e2e foundation PR: Testing section rewritten).
 
 Changelog: none (docs only), unless a behavior changes.
@@ -69,18 +70,20 @@ Changelog: none (docs only), unless a behavior changes.
 
 ### P0 first
 
-- [ ] **1.1 Per-instance view-transition-name scoping.** Assign unique names only while the
+- [x] **1.1 Per-instance view-transition-name scoping.** Assign unique names only while the
       component is active; remove unconditional hardcoded names from static styles.
       Files: `content-dialog.ts`, `message-dialog.ts`, `flyout.ts`, `settings-flyout.ts`,
       `semantic-zoom.ts`. Verify: two instances of one component on a page; a route change
-      still animates. Category: **Fixed**.
-- [ ] **1.2 Wire root turnstile.** Add `::view-transition-old(root)` / `new(root)` rules using
+      still animates. Category: **Fixed**. (PR2; `src/utils/view-transition.ts`;
+      `e2e/view-transitions.spec.ts`. Probe correction: cross-shadow-root duplicates are
+      tolerated by current Chromium/Firefox; same-scope duplicates reject. See ROADMAP §3.)
+- [x] **1.2 Wire root turnstile.** Add `::view-transition-old(root)` / `new(root)` rules using
       the existing `metro-view-transition-out/in` keyframes; pass `types` in `demo/main.ts`.
       Unify the demo animations page turnstile with the library values (10° / −15°).
-      Category: **Fixed**.
-- [ ] **1.3 Content dialog swivel entrance.** Replace `metro-dialog-enter/exit`
+      Category: **Fixed**. (PR2; e2e root animation-name gate.)
+- [x] **1.3 Content dialog swivel entrance.** Replace `metro-dialog-enter/exit`
       scale+translate with rotateX 90°↔0 (match `metro-msg-dialog-enter`). Keep the fade
-      fallback. Category: **Changed**.
+      fallback. Category: **Changed**. (PR2; e2e CSSOM gate + frame artifacts.)
 
 ### P1 defects
 
