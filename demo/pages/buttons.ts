@@ -1,6 +1,8 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 import { registerMetroButton } from "@src/components/buttons/button.ts";
 import { registerMetroHyperlinkButton } from "@src/components/buttons/hyperlink-button.ts";
 import { registerMetroRepeatButton } from "@src/components/buttons/repeat-button.ts";
@@ -10,50 +12,13 @@ registerMetroButton();
 registerMetroHyperlinkButton();
 registerMetroRepeatButton();
 registerMetroDropdownButton();
+registerMetroGrid();
 
 export class MetrinoButtonsPage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      font-family: var(
-        --metro-font-family,
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif
-      );
-    }
-    .page-title {
-      font-size: 42px;
-      font-weight: 200;
-      color: var(--metro-foreground, #fff);
-      margin: 0 0 var(--metro-spacing-lg, 16px) 0;
-    }
-    .page-description {
-      font-size: 14px;
-      font-weight: 300;
-      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
-      margin: 0 0 var(--metro-spacing-xl, 24px) 0;
-      max-width: 600px;
-    }
-    .section {
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
-    .section-header {
-      font-size: 24px;
-      font-weight: 200;
-      color: var(--metro-foreground, #fff);
-      margin: 0 0 var(--metro-spacing-xs, 4px) 0;
-      padding-bottom: var(--metro-spacing-xs, 4px);
-      border-bottom: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-    }
-    .section-description {
-      font-size: 14px;
-      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
-      margin: var(--metro-spacing-sm, 8px) 0 var(--metro-spacing-md, 12px) 0;
-    }
     .demo-container {
       padding: var(--metro-spacing-lg, 16px);
       background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
@@ -63,26 +28,10 @@ export class MetrinoButtonsPage extends LitElement {
       gap: var(--metro-spacing-md, 12px);
       align-items: center;
     }
-    .code-block {
-      background: var(--metro-background-alt, #2d2d2d);
-      padding: var(--metro-spacing-md, 12px);
-      font-family: "Consolas", "Monaco", monospace;
-      font-size: 13px;
-      color: var(--metro-foreground, #fff);
-      overflow-x: auto;
-      margin: 0;
-      white-space: pre;
-      line-height: 1.5;
-    }
     .demo-label {
       font-size: 12px;
       color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.5));
       margin-right: var(--metro-spacing-sm, 8px);
-    }
-    .button-group {
-      display: flex;
-      gap: var(--metro-spacing-md, 12px);
-      align-items: center;
     }
     .counter-display {
       font-size: 24px;
@@ -147,9 +96,10 @@ export class MetrinoButtonsPage extends LitElement {
         screen readers.
       </p>
 
-      <section class="section">
-        <h2 class="section-header">metro-button</h2>
-        <p class="section-description">
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card">
+        <h2 class="component-title">metro-button</h2>
+        <p class="component-desc">
           Standard push button with border outline. Hover inverts colors.
           Supports accent variant and disabled state.
         </p>
@@ -162,20 +112,20 @@ export class MetrinoButtonsPage extends LitElement {
           <metro-button disabled>Disabled</metro-button>
         </div>
         <pre
-          class="code-block"
+          class="code-snippet"
         ><code>&lt;metro-button&gt;Button&lt;/metro-button&gt;
 &lt;metro-button accent&gt;Accent&lt;/metro-button&gt;
 &lt;metro-button disabled&gt;Disabled&lt;/metro-button&gt;</code></pre>
         <api-docs component="MetroButton"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2 class="section-header">metro-hyperlink-button</h2>
-        <p class="section-description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-hyperlink-button</h2>
+        <p class="component-desc">
           Link-styled button for navigation. Renders as a link when href is
           provided, otherwise as a button.
         </p>
-        <p class="section-description">
+        <p class="component-desc">
           Hyperlinks sit naturally inside text: to learn more, read the
           <metro-hyperlink-button href="#/buttons"
             >documentation</metro-hyperlink-button
@@ -196,16 +146,16 @@ export class MetrinoButtonsPage extends LitElement {
           >
         </div>
         <pre
-          class="code-block"
+          class="code-snippet"
         ><code>&lt;metro-hyperlink-button href="#/buttons"&gt;Navigate&lt;/metro-hyperlink-button&gt;
 &lt;metro-hyperlink-button&gt;Action&lt;/metro-hyperlink-button&gt;
 &lt;metro-hyperlink-button disabled&gt;Disabled Link&lt;/metro-hyperlink-button&gt;</code></pre>
         <api-docs component="MetroHyperlinkButton"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2 class="section-header">metro-repeat-button</h2>
-        <p class="section-description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-repeat-button</h2>
+        <p class="component-desc">
           Button that fires click events repeatedly while pressed. Configurable
           delay and interval. Hold the button to see continuous clicks.
         </p>
@@ -218,7 +168,7 @@ export class MetrinoButtonsPage extends LitElement {
           <metro-button @click=${this.#handleRepeatReset}>Reset</metro-button>
         </div>
         <pre
-          class="code-block"
+          class="code-snippet"
         ><code>&lt;metro-repeat-button @click=\${handleClick}&gt;Click Me&lt;/metro-repeat-button&gt;
 
 &lt;script&gt;
@@ -229,11 +179,11 @@ function handleClick() {
 }
 &lt;/script&gt;</code></pre>
         <api-docs component="MetroRepeatButton"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2 class="section-header">metro-dropdown-button</h2>
-        <p class="section-description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-dropdown-button</h2>
+        <p class="component-desc">
           Button with dropdown menu. Supports top/bottom placement. Menu items
           are slotted for flexibility.
         </p>
@@ -259,7 +209,7 @@ function handleClick() {
           </metro-dropdown-button>
         </div>
         <pre
-          class="code-block"
+          class="code-snippet"
         ><code>&lt;metro-dropdown-button label="Options" placement="bottom"&gt;
   &lt;div class="menu-item" role="menuitem"&gt;Edit&lt;/div&gt;
   &lt;div class="menu-item" role="menuitem"&gt;Copy&lt;/div&gt;
@@ -276,11 +226,11 @@ function handleClick() {
   ...
 &lt;/metro-dropdown-button&gt;</code></pre>
         <api-docs component="MetroDropdownButton"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2 class="section-header">Button States</h2>
-        <p class="section-description">
+      <div class="demo-card">
+        <h2 class="component-title">Button States</h2>
+        <p class="component-desc">
           Visual demonstration of button hover and pressed states. Hover over
           buttons to see color inversion, click and hold to see pressed state.
         </p>
@@ -290,13 +240,14 @@ function handleClick() {
           <metro-repeat-button accent>Repeat Button</metro-repeat-button>
         </div>
         <pre
-          class="code-block"
+          class="code-snippet"
         ><code>/* Button states are handled automatically */
 /* Default: transparent bg, white border */
 /* Hover: white bg, text inverts */
 /* Pressed: slightly dimmed */
 /* Disabled: 40% opacity, no pointer events */</code></pre>
-      </section>
+      </div>
+      </metro-grid>
     `;
   }
 }

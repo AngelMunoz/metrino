@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
 import { registerMetroStackPanel } from "@src/components/layout/stack-panel.ts";
 import { registerMetroGrid } from "@src/components/layout/grid.ts";
@@ -22,38 +23,8 @@ registerMetroVariableSizedWrapGrid();
 export class MetrinoLayoutPage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      padding: var(--metro-spacing-xl, 24px);
-      font-family: var(
-        --metro-font-family,
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif
-      );
-      color: var(--metro-foreground, #ffffff);
-      background: var(--metro-background, #1f1f1f);
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
-    h1 {
-      font-size: var(--metro-font-size-xxlarge, 42px);
-      font-weight: 200;
-      margin: 0 0 var(--metro-spacing-xl, 24px) 0;
-    }
-    h2 {
-      font-size: 24px;
-      font-weight: 200;
-      color: var(--metro-accent, #0078d4);
-      margin: var(--metro-spacing-xl, 24px) 0 var(--metro-spacing-md, 12px) 0;
-      padding-bottom: var(--metro-spacing-xs, 4px);
-      border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-    }
-    .demo-section {
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
     .demo-box {
       background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
       padding: var(--metro-spacing-md, 12px);
@@ -73,7 +44,7 @@ export class MetrinoLayoutPage extends LitElement {
     metro-stack-panel {
       --metro-gap: var(--metro-spacing-sm, 8px);
     }
-    metro-grid {
+    .demo-card metro-grid {
       --metro-gap: var(--metro-spacing-sm, 8px);
     }
     .scroll-content {
@@ -144,10 +115,11 @@ export class MetrinoLayoutPage extends LitElement {
 
   render() {
     return html`
-      <h1>Layout Components</h1>
+      <h1 class="page-title">Layout Components</h1>
 
-      <div class="demo-section">
-        <h2>metro-stack-panel (vertical)</h2>
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card">
+        <h2 class="component-title">metro-stack-panel (vertical)</h2>
         <metro-stack-panel orientation="vertical">
           <div class="demo-box">Item 1</div>
           <div class="demo-box">Item 2</div>
@@ -156,8 +128,8 @@ export class MetrinoLayoutPage extends LitElement {
         <api-docs component="MetroStackPanel"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-stack-panel (horizontal)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-stack-panel (horizontal)</h2>
         <metro-stack-panel orientation="horizontal">
           <div class="demo-box">Item 1</div>
           <div class="demo-box">Item 2</div>
@@ -166,8 +138,8 @@ export class MetrinoLayoutPage extends LitElement {
         <api-docs component="MetroStackPanel"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-grid (custom rows/columns)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-grid (custom rows/columns)</h2>
         <metro-grid rows="auto auto" columns="1fr 2fr 1fr">
           <div class="demo-box">1,1</div>
           <div class="demo-box accent">1,2 (2fr)</div>
@@ -179,8 +151,8 @@ export class MetrinoLayoutPage extends LitElement {
         <api-docs component="MetroGrid"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-wrap-panel</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-wrap-panel</h2>
         <metro-wrap-panel orientation="horizontal" style="max-width: 400px;">
           ${[1, 2, 3, 4, 5, 6, 7, 8].map(
             (i) =>
@@ -190,8 +162,8 @@ export class MetrinoLayoutPage extends LitElement {
         <api-docs component="MetroWrapPanel"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-wrap-panel (vertical)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-wrap-panel (vertical)</h2>
         <metro-wrap-panel
           id="vertical-wrap-panel"
           orientation="vertical"
@@ -209,8 +181,8 @@ export class MetrinoLayoutPage extends LitElement {
         </metro-wrap-panel>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-scroll-viewer (with touch physics)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-scroll-viewer (with touch physics)</h2>
         <p>
           Scrollable content with inertia scrolling. Use mouse wheel or touch
           gestures to feel the physics.
@@ -233,16 +205,16 @@ export class MetrinoLayoutPage extends LitElement {
         <api-docs component="MetroScrollViewer"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-viewbox (content scaling)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-viewbox (content scaling)</h2>
         <metro-viewbox stretch="uniform" class="viewbox-demo">
           <div class="viewbox-content">Scaled Content</div>
         </metro-viewbox>
         <api-docs component="MetroViewbox"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-canvas (absolute positioning)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-canvas (absolute positioning)</h2>
         <metro-canvas class="canvas-container">
           <div class="canvas-item" style="top: 20px; left: 20px;">
             Positioned (20, 20)
@@ -260,8 +232,8 @@ export class MetrinoLayoutPage extends LitElement {
         <api-docs component="MetroCanvas"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-tile-grid (tile-specific grid)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-tile-grid (tile-specific grid)</h2>
         <metro-tile-grid columns="6">
           <div class="tile-demo" data-size="small">1x1</div>
           <div class="tile-demo" data-size="medium">2x2</div>
@@ -273,8 +245,8 @@ export class MetrinoLayoutPage extends LitElement {
         <api-docs component="MetroTileGrid"></api-docs>
       </div>
 
-      <div class="demo-section">
-        <h2>metro-variable-sized-wrap-grid (data-row-span, data-col-span)</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-variable-sized-wrap-grid (data-row-span, data-col-span)</h2>
         <metro-variable-sized-wrap-grid
           orientation="horizontal"
           item-width="60"
@@ -300,6 +272,7 @@ export class MetrinoLayoutPage extends LitElement {
         </metro-variable-sized-wrap-grid>
         <api-docs component="MetroVariableSizedWrapGrid"></api-docs>
       </div>
+      </metro-grid>
     `;
   }
 }

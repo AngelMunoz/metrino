@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
 import { registerMetroDatePicker } from "@src/components/datetime/date-picker.ts";
 import { registerMetroTimePicker } from "@src/components/datetime/time-picker.ts";
@@ -20,61 +21,14 @@ registerMetroGrid();
 export class MetrinoDatetimePage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      font-family: var(
-        --metro-font-family,
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif
-      );
-      color: var(--metro-foreground, #ffffff);
-      background: var(--metro-background, #1f1f1f);
-      padding: var(--metro-spacing-xl, 24px);
-      min-height: 100vh;
-    }
-    .page-title {
-      font-size: 42px;
-      font-weight: 200;
-      margin-bottom: var(--metro-spacing-xl, 24px);
-      color: var(--metro-foreground, #ffffff);
-    }
-    /* metro-grid owns the column template; columns stay wide enough for the
-       API reference tables instead of newspaper-narrow cards. */
-    .demo-grid {
-      gap: var(--metro-spacing-xl, 32px);
-      align-items: start;
-    }
-    .demo-card {
-      background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
-      padding: var(--metro-spacing-lg, 24px);
-      border: 2px solid transparent;
-    }
-    .demo-card:hover {
-      border-color: var(--metro-border, rgba(255, 255, 255, 0.2));
-    }
-    .component-title {
-      font-size: 24px;
-      font-weight: 200;
-      margin-bottom: var(--metro-spacing-md, 12px);
-      color: var(--metro-foreground, #ffffff);
-    }
-    .component-desc {
-      font-size: var(--metro-font-size-small, 12px);
-      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
-      margin-bottom: var(--metro-spacing-md, 12px);
-    }
     .demo-area {
       margin-bottom: var(--metro-spacing-md, 12px);
     }
+    /* Pickers align to the top of the row, not its vertical center. */
     .demo-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--metro-spacing-md, 12px);
       align-items: flex-start;
-      margin-bottom: var(--metro-spacing-sm, 8px);
     }
     .demo-item {
       flex: 1;
@@ -90,15 +44,6 @@ export class MetrinoDatetimePage extends LitElement {
       font-size: var(--metro-font-size-small, 12px);
       color: var(--metro-accent, #0078d4);
       margin-top: var(--metro-spacing-xs, 4px);
-    }
-    .code-snippet {
-      background: var(--metro-background, #1f1f1f);
-      padding: var(--metro-spacing-sm, 8px) var(--metro-spacing-md, 12px);
-      font-family: "Consolas", "Monaco", monospace;
-      font-size: var(--metro-font-size-small, 12px);
-      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.8));
-      overflow-x: auto;
-      border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.1));
     }
     metro-date-picker,
     metro-time-picker,
@@ -174,7 +119,7 @@ export class MetrinoDatetimePage extends LitElement {
   render() {
     return html`
       <h1 class="page-title">Datetime Components</h1>
-      <metro-grid class="demo-grid" columns="repeat(auto-fit, minmax(min(640px, 100%), 1fr))">
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
         <div class="demo-card">
           <h3 class="component-title">metro-date-picker</h3>
           <p class="component-desc">

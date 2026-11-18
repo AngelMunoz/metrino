@@ -14,6 +14,7 @@
 - **continuum**: `beginContinuum(origin)` flies the tapped item into its destination — translate-only, 150ms, per the WP toolkit source.
 - **demo**: selection page dogfoods zoom groups and the jump grid; home tiles fly via continuum.
 - **demo**: showcase columns squeezed API reference tables until cells clipped; showcases now use `metro-grid` with content-wide columns and tables scroll inside their section on narrow viewports.
+- **demo**: documentation pages mixed centered, full-width and two-column layouts; every showcase now shares one page chrome and column rule, with wide interactive stages spanning the same grid.
 - **hub**, **grid-view**, **list-view**, **long-list-selector**: mouse grab-to-pan with inertia fling, without selecting page text; these scrollers previously answered only wheel and touch.
 - **grid-view**, **list-view**, **long-list-selector**: Metro entrance stagger on first mount; recycled virtualization items no longer pop in plain.
 - **tree-view**: expanding and collapsing children glide instead of toggling display; collapsed children stay out of the tab order.

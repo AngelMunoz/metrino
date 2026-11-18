@@ -1,6 +1,8 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 import { registerMetroPivot } from "@src/components/navigation/pivot.ts";
 import { registerMetroPivotItem } from "@src/components/navigation/pivot-item.ts";
 import { registerMetroHub } from "@src/components/navigation/hub.ts";
@@ -31,6 +33,7 @@ registerMetroAppBarButton();
 registerMetroAppBarSeparator();
 registerMetroAppBarToggleButton();
 registerMetroIcon();
+registerMetroGrid();
 
 export class MetrinoNavigationPage extends LitElement {
   static properties = {
@@ -53,38 +56,8 @@ export class MetrinoNavigationPage extends LitElement {
 
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      padding: var(--metro-spacing-xl, 24px);
-      font-family: var(
-        --metro-font-family,
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif
-      );
-      color: var(--metro-foreground, #ffffff);
-      background: var(--metro-background, #1f1f1f);
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
-    h1 {
-      font-size: var(--metro-font-size-xxlarge, 42px);
-      font-weight: 200;
-      margin: 0 0 var(--metro-spacing-xl, 24px) 0;
-    }
-    h2 {
-      font-size: 24px;
-      font-weight: 200;
-      color: var(--metro-accent, #0078d4);
-      margin: var(--metro-spacing-xl, 24px) 0 var(--metro-spacing-md, 12px) 0;
-      padding-bottom: var(--metro-spacing-xs, 4px);
-      border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-    }
-    .demo-section {
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
     .demo-content {
       padding: var(--metro-spacing-md, 12px);
       background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
@@ -206,10 +179,11 @@ export class MetrinoNavigationPage extends LitElement {
 
   render() {
     return html`
-      <h1>Navigation Components</h1>
+      <h1 class="page-title">Navigation Components</h1>
 
-      <div class="demo-section" id="metro-pivot">
-        <h2>metro-pivot (tab navigation with animated transitions)</h2>
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card" id="metro-pivot">
+        <h2 class="component-title">metro-pivot (tab navigation with animated transitions)</h2>
         <metro-pivot>
           <metro-pivot-item header="First">
             <div class="demo-content">
@@ -248,8 +222,8 @@ export class MetrinoNavigationPage extends LitElement {
         <api-docs component="MetroPivotItem"></api-docs>
       </div>
 
-      <div class="demo-section" id="metro-hub">
-        <h2>metro-hub (horizontal scrolling sections, programmatic API)</h2>
+      <div class="demo-card" id="metro-hub">
+        <h2 class="component-title">metro-hub (horizontal scrolling sections, programmatic API)</h2>
         <div class="hub-controls">
           <button class="control-btn ${this.hubSnap ? "active" : ""}" @click=${this.#toggleHubSnap}>
             ${this.hubSnap ? "Snap: On" : "Snap: Off"}
@@ -305,8 +279,8 @@ export class MetrinoNavigationPage extends LitElement {
         <api-docs component="MetroHubSection"></api-docs>
       </div>
 
-      <div class="demo-section" id="metro-panorama">
-        <h2>metro-panorama (parallax background effect)</h2>
+      <div class="demo-card wide" id="metro-panorama">
+        <h2 class="component-title">metro-panorama (parallax background effect)</h2>
         <metro-panorama
           title="Panorama"
           wrap
@@ -337,8 +311,8 @@ export class MetrinoNavigationPage extends LitElement {
         <api-docs component="MetroPanoramaItem"></api-docs>
       </div>
 
-      <div class="demo-section" id="metro-split-view">
-        <h2>metro-split-view (overlay, inline, compact modes)</h2>
+      <div class="demo-card wide" id="metro-split-view">
+        <h2 class="component-title">metro-split-view (overlay, inline, compact modes)</h2>
         <div class="split-view-controls">
           <button
             class="control-btn ${this.splitViewMode === "overlay"
@@ -394,8 +368,8 @@ export class MetrinoNavigationPage extends LitElement {
         <api-docs component="MetroSplitView"></api-docs>
       </div>
 
-      <div class="demo-section" id="metro-app-bar">
-        <h2>metro-app-bar (bottom bar, expandable)</h2>
+      <div class="demo-card wide" id="metro-app-bar">
+        <h2 class="component-title">metro-app-bar (bottom bar, expandable)</h2>
         <div class="app-bar-controls">
           <button class="control-btn" @click=${this.#toggleAppBar}>
             ${this.appBarExpanded ? "Collapse" : "Expand"} App Bar
@@ -445,8 +419,8 @@ export class MetrinoNavigationPage extends LitElement {
         <api-docs component="MetroAppBarToggleButton"></api-docs>
       </div>
 
-      <div class="demo-section" id="metro-app-bar-button">
-        <h2>metro-app-bar-button (circular icon button)</h2>
+      <div class="demo-card" id="metro-app-bar-button">
+        <h2 class="component-title">metro-app-bar-button (circular icon button)</h2>
         <div
           style="display: flex; gap: var(--metro-spacing-md, 12px); align-items: center;"
         >
@@ -468,8 +442,8 @@ export class MetrinoNavigationPage extends LitElement {
         </div>
       </div>
 
-      <div class="demo-section" id="metro-app-bar-separator">
-        <h2>metro-app-bar-separator</h2>
+      <div class="demo-card" id="metro-app-bar-separator">
+        <h2 class="component-title">metro-app-bar-separator</h2>
         <div
           style="display: flex; gap: var(--metro-spacing-sm, 8px); align-items: center;"
         >
@@ -481,8 +455,8 @@ export class MetrinoNavigationPage extends LitElement {
         </div>
       </div>
 
-      <div class="demo-section" id="metro-app-bar-toggle-button">
-        <h2>metro-app-bar-toggle-button</h2>
+      <div class="demo-card" id="metro-app-bar-toggle-button">
+        <h2 class="component-title">metro-app-bar-toggle-button</h2>
         <div
           style="display: flex; gap: var(--metro-spacing-md, 12px); align-items: center;"
         >
@@ -510,6 +484,7 @@ export class MetrinoNavigationPage extends LitElement {
           ></metro-app-bar-toggle-button>
         </div>
       </div>
+      </metro-grid>
     `;
   }
 
