@@ -164,8 +164,8 @@ const ANIMATION_DURATIONS: Record<AnimationName, number> = {
   "slide-right": 250,
   "turnstile-in": 450,
   "turnstile-out": 350,
-  "continuum-enter": 333,
-  "continuum-exit": 333,
+  "continuum-enter": 150,
+  "continuum-exit": 150,
   "tile-flip": 500,
   "zoom-in": 333,
   "zoom-out": 333,
@@ -294,7 +294,9 @@ export function createTransition(
   type: TransitionType,
   options: TransitionOptions = {}
 ): Promise<void> {
-  const duration = motionDuration(options, 333);
+  // The continuum runs at its own 150ms, matching its keyframes; every other scripted
+  // transition keeps the slow Metro duration when the caller gives none.
+  const duration = motionDuration(options, type === "continuum" ? 150 : 333);
   const easing = options.easing ?? METRO_EASING;
   const direction = options.direction ?? "forward";
 
@@ -319,12 +321,17 @@ export function createTransition(
       element.style.opacity = direction === "forward" ? "1" : "0";
     },
     continuum: () => {
+      // Translate only, over the offsets the caller measured from the item's origin,
+      // as the keyframes in animations.css do. Scale would describe a different
+      // transition than the continuum of the design language.
+      const dx = getComputedStyle(element).getPropertyValue("--metro-continuum-dx");
+      const dy = getComputedStyle(element).getPropertyValue("--metro-continuum-dy");
       element.style.transition = `transform ${duration}ms ${easing}, opacity ${duration}ms ${easing}`;
       if (direction === "forward") {
-        element.style.transform = "scale(1) translateY(0)";
+        element.style.transform = "translate(0, 0)";
         element.style.opacity = "1";
       } else {
-        element.style.transform = "scale(1.2) translateY(-20px)";
+        element.style.transform = `translate(${dx || "0px"}, ${dy || "0px"})`;
         element.style.opacity = "0";
       }
     },

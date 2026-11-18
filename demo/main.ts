@@ -7,6 +7,7 @@ import {
 } from "./router";
 import { initTheme } from "./state";
 import { prefersReducedMotion } from "@src/utils/reduced-motion.ts";
+import { continuumInFlight } from "@src/utils/continuum.ts";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "./components/app-shell";
 
@@ -173,7 +174,11 @@ export class MetrinoApp extends LitElement {
       ? handler(state.params)
       : html`<div style="padding: 24px;">Not Found</div>`;
 
-    if (!prefersReducedMotion() && "startViewTransition" in document) {
+    if (
+      !prefersReducedMotion() &&
+      !continuumInFlight() &&
+      "startViewTransition" in document
+    ) {
       document.startViewTransition({
         update: () => {
           this.routeContent = newContent;
