@@ -2,6 +2,7 @@ import { LitElement, html, css } from "lit";
 import { baseTypography, modalBackdrop } from "../../styles/shared.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { focusFirstInside, rememberedFocus, trapTabKey } from "../../utils/dialog-focus.ts";
 
 /**
  * The ::view-transition rules of one message dialog instance, keyed to its
@@ -39,6 +40,8 @@ html:active-view-transition-type(message-dialog)::view-transition-old(${names.ba
  * - Dedicated button slot for action buttons (OK, Cancel, etc.)
  * - View Transition animations for enter/exit
  * - Backdrop click to close
+ * - Escape to close, focus moves into the dialog on open and back to the opener
+ *   on close, and Tab stays inside the dialog while it is open
  * - ARIA dialog role with modal support
  * - Programmatic show/hide API
  *
@@ -141,11 +144,18 @@ export class MetroMessageDialog extends LitElement {
 
   #transition = createTransitionScope("message-dialog", ["content", "backdrop"]);
   #transitionRules = msgDialogTransitionRules(this.#transition.names);
+  #previousFocus: HTMLElement | null = null;
+  #closing = false;
 
   constructor() {
     super();
     this.open = false;
     this.title = "";
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("keydown", this.#handleEscapeKey);
   }
 
   render() {
@@ -164,20 +174,41 @@ export class MetroMessageDialog extends LitElement {
   }
 
   /**
-   * Handles keyboard events for Escape key to close the dialog.
+   * Handles Escape and Tab while focus is inside the dialog.
    * @param e - The keyboard event
    * @returns void
    */
   #handleKeydown(e: KeyboardEvent): void {
     if (e.key === "Escape") {
-      e.preventDefault();
       this.#close();
+    }
+    if (e.key === "Tab") {
+      const dialog = this.shadowRoot?.querySelector<HTMLElement>(".dialog");
+      if (dialog) trapTabKey(dialog, e);
     }
   }
 
+  /**
+   * Escape while the dialog is open, listened for on the document: the key is
+   * handled even when focus did not move into the dialog.
+   */
+  #handleEscapeKey = (e: KeyboardEvent): void => {
+    if (e.key === "Escape") this.#close();
+  };
+
   #close(): void {
-    if (!this.open) return;
     void this.hide();
+  }
+
+  /**
+   * Returns focus to the element that opened the dialog. A custom-element host is
+   * not focusable itself, so the first tab stop inside it takes focus.
+   * @returns void
+   */
+  #restoreFocus(): void {
+    const target = this.#previousFocus;
+    this.#previousFocus = null;
+    if (target) focusFirstInside(target);
   }
 
   #transitionTargets(): Record<string, HTMLElement | null> {
@@ -231,14 +262,22 @@ export class MetroMessageDialog extends LitElement {
 
   /**
    * Opens the dialog with enter animation and dispatches show event.
+   * Escape is listened for on the document from the first moment, so a key
+   * pressed while the entrance is still running dismisses the dialog. Focus
+   * moves in only after `open` is applied: the dialog is hidden until then, so an
+   * earlier focus call would land on the opener.
    * @returns Promise that resolves when the dialog is fully open.
    */
   async show(): Promise<void> {
     if (this.open) return;
+    this.#previousFocus = rememberedFocus();
+    document.addEventListener("keydown", this.#handleEscapeKey);
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
     await this.updateComplete;
     this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
+    const dialog = this.shadowRoot?.querySelector<HTMLElement>(".dialog");
+    if (dialog) focusFirstInside(dialog);
   }
 
   /**
@@ -246,11 +285,15 @@ export class MetroMessageDialog extends LitElement {
    * @returns Promise that resolves when the dialog is fully closed.
    */
   async hide(): Promise<void> {
-    if (!this.open) return;
+    if (!this.open || this.#closing) return;
+    this.#closing = true;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
     // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
     this.#transition.detach(this.#transitionTargets());
+    document.removeEventListener("keydown", this.#handleEscapeKey);
+    this.#restoreFocus();
+    this.#closing = false;
   }
 }
 

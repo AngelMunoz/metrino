@@ -10,8 +10,9 @@ import { registerMetroIcon } from "./icon.ts";
  * to indicate state.
  *
  * Features:
- * - Clickable header to toggle expanded state
- * - Smooth height transition animation (max-height based)
+ * - Header that toggles on click, Enter or Space, exposed as an ARIA button
+ *   with `aria-expanded` for assistive technology
+ * - Smooth height transition on the content row, with no cap on content height
  * - Rotating chevron icon indicating state
  * - Optional title attribute or slot for header content
  * - Highlight background on header hover
@@ -95,15 +96,24 @@ export class MetroExpander extends LitElement {
         transform: rotate(180deg);
       }
       .expander-content {
-        max-height: 0;
+        display: grid;
+        grid-template-rows: 0fr;
         overflow: hidden;
-        transition: max-height var(--metro-transition-slow, 333ms)
+        transition: grid-template-rows var(--metro-transition-slow, 333ms)
           var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       :host([expanded]) .expander-content {
-        max-height: 500px;
+        grid-template-rows: 1fr;
       }
       .expander-inner {
+        /* The grid item must reach a zero outer size on a 0fr row, so it carries
+           no padding of its own: padding on the item itself forces a 32px strip
+           even when the row is 0. The padding lives on the wrapper inside it,
+           where the collapsed row clips it. */
+        min-height: 0;
+        overflow: hidden;
+      }
+      .expander-pad {
         padding: var(--metro-spacing-lg, 16px);
       }
     `,
@@ -117,18 +127,47 @@ export class MetroExpander extends LitElement {
 
   render() {
     return html`
-      <div class="expander-header" @click=${this.#toggle}>
-        <span class="expander-title"
+      <div
+        class="expander-header"
+        part="expander-header"
+        role="button"
+        tabindex="0"
+        aria-expanded=${this.expanded}
+        aria-controls="expander-content"
+        @click=${this.#toggle}
+        @keydown=${this.#handleKeydown}
+      >
+        <span class="expander-title" part="expander-title"
           >${this.title || html`<slot name="header"></slot>`}</span
         >
-        <metro-icon class="expander-icon" icon="chevron-down" size="small"></metro-icon>
+        <metro-icon
+          class="expander-icon"
+          part="expander-icon"
+          icon="chevron-down"
+          size="small"
+        ></metro-icon>
       </div>
-      <div class="expander-content">
-        <div class="expander-inner">
-          <slot></slot>
+      <div class="expander-content" part="expander-content" id="expander-content">
+        <div class="expander-inner" part="expander-inner">
+          <div class="expander-pad" part="expander-pad">
+            <slot></slot>
+          </div>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Toggles the header with Enter or Space, the keys a disclosure control takes.
+   * @param e - The keyboard event
+   * @returns void
+   */
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+      // Space would otherwise scroll the page.
+      e.preventDefault();
+      this.#toggle();
+    }
   }
 
   /**

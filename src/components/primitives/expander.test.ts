@@ -71,13 +71,14 @@ suite("metro-expander", () => {
     const el = await createExpander();
     const content = el.shadowRoot?.querySelector(".expander-content") as HTMLElement;
     const style = getComputedStyle(content);
-    assert.equal(style.maxHeight, "0px");
+    assert.equal(style.gridTemplateRows, "0px");
   });
 
   test("content is visible when expanded", async () => {
     const el = await createExpander({ expanded: "" });
     await el.updateComplete;
     const content = el.shadowRoot?.querySelector(".expander-content") as HTMLElement;
-    assert.notEqual(content.style.maxHeight, "0px");
+    const style = getComputedStyle(content);
+    assert.notEqual(style.gridTemplateRows, "0px");
   });
 });

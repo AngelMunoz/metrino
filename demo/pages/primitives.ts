@@ -239,6 +239,9 @@ export class MetrinoPrimitivesPage extends LitElement {
             header.</metro-text-block
           >
         </metro-expander>
+        <metro-expander id="tall-expander" title="Tall content (800px)">
+          <div style="height: 800px; width: 100%;"></div>
+        </metro-expander>
         <api-docs component="MetroExpander"></api-docs>
       </section>
 
@@ -469,6 +472,7 @@ export class MetrinoPrimitivesPage extends LitElement {
           <div class="image-demo-item">
             <h4>With Placeholder</h4>
             <metro-image
+              id="demo-image-placeholder"
               src="https://picsum.photos/400/300"
               alt="Random image"
               placeholder="Loading..."

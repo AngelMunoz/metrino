@@ -25,7 +25,9 @@ dist-ssr
 *.sw?
 .playwright-mcp
 *.png
-!artifacts/**/*.png
+
+# Review snapshots are attached to PR descriptions, never checked into source.
+artifacts/
 
 # Playwright
 test-results/

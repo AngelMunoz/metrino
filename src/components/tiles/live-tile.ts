@@ -166,7 +166,10 @@ export class MetroLiveTile extends LitElement {
     if (this.#items.length <= 1) return;
 
     const scheduleNext = (): void => {
-      const interval = 6000 + Math.random() * 4000;
+      // `interval` is opt-in; 0 keeps the Windows Phone behaviour of an
+      // irregular 6-10 s gap so tiles on one screen do not flip in step.
+      const interval =
+        this.interval > 0 ? this.interval : 6000 + Math.random() * 4000;
       this.#timer = window.setTimeout(() => {
         this.#currentIndex = (this.#currentIndex + 1) % this.#items.length;
         this.#renderCurrentItem();

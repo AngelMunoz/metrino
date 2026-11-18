@@ -3,6 +3,7 @@ import { baseTypography, modalBackdrop, closeButton } from "../../styles/shared.
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { focusFirstInside, rememberedFocus, trapTabKey } from "../../utils/dialog-focus.ts";
 
 /**
  * The ::view-transition rules of one dialog instance, keyed to its scoped part
@@ -41,6 +42,8 @@ html:active-view-transition-type(content-dialog)::view-transition-old(${names.ba
  * - Optional close button (can be disabled for required dialogs)
  * - View Transition-powered enter/exit animations
  * - Backdrop click to close (when closable)
+ * - Escape to close, focus moves into the dialog on open and back to the opener
+ *   on close, and Tab stays inside the dialog while it is open
  * - ARIA dialog role with modal support
  * - Programmatic show/hide API
  *
@@ -163,6 +166,7 @@ export class MetroContentDialog extends LitElement {
   ];
 
   #previousFocus: HTMLElement | null = null;
+  #closing = false;
   #transition = createTransitionScope("content-dialog", ["content", "backdrop"]);
   #transitionRules = dialogTransitionRules(this.#transition.names);
 
@@ -171,6 +175,11 @@ export class MetroContentDialog extends LitElement {
     this.open = false;
     this.title = "";
     this.closable = true;
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("keydown", this.#handleEscapeKey);
   }
 
   render() {
@@ -196,67 +205,54 @@ export class MetroContentDialog extends LitElement {
   }
 
   #handleKeydown(e: KeyboardEvent): void {
-    if (e.key === "Escape" && this.closable) {
-      e.preventDefault();
+    if (e.key === "Escape") {
       this.#close();
     }
     if (e.key === "Tab") {
-      this.#trapFocus(e);
+      const dialog = this.#dialogElement();
+      if (dialog) trapTabKey(dialog, e);
     }
   }
 
-  #trapFocus(e: KeyboardEvent): void {
-    const dialog = this.shadowRoot?.querySelector(".dialog");
-    if (!dialog) return;
+  /**
+   * Escape while the dialog is open, listened for on the document: the key is
+   * handled even when focus did not move into the dialog.
+   */
+  #handleEscapeKey = (e: KeyboardEvent): void => {
+    if (e.key === "Escape") this.#close();
+  };
 
-    const focusable = dialog.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    if (focusable.length === 0) return;
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+  #dialogElement(): HTMLElement | null {
+    return this.shadowRoot?.querySelector<HTMLElement>(".dialog") ?? null;
   }
 
-  #saveFocus(): void {
-    this.#previousFocus = document.activeElement as HTMLElement;
-    requestAnimationFrame(() => {
-      const dialog = this.shadowRoot?.querySelector(".dialog");
-      if (dialog) {
-        const firstFocusable = dialog.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (firstFocusable) {
-          firstFocusable.focus();
-        }
-      }
-    });
+  /**
+   * Moves focus to the first tab stop in the dialog, slots included.
+   * @returns void
+   */
+  #focusDialog(): void {
+    const dialog = this.#dialogElement();
+    if (dialog) focusFirstInside(dialog);
   }
 
+  /**
+   * Returns focus to the element that opened the dialog. A custom-element host is
+   * not focusable itself, so the first tab stop inside it takes focus.
+   * @returns void
+   */
   #restoreFocus(): void {
-    if (this.#previousFocus) {
-      this.#previousFocus.focus();
-      this.#previousFocus = null;
-    }
+    const target = this.#previousFocus;
+    this.#previousFocus = null;
+    if (target) focusFirstInside(target);
   }
 
   #handleBackdropClick(e: Event): void {
-    if (this.closable) {
-      this.#close();
-    }
+    this.#close();
     e.stopPropagation();
   }
 
   #close(): void {
-    if (!this.open) return;
+    if (!this.closable) return;
     void this.hide();
   }
 
@@ -318,15 +314,21 @@ export class MetroContentDialog extends LitElement {
   /**
    * Opens the dialog with enter animation and dispatches show event.
    * Uses View Transitions for a coordinated backdrop + dialog animation.
+   * Escape is listened for on the document from the first moment, so a key
+   * pressed while the entrance is still running dismisses the dialog. Focus
+   * moves in only after `open` is applied: the dialog is hidden until then, so an
+   * earlier focus call would land on the opener.
    * @returns Promise that resolves when the dialog is fully open.
    */
   async show(): Promise<void> {
     if (this.open) return;
-    this.#saveFocus();
+    this.#previousFocus = rememberedFocus();
+    document.addEventListener("keydown", this.#handleEscapeKey);
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
     await this.updateComplete;
     this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
+    this.#focusDialog();
   }
 
   /**
@@ -335,12 +337,15 @@ export class MetroContentDialog extends LitElement {
    * @returns Promise that resolves when the dialog is fully closed.
    */
   async hide(): Promise<void> {
-    if (!this.open) return;
+    if (!this.open || this.#closing) return;
+    this.#closing = true;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
     // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
     this.#transition.detach(this.#transitionTargets());
+    document.removeEventListener("keydown", this.#handleEscapeKey);
     this.#restoreFocus();
+    this.#closing = false;
   }
 }
 

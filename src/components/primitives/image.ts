@@ -132,6 +132,7 @@ export class MetroImage extends LitElement {
   #handleLoad(): void {
     this.#loaded = true;
     this.#hasError = false;
+    this.requestUpdate();
     this.dispatchEvent(new Event("load", { bubbles: true, composed: true }));
   }
 

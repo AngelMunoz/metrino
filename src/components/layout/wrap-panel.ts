@@ -12,6 +12,12 @@ export class MetroWrapPanel extends LitElement {
     reducedMotionBlanket,
     css`
     :host { display: flex; flex-wrap: wrap; box-sizing: border-box; }
+    /* Vertical wrapping needs a block-size to fill before it moves on. */
+    :host([orientation="vertical"]) {
+      flex-direction: column;
+      align-content: flex-start;
+      block-size: 100%;
+    }
     ::slotted(*) { flex-shrink: 0; }
     `,
   ];

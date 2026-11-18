@@ -1,4 +1,35 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
+
+/** Toast events the page collected, written by the toast test. */
+interface WindowWithToastLog extends Window {
+  toastEvents?: { name: string; id: string }[];
+}
+
+/**
+ * Whether focus sits at or inside the element.
+ *
+ * `document.activeElement` stops at the outermost host, and every component here
+ * keeps its real focusable node one shadow level deeper, so the check walks the
+ * flat tree: descend into shadow roots to the focused node, then climb back out
+ * through slots and hosts looking for the element.
+ */
+function isFocused(locator: Locator): Promise<boolean> {
+  return locator.evaluate((el) => {
+    let deep: Element | null = document.activeElement;
+    while (deep?.shadowRoot?.activeElement) {
+      deep = deep.shadowRoot.activeElement;
+    }
+    const flatParent = (node: Node): Node | null => {
+      if (node instanceof Element && node.assignedSlot) return node.assignedSlot;
+      if (node.parentNode) return node.parentNode;
+      return node instanceof ShadowRoot ? node.host : null;
+    };
+    for (let node: Node | null = deep; node; node = flatParent(node)) {
+      if (node === el) return true;
+    }
+    return false;
+  });
+}
 
 test.describe("dialogs page use cases", () => {
   test.beforeEach(async ({ page }) => {
@@ -6,9 +37,7 @@ test.describe("dialogs page use cases", () => {
     await expect(page.locator("metrino-dialogs-page h1")).toHaveText("Dialogs");
   });
 
-  // FIXME(3.11): content-dialog initial focus races the View Transition; focus
-  // stays on the opener, so Escape never reaches the dialog key handler.
-  test.fixme("user opens a content dialog, reads it, and dismisses with Escape", async ({
+  test("user opens a content dialog, reads it, and dismisses with Escape", async ({
     page,
   }) => {
     await page
@@ -47,9 +76,7 @@ test.describe("dialogs page use cases", () => {
     await expect(dialog).toBeHidden();
   });
 
-  // FIXME(3.11): message-dialog never moves focus into the dialog and has no
-  // document-level Escape listener, so Escape is dead in real flows.
-  test.fixme("user dismisses a message dialog with Escape", async ({ page }) => {
+  test("user dismisses a message dialog with Escape", async ({ page }) => {
     await page
       .locator("metro-button", { hasText: "Show Message Dialog" })
       .click();
@@ -57,6 +84,104 @@ test.describe("dialogs page use cases", () => {
     await expect(dialog).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
+  });
+
+  test("user gets focus inside the dialog they open with the keyboard", async ({
+    page,
+  }) => {
+    const opener = page.locator("#content-dialog-open");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+
+    const dialog = page.getByRole("dialog", { name: "Content Dialog" });
+    await expect(dialog).toBeVisible();
+    // Focus has to be in the dialog, or the user types into the page behind it.
+    await expect.poll(() => isFocused(page.locator("#content-dialog"))).toBe(true);
+  });
+
+  test("closing a content dialog returns focus to its opener", async ({
+    page,
+  }) => {
+    const opener = page.locator("#content-dialog-open");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", { name: "Content Dialog" });
+    await expect(dialog).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect.poll(() => isFocused(opener)).toBe(true);
+  });
+
+  test("closing a message dialog returns focus to its opener", async ({
+    page,
+  }) => {
+    const opener = page.locator("#message-dialog-open");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", { name: "Information" });
+    await expect(dialog).toBeVisible();
+    await expect
+      .poll(() => isFocused(page.locator("#message-dialog")))
+      .toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect.poll(() => isFocused(opener)).toBe(true);
+  });
+
+  test("closing the settings flyout returns focus to its opener", async ({
+    page,
+  }) => {
+    const opener = page.locator("#settings-flyout-open");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const flyout = page.locator("#settings-flyout");
+    await expect(
+      flyout.locator(".settings-item label", { hasText: "Notifications" })
+    ).toBeVisible();
+    await expect.poll(() => isFocused(flyout)).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(flyout.locator(".flyout-panel")).toHaveCSS(
+      "transform",
+      "matrix(1, 0, 0, 1, 346, 0)"
+    );
+    await expect.poll(() => isFocused(opener)).toBe(true);
+  });
+
+  test("Tab cycles through the buttons projected into the dialog", async ({
+    page,
+  }) => {
+    const opener = page.locator("#content-dialog-open");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", { name: "Content Dialog" });
+    await expect(dialog).toBeVisible();
+
+    // Close button, then the Cancel/OK buttons the page slotted in. Each slotted
+    // metro-button is a stop itself and one more for the control inside it, so
+    // the walk counts the stops instead of assuming their number.
+    const closeBtn = page.locator("#content-dialog .close-btn");
+    const projected = page.locator("#content-dialog metro-button");
+    const dialogHost = page.locator("#content-dialog");
+    await expect.poll(() => isFocused(closeBtn)).toBe(true);
+
+    const reached = { cancel: false, ok: false, wrappedToClose: false, escaped: false };
+    for (let stop = 0; stop < 8; stop++) {
+      await page.keyboard.press("Tab");
+      reached.cancel ||= await isFocused(projected.nth(0));
+      reached.ok ||= await isFocused(projected.nth(1));
+      reached.wrappedToClose ||= await isFocused(closeBtn);
+      if (!(await isFocused(dialogHost))) reached.escaped = true;
+    }
+
+    expect(reached).toEqual({
+      cancel: true,
+      ok: true,
+      wrappedToClose: true,
+      escaped: false,
+    });
   });
 
   test("user opens a flyout and light-dismisses it", async ({ page }) => {
@@ -116,5 +241,39 @@ test.describe("dialogs page use cases", () => {
     await saveItem.click();
     await expect(page.locator("#page-toast .toast-title")).toHaveText("Save");
     await expect(saveItem).toBeHidden();
+  });
+
+  test("user's page hears a toast arrive and leave", async ({ page }) => {
+    await page.evaluate(() => {
+      const win = window as WindowWithToastLog;
+      win.toastEvents = [];
+      for (const name of ["toastshown", "toasthidden"]) {
+        document.addEventListener(name, (event) => {
+          const detail = (event as CustomEvent<{ id: string }>).detail;
+          win.toastEvents?.push({ name: event.type, id: detail?.id ?? "" });
+        });
+      }
+    });
+
+    await page.locator("metro-button", { hasText: "Info Toast" }).click();
+    await expect(page.locator("#page-toast .toast-message")).toBeVisible();
+
+    // The host sits inside the demo page's shadow root, so events that reach the
+    // document are both bubbling and composed.
+    const line = () =>
+      page.evaluate(() =>
+        ((window as WindowWithToastLog).toastEvents ?? [])
+          .map((e) => `${e.name}:${e.id}`)
+          .join(",")
+      );
+
+    await expect.poll(line).toMatch(/^toastshown:toast-\d+$/);
+    const shownId = (await line()).slice("toastshown:".length);
+    await expect
+      .poll(line, {
+        message: "the toast never reported that it went away",
+        timeout: 8_000,
+      })
+      .toBe(`toastshown:${shownId},toasthidden:${shownId}`);
   });
 });
