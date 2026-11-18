@@ -6,12 +6,18 @@ import {
   groupItems,
 } from "../../utils/virtualization.ts";
 import {
+  attachDragPan,
   createGestureState,
   updateGesture,
   resolveGesture,
   normalizePointerEvent,
   type GestureState,
 } from "../../utils/touch-physics.ts";
+import { animationKeyframes, animationEntrance } from "../../utils/animations.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+
+/** Stagger tail (256ms delay + 250ms run) after which recycled items stay plain. */
+const ENTRANCE_WINDOW_MS = 600;
 
 type SelectionMode = "none" | "single" | "multiple" | "extended";
 
@@ -48,6 +54,8 @@ export class MetroGridView extends LitElement {
     baseTypography,
     scrollbarVisible,
     groupHeader,
+    animationKeyframes,
+    animationEntrance,
     css`
       :host {
         display: block;
@@ -114,6 +122,10 @@ export class MetroGridView extends LitElement {
   #lastFocusedIndex: number | null = null;
   #groups: VirtualizationGroup<GridViewItem>[] = [];
   #gestureState: GestureState | null = null;
+  #detachDragPan: (() => void) | null = null;
+  #panContainer: HTMLElement | null = null;
+  #entrancePlayed = false;
+  #entranceTimer = 0;
 
   constructor() {
     super();
@@ -124,6 +136,45 @@ export class MetroGridView extends LitElement {
     this.selectionMode = "none";
     this.groupKey = "";
     this.displayMember = "";
+  }
+
+  protected updated(changed: PropertyValues<this>): void {
+    super.updated(changed);
+    this.#ensureDragPan();
+    this.#playEntranceOnce();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#detachDragPan?.();
+    this.#detachDragPan = null;
+    this.#panContainer = null;
+    window.clearTimeout(this.#entranceTimer);
+  }
+
+  /** Mouse grab-to-pan on the grid scroller; touch keeps native scrolling. */
+  #ensureDragPan(): void {
+    const container = this.renderRoot.querySelector<HTMLElement>(".grid-container");
+    if (container === this.#panContainer) return;
+    this.#detachDragPan?.();
+    this.#panContainer = container;
+    this.#detachDragPan =
+      container === null ? null : attachDragPan(container, { axis: "y" });
+  }
+
+  /**
+   * The Metro entrance stagger, once per mount. The class comes off after the
+   * stagger tail so virtualization recycling during scroll never re-animates.
+   */
+  #playEntranceOnce(): void {
+    if (this.#entrancePlayed || prefersReducedMotion()) return;
+    const layer = this.renderRoot.querySelector<HTMLElement>(".grid-layout");
+    if (layer === null) return;
+    this.#entrancePlayed = true;
+    layer.classList.add("metro-entrance-stagger");
+    this.#entranceTimer = window.setTimeout(() => {
+      layer.classList.remove("metro-entrance-stagger");
+    }, ENTRANCE_WINDOW_MS);
   }
 
   render() {

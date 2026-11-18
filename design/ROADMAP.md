@@ -31,6 +31,7 @@ this roadmap. See the component audit summary at the bottom for the hand-off fac
 | Frame-rate-independent inertia/spring; velocities in px/ms | `touch-physics.ts` `stepInertia(state, dtMs)`, `stepSpring(state, dtMs)`, `frameDeltaMs`; independence tests in `touch-physics.test.ts` |
 | Hub auto-hide horizontal scrollbar (pan/point/focus reveal, 1.5 s idle) | `hub.ts` `#showScrollbar`, pointer enter/leave; `e2e/hub-zoom.spec.ts` |
 | Hub section-header click scrolls the section to the gutter and focuses it | `hub.ts` `#handleContainerClick`; `e2e/hub-zoom.spec.ts` |
+| Mouse grab-to-pan + fling on hub/grid/list/long-list; entrance stagger once per mount; tree disclosure glide | `touch-physics.ts` `attachDragPan`; `animationEntrance`; `tree-view.ts` grid-rows; `e2e/interaction-completeness.spec.ts` |
 | Route motion parity: every route change turns the page (continuum taps included), first visit keeps the previous page, tapped item rides the swivel and lands at settle, glide curve 400/500ms | `demo/main.ts` `#loadRoute`; `src/utils/continuum.ts`; `demo/pages/home.ts`; `e2e/route-motion.spec.ts`, `e2e/continuum.spec.ts` |
 | Settings flyout widths 346 px (narrow) / 646 px (wide) | `src/components/dialogs/settings-flyout.ts:108,122` |
 | ARIA roles: list-view `listbox`, grid-view `grid`, panorama `region` | `list-view.ts:101`, `grid-view.ts:132`, `panorama.ts` |
@@ -104,6 +105,16 @@ rotateY flip axis, and a single animation source with `animationend` completion
 All seven items landed: pivot swipe/keyboard/loop and the reduced-motion policy (PR5),
 semantic-zoom group sync and the jump grid (PR6), panorama wrap and the zoomable hub
 (PR7), continuum from the verified WP toolkit source (PR8).
+
+### P2 follow-up — interaction completeness gaps (landed: PR11)
+
+Owner review 2026-11-18: hub/grid never answered mouse grab-to-pan (only panorama,
+pivot, scroll-viewer and flip-view had container drag), lists popped in without entrance
+motion, and tree-view children toggled with display:none. Verified never-implemented,
+not regressions. PR11 adds `attachDragPan` (mouse grab + inertia fling, tap/cross-slide
+safe, touch native) on hub/grid/list/long-list, the entrance stagger once per mount via
+`animationEntrance`, and the tree disclosure glide on grid-rows with the page curve.
+Gates: `e2e/interaction-completeness.spec.ts`.
 
 ### P3 — Component bugs (landed: PR9)
 

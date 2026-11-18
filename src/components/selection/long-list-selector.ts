@@ -1,14 +1,18 @@
 import { LitElement, html, css, type PropertyValues, type TemplateResult, nothing } from "lit";
 import { baseTypography, scrollbarVisible } from "../../styles/shared.ts";
-import { animationKeyframes } from "../../utils/animations.ts";
+import { animationKeyframes, animationEntrance } from "../../utils/animations.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 import {
+  attachDragPan,
   createGestureState,
   updateGesture,
   resolveGesture,
   normalizePointerEvent,
   type GestureState,
 } from "../../utils/touch-physics.ts";
+
+/** Stagger tail (256ms delay + 250ms run) after which recycled items stay plain. */
+const ENTRANCE_WINDOW_MS = 600;
 
 export interface LongListSelectorItem {
   [key: string]: unknown;
@@ -64,6 +68,7 @@ export class MetroLongListSelector extends LitElement {
     baseTypography,
     scrollbarVisible,
     animationKeyframes,
+    animationEntrance,
     css`
       :host {
         display: block;
@@ -250,6 +255,10 @@ export class MetroLongListSelector extends LitElement {
   #jumpGridTrigger: HTMLElement | null = null;
   #jumpGridNeedsFocus = false;
   #gridCloseTimer = 0;
+  #detachDragPan: (() => void) | null = null;
+  #panContainer: HTMLElement | null = null;
+  #entrancePlayed = false;
+  #entranceTimer = 0;
 
   constructor() {
     super();
@@ -763,6 +772,8 @@ export class MetroLongListSelector extends LitElement {
   }
 
   protected updated(changed: PropertyValues<this>): void {
+    this.#ensureDragPan();
+    this.#playEntranceOnce();
     const container = this.shadowRoot?.querySelector<HTMLElement>(".list-container");
     if (container) {
       container.style.maxHeight = "";
@@ -793,6 +804,35 @@ export class MetroLongListSelector extends LitElement {
     this.#jumpGridState = "closed";
     this.#jumpGridTrigger = null;
     this.#jumpGridNeedsFocus = false;
+    this.#detachDragPan?.();
+    this.#detachDragPan = null;
+    this.#panContainer = null;
+    window.clearTimeout(this.#entranceTimer);
+  }
+
+  /** Mouse grab-to-pan on the list scroller; touch keeps native scrolling. */
+  #ensureDragPan(): void {
+    const container = this.renderRoot.querySelector<HTMLElement>(".list-container");
+    if (container === this.#panContainer) return;
+    this.#detachDragPan?.();
+    this.#panContainer = container;
+    this.#detachDragPan =
+      container === null ? null : attachDragPan(container, { axis: "y" });
+  }
+
+  /**
+   * The Metro entrance stagger, once per mount. The class comes off after the
+   * stagger tail so virtualization recycling during scroll never re-animates.
+   */
+  #playEntranceOnce(): void {
+    if (this.#entrancePlayed || prefersReducedMotion()) return;
+    const layer = this.renderRoot.querySelector<HTMLElement>(".viewport");
+    if (layer === null) return;
+    this.#entrancePlayed = true;
+    layer.classList.add("metro-entrance-stagger");
+    this.#entranceTimer = window.setTimeout(() => {
+      layer.classList.remove("metro-entrance-stagger");
+    }, ENTRANCE_WINDOW_MS);
   }
 
   #syncSelectionFromValue(): void {

@@ -5,6 +5,8 @@
  * All functions are stateless or operate on plain state objects.
  */
 
+import { prefersReducedMotion } from "./reduced-motion.ts";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type GestureType = "tap" | "drag-x" | "drag-y" | "cross-slide" | null;
@@ -501,5 +503,198 @@ export function attachPointerHandlers(
     element.removeEventListener("mousedown", mouseDown);
     element.removeEventListener("mousemove", mouseMove);
     element.removeEventListener("mouseup", mouseUp);
+  };
+}
+
+// ─── Grab-to-pan ─────────────────────────────────────────────────────────────
+
+export interface DragPanOptions {
+  /** The axis the container scrolls on; the cross axis stays native. */
+  axis: "x" | "y";
+  /** The grab committed past the tap threshold: cancel glides, suppress snap. */
+  onStart?: () => void;
+  /** The pan and any fling or spring have rested: restore snap, land on a boundary. */
+  onSettle?: () => void;
+}
+
+/**
+ * Mouse grab-to-pan for a native overflow scroller: dragging past the tap threshold
+ * captures the pointer and scrolls the rail axis, releasing flings with inertia and
+ * springs back from the boundary. Touch keeps native scrolling, so touch-action is
+ * untouched; the axis rail leaves cross-axis gestures (item cross-slide, page scroll)
+ * alone. A committed pan suppresses the click that would follow it, a tap never
+ * scrolls, so item taps and selection keep working.
+ *
+ * @param container - The scrolling element
+ * @param options - Axis and grab/settle hooks
+ * @returns a cleanup function removing every listener
+ */
+export function attachDragPan(
+  container: HTMLElement,
+  options: DragPanOptions
+): () => void {
+  const axis = options.axis;
+  let gesture: GestureState | null = null;
+  let rail = createAxisRailState();
+  let lastX = 0;
+  let lastY = 0;
+  let panned = false;
+  let settleSent = false;
+  let frame: number | null = null;
+
+  const scroll = (): number =>
+    axis === "x" ? container.scrollLeft : container.scrollTop;
+  const setScroll = (value: number): void => {
+    if (axis === "x") container.scrollLeft = value;
+    else container.scrollTop = value;
+  };
+  const maxScroll = (): number =>
+    axis === "x"
+      ? container.scrollWidth - container.clientWidth
+      : container.scrollHeight - container.clientHeight;
+  const stop = (): void => {
+    if (frame !== null) {
+      cancelAnimationFrame(frame);
+      frame = null;
+    }
+  };
+  const settle = (): void => {
+    if (!settleSent) {
+      settleSent = true;
+      options.onSettle?.();
+    }
+  };
+
+  const springBack = (overscroll: number): void => {
+    let spring = createSpringState(overscroll);
+    let lastFrame: number | null = null;
+    const tick = (timestamp: number): void => {
+      if (!container.isConnected) {
+        settle();
+        return;
+      }
+      const dt = frameDeltaMs(lastFrame, timestamp);
+      lastFrame = timestamp;
+      spring = stepSpring(spring, dt);
+      setScroll(scroll() - spring.velocity * dt);
+      if (!spring.settled) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        settle();
+      }
+    };
+    frame = requestAnimationFrame(tick);
+  };
+
+  const down = (e: PointerEvent): void => {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    stop();
+    const info = normalizePointerEvent(e);
+    gesture = createGestureState(info);
+    rail = createAxisRailState();
+    lastX = info.clientX;
+    lastY = info.clientY;
+    panned = false;
+    settleSent = false;
+  };
+
+  const move = (e: PointerEvent): void => {
+    if (gesture === null) return;
+    const info = normalizePointerEvent(e);
+    gesture = updateGesture(gesture, info);
+    const dx = info.clientX - lastX;
+    const dy = info.clientY - lastY;
+    lastX = info.clientX;
+    lastY = info.clientY;
+    const fed = feedAxisRail(rail, dx, dy);
+    rail = fed.state;
+    if (!panned) {
+      // The rail locks past the tap threshold on the dominant axis; a cross-axis
+      // gesture never grabs, so taps and cross-slide selection stay untouched.
+      if (rail.locked !== axis) return;
+      panned = true;
+      container.setPointerCapture(e.pointerId);
+      options.onStart?.();
+    }
+    const delta = axis === "x" ? fed.movement.x : fed.movement.y;
+    if (delta === 0) return;
+    const next = scroll() - delta;
+    setScroll(
+      next < 0 || next > maxScroll() ? scroll() - compressBoundary(delta) : next
+    );
+  };
+
+  const up = (e: PointerEvent): void => {
+    if (gesture === null) return;
+    const result = resolveGesture(gesture);
+    gesture = null;
+    if (!panned) return;
+    if (container.hasPointerCapture(e.pointerId)) {
+      container.releasePointerCapture(e.pointerId);
+    }
+    const velocity = axis === "x" ? result.velocityX : result.velocityY;
+    // Reduced motion skips the fling and the spring: the content rests where the
+    // drag left it, pulled inside the scrollable range in one step.
+    if (prefersReducedMotion()) {
+      setScroll(Math.min(Math.max(scroll(), 0), maxScroll()));
+      settle();
+      return;
+    }
+    let inertia = createInertiaState(-velocity);
+    if (!inertia.moving) {
+      settle();
+      return;
+    }
+    let lastFrame: number | null = null;
+    const tick = (timestamp: number): void => {
+      if (!container.isConnected) {
+        settle();
+        return;
+      }
+      const dt = frameDeltaMs(lastFrame, timestamp);
+      lastFrame = timestamp;
+      inertia = stepInertia(inertia, dt);
+      const next = scroll() + inertia.velocity * dt;
+      if (next <= 0 || next >= maxScroll()) {
+        const overscroll = next <= 0 ? next : next - maxScroll();
+        setScroll(Math.min(Math.max(next, 0), maxScroll()));
+        inertia = createInertiaState(0, inertia.position);
+        if (Math.abs(overscroll) > 1) {
+          springBack(overscroll);
+          return;
+        }
+      } else {
+        setScroll(next);
+      }
+      if (inertia.moving) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        settle();
+      }
+    };
+    frame = requestAnimationFrame(tick);
+  };
+
+  const click = (e: MouseEvent): void => {
+    if (panned) {
+      e.stopPropagation();
+      e.preventDefault();
+      panned = false;
+    }
+  };
+
+  container.addEventListener("pointerdown", down);
+  container.addEventListener("pointermove", move);
+  container.addEventListener("pointerup", up);
+  container.addEventListener("pointercancel", up);
+  container.addEventListener("click", click, true);
+
+  return () => {
+    stop();
+    container.removeEventListener("pointerdown", down);
+    container.removeEventListener("pointermove", move);
+    container.removeEventListener("pointerup", up);
+    container.removeEventListener("pointercancel", up);
+    container.removeEventListener("click", click, true);
   };
 }

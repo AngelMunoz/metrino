@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import { METRO_EASING_VALUES } from "../../utils/animations.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { attachDragPan } from "../../utils/touch-physics.ts";
 import { focusFirstInside } from "../../utils/dialog-focus.ts";
 import { registerMetroSemanticZoom } from "../selection/semantic-zoom.ts";
 import type { MetroHubSection } from "./hub-section.ts";
@@ -194,6 +195,8 @@ export class MetroHub extends LitElement {
   #animating = false;
   /* Inline scroll-snap-type saved while a glide suppresses mandatory snap. */
   #restoreSnap: string | null = null;
+  #detachDragPan: (() => void) | null = null;
+  #panContainer: HTMLElement | null = null;
   #lastReportedIndex = -1;
   /* Idle timer that hides the auto-hide scrollbar after the pan settles. */
   #scrollbarTimer = 0;
@@ -380,6 +383,43 @@ export class MetroHub extends LitElement {
 
   updated(): void {
     this.#syncGroupKeys();
+    this.#ensureDragPan();
+  }
+
+  /**
+   * Mouse grab-to-pan on the hub's scroller. The zoomable branch moves the
+   * container between trees, so re-attach whenever the element identity changes.
+   * @returns void
+   */
+  #ensureDragPan(): void {
+    const container = this.#container();
+    if (container === this.#panContainer) return;
+    this.#detachDragPan?.();
+    this.#panContainer = container;
+    this.#detachDragPan =
+      container === null
+        ? null
+        : attachDragPan(container, {
+            axis: "x",
+            onStart: () => {
+              this.#cancelSmoothScroll();
+              const scroller = this.#container();
+              if (scroller !== null) {
+                this.#restoreSnap = scroller.style.scrollSnapType;
+                scroller.style.scrollSnapType = "none";
+              }
+            },
+            onSettle: () => {
+              const scroller = this.#container();
+              if (scroller !== null) {
+                scroller.style.scrollSnapType = this.#restoreSnap ?? "";
+                this.#restoreSnap = null;
+              }
+              if (this.hasAttribute("snap")) {
+                this.scrollToSection(this.selectedIndex);
+              }
+            },
+          });
   }
 
   /**
@@ -462,11 +502,15 @@ export class MetroHub extends LitElement {
     if (container !== null) {
       this.#supportsScrollEnd = "onscrollend" in container;
     }
+    this.#ensureDragPan();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#cancelSmoothScroll();
+    this.#detachDragPan?.();
+    this.#detachDragPan = null;
+    this.#panContainer = null;
     clearTimeout(this.#debounceTimer);
     clearTimeout(this.#scrollbarTimer);
   }
