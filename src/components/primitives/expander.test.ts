@@ -81,4 +81,16 @@ suite("metro-expander", () => {
     const style = getComputedStyle(content);
     assert.notEqual(style.gridTemplateRows, "0px");
   });
+
+  test("two expanders have distinct content ids matching their own header", async () => {
+    const firstEl = await createExpander({ title: "First" });
+    const secondEl = await createExpander({ title: "Second" });
+    const firstContent = firstEl.shadowRoot?.querySelector(".expander-content") as HTMLElement;
+    const secondContent = secondEl.shadowRoot?.querySelector(".expander-content") as HTMLElement;
+    const firstHeader = firstEl.shadowRoot?.querySelector(".expander-header") as HTMLElement;
+    const secondHeader = secondEl.shadowRoot?.querySelector(".expander-header") as HTMLElement;
+    assert.notEqual(firstContent.id, secondContent.id);
+    assert.equal(firstHeader.getAttribute("aria-controls"), firstContent.id);
+    assert.equal(secondHeader.getAttribute("aria-controls"), secondContent.id);
+  });
 });

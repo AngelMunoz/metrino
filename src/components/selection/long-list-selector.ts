@@ -2,6 +2,7 @@ import { LitElement, html, css, type PropertyValues, type TemplateResult, nothin
 import { baseTypography, scrollbarVisible } from "../../styles/shared.ts";
 import { animationKeyframes, animationEntrance } from "../../utils/animations.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { trapTabKey } from "../../utils/dialog-focus.ts";
 import {
   attachDragPan,
   createGestureState,
@@ -480,9 +481,15 @@ export class MetroLongListSelector extends LitElement {
   };
 
   #handleGridKeyDown = (event: KeyboardEvent): void => {
-    if (event.key !== "Escape") return;
-    event.preventDefault();
-    this.#closeJumpGrid();
+    if (event.key === "Escape") {
+      event.preventDefault();
+      this.#closeJumpGrid();
+      return;
+    }
+    if (event.key === "Tab") {
+      const grid = this.shadowRoot?.querySelector<HTMLElement>(".jump-grid");
+      if (grid) trapTabKey(grid, event);
+    }
   };
 
   #handleGridTileClick = (group: LongListSelectorGroup): void => {

@@ -235,6 +235,78 @@ test.describe("list entrance stagger", () => {
     ).toBe("none");
   });
 
+  test("list-view and long-list-selector mount the stagger class and drop it", async ({
+    page,
+  }) => {
+    // One mount per list: the stagger window is 600ms, so a shared navigation
+    // would let the second list's window lapse while the first is polled.
+    for (const host of ["metro-list-view", "metro-long-list-selector"]) {
+      // Poll from navigation commit: the read retries through mount and catches
+      // the 600ms stagger window whenever it occurs, even on a loaded cold engine.
+      await page.goto("/#/selection", { waitUntil: "commit" });
+      await expect
+        .poll(
+          () =>
+            page
+              .locator(host)
+              .evaluate(
+                (el) =>
+                  el.shadowRoot
+                    ?.querySelector(".viewport")
+                    ?.classList.contains("metro-entrance-stagger") ?? false,
+              ),
+          { timeout: 5000, intervals: [50] }
+        )
+        .toBe(true);
+    }
+
+    // After the stagger tail the class comes off, so later scrolls recycle
+    // plain rows instead of re-animating them.
+    await page.waitForTimeout(800);
+    for (const host of ["metro-list-view", "metro-long-list-selector"]) {
+      expect(
+        await page
+          .locator(host)
+          .evaluate(
+            (el) =>
+              el.shadowRoot
+                ?.querySelector(".viewport")
+                ?.classList.contains("metro-entrance-stagger") ?? false,
+          ),
+        `${host} kept the stagger class past its window`,
+      ).toBe(false);
+      expect(
+        await page
+          .locator(`${host} .list-item`)
+          .first()
+          .evaluate((el) => getComputedStyle(el).animationName),
+        `${host} kept the entrance stagger past its window`,
+      ).toBe("none");
+    }
+  });
+
+  test("list-view and long-list-selector items enter staggered on load", async ({
+    page,
+  }) => {
+    // Like the grid-view case: the rows themselves must run the entrance
+    // animation on mount, not just their wrapping layer.
+    for (const host of ["metro-list-view", "metro-long-list-selector"]) {
+      // Poll from navigation commit: the read retries through mount and catches
+      // the 600ms stagger window whenever it occurs, even on a loaded cold engine.
+      await page.goto("/#/selection", { waitUntil: "commit" });
+      await expect
+        .poll(
+          () =>
+            page
+              .locator(`${host} .list-item`)
+              .first()
+              .evaluate((el) => getComputedStyle(el).animationName),
+          { timeout: 5000, intervals: [50] }
+        )
+        .toBe("metro-entrance-stagger");
+    }
+  });
+
   test.describe("under reduced motion", () => {
     test.use({ reducedMotion: "reduce" });
 

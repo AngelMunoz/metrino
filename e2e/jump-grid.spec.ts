@@ -114,6 +114,50 @@ test.describe("long list selector jump grid", () => {
     ).toBeFocused();
   });
 
+  test("Tab cycles within the grid and Shift+Tab wraps back", async ({
+    page,
+  }) => {
+    const list = page.locator("metro-long-list-selector");
+    await gotoReadyRoute(page, "/#/selection", list);
+    await list.scrollIntoViewIfNeeded();
+
+    const dialog = list.locator('[role="dialog"]');
+    await list.locator(".group-header").first().click();
+    await expect(dialog).toBeVisible();
+
+    const tiles = dialog.locator("[data-group-key]");
+    const count = await tiles.count();
+    expect(count, "the grid needs at least two tiles for a wrap test").toBeGreaterThan(1);
+
+    await expect(
+      tiles.first(),
+      "the grid must put the caret on its first tile"
+    ).toBeFocused();
+
+    for (let i = 1; i < count; i++) {
+      await page.keyboard.press("Tab");
+    }
+    await expect(
+      tiles.nth(count - 1),
+      "Tab must walk the caret to the last tile"
+    ).toBeFocused();
+
+    await page.keyboard.press("Tab");
+    await expect(
+      tiles.first(),
+      "Tab past the last tile must wrap to the first tile"
+    ).toBeFocused();
+
+    await page.keyboard.press("Shift+Tab");
+    await expect(
+      tiles.nth(count - 1),
+      "Shift+Tab from the first tile must wrap to the last tile"
+    ).toBeFocused();
+
+    await page.keyboard.press("Escape");
+    await expect(dialog, "Escape must still close the grid").toHaveCount(0);
+  });
+
   test("the alphabet strip still jumps directly without jump-grid", async ({
     page,
   }) => {

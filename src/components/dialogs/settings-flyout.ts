@@ -4,7 +4,7 @@ import type { PropertyValueMap } from "lit";
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
-import { focusFirstInside, rememberedFocus } from "../../utils/dialog-focus.ts";
+import { focusFirstInside, rememberedFocus, trapTabKey } from "../../utils/dialog-focus.ts";
 
 /**
  * The ::view-transition rules of one settings flyout instance, keyed to its
@@ -47,7 +47,7 @@ type SettingsFlyoutWidth = "narrow" | "wide";
  * - Backdrop overlay with click-to-close
  * - Title header with close button
  * - Focus moves into the panel on open and back to the opener on close
- * - Keyboard support (Escape key closes)
+ * - Keyboard support (Escape key closes, Tab stays inside while open)
  *
  * Use for application settings, preferences, or any side panel that
  * requires user attention and should be dismissible.
@@ -207,10 +207,15 @@ export class MetroSettingsFlyout extends LitElement {
     }
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("keydown", this.#handleEscapeKey);
+  }
+
   render() {
     return html`
       <div class="flyout-backdrop" @click=${this.#handleBackdropClick}></div>
-      <div class="flyout-panel" role="dialog" aria-modal="true" aria-labelledby="flyout-title">
+      <div class="flyout-panel" role="dialog" aria-modal="true" aria-labelledby="flyout-title" @keydown=${this.#handleKeydown}>
         <div class="flyout-header">
           <h2 class="flyout-title" id="flyout-title">${this.title}</h2>
           <button class="close-btn" @click=${this.#handleClose} aria-label="Close">
@@ -271,6 +276,13 @@ export class MetroSettingsFlyout extends LitElement {
       void this.hide();
     }
   };
+
+  #handleKeydown(e: KeyboardEvent): void {
+    if (e.key === "Tab") {
+      const panel = this.shadowRoot?.querySelector<HTMLElement>(".flyout-panel");
+      if (panel) trapTabKey(panel, e);
+    }
+  }
 
   #transitionTargets(): Record<string, HTMLElement | null> {
     const root = this.shadowRoot;

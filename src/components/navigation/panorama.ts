@@ -533,6 +533,23 @@ export class MetroPanorama extends LitElement {
    */
   #seamCopy(item: HTMLElement, side: "start" | "end"): HTMLElement {
     const clone = item.cloneNode(true) as HTMLElement;
+    clone.removeAttribute("id");
+    for (const descendant of Array.from(clone.querySelectorAll("[id]"))) {
+      descendant.removeAttribute("id");
+    }
+    if ("inert" in clone) {
+      (clone as unknown as { inert: boolean }).inert = true;
+    }
+    for (const focusable of Array.from(
+      clone.querySelectorAll<HTMLElement>(
+        "a[href],button,input,select,textarea,[tabindex]"
+      )
+    )) {
+      focusable.setAttribute("tabindex", "-1");
+    }
+    if (clone.hasAttribute("tabindex")) {
+      clone.setAttribute("tabindex", "-1");
+    }
     clone.setAttribute(CLONE_ATTRIBUTE, side);
     clone.setAttribute("aria-hidden", "true");
     return clone;

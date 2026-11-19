@@ -48,6 +48,7 @@ interface SeamSample {
 interface WrapGeometry {
   firstReal: number;
   lastReal: number;
+  offsets: number[];
   seam: number;
   period: number;
   step: number;
@@ -128,6 +129,7 @@ async function wrapGeometry(container: Locator): Promise<WrapGeometry> {
   return {
     firstReal,
     lastReal,
+    offsets: measured.offsets,
     seam: measured.seam,
     period: measured.seam - firstReal,
     step:
@@ -500,6 +502,101 @@ test.describe("panorama circular wrap", () => {
     );
   });
 
+  test("a wheel scroll across the seam settles on a real item", async ({
+    page,
+  }) => {
+    const panorama = page.locator("#metro-panorama metro-panorama");
+    await gotoReadyRoute(page, "/#/navigation", panorama);
+    await panorama.scrollIntoViewIfNeeded();
+    const container = panorama.locator(".panorama-container");
+
+    // Wrap is the demo default: without seam copies there is no seam to cross.
+    await expect(
+      panorama.locator("metro-panorama-item[data-panorama-clone]")
+    ).not.toHaveCount(0);
+
+    const geometry = await wrapGeometry(container);
+    await container.evaluate((el, offset) => {
+      el.scrollLeft = offset;
+    }, geometry.lastReal);
+
+    // Native wheel input, not a scripted drag: the pointer sits over the
+    // container and horizontal ticks walk the position past the seam.
+    const box = await container.boundingBox();
+    if (!box) throw new Error("panorama container has no bounding box");
+    await page.mouse.move(box.x + box.width / 2, box.y + 40);
+
+    // One decisive tick onto the seam copy: a short tick ends near the parked
+    // snap point and mandatory snap pulls it back, while overshooting past
+    // the seam normalizes mid-flight and the rest of the gesture lands
+    // nowhere. The exact distance arrives on the copy and the scroll handler
+    // normalizes it back by one period.
+    await page.mouse.wheel(geometry.seam - geometry.lastReal, 0);
+
+    // A smooth-scrolling engine can rest just short of the integer seam on
+    // the copy, or carry the crossing gesture past the first item onto the
+    // next snap point: either way the position stays past the parked item
+    // instead of normalizing home, so one corrective tick for the exact
+    // remainder plus a pixel finishes the crossing through the same handler.
+    await page.waitForTimeout(1000);
+    const parked = await container.evaluate((el) => el.scrollLeft);
+    if (parked > geometry.firstReal + geometry.step / 2) {
+      await page.mouse.wheel(Math.ceil(geometry.seam - parked) + 8, 0);
+    }
+
+    // Whatever the engine's snap does with the crossing, the wrap must put a
+    // real item boundary under the scroll position: the seam copy sits past
+    // the last real item, so settling behind it proves the wrap fired.
+    await expect
+      .poll(
+        async () => {
+          const scroll = await container.evaluate((el) => el.scrollLeft);
+          return Math.min(
+            ...geometry.offsets.map((offset) => Math.abs(scroll - offset))
+          );
+        },
+        {
+          message: "the wheel never settled on a real item boundary",
+          timeout: 15_000,
+        }
+      )
+      .toBeLessThanOrEqual(2);
+    const settled = await container.evaluate((el) => el.scrollLeft);
+    expect(
+      settled,
+      `the wrap must bring the position back past the last item, stayed at ${settled}`
+    ).toBeLessThan(geometry.lastReal);
+
+    // The settled item must be real, not the seam copy: the header painted
+    // at the scrollport edge decides, and clones are excluded.
+    const leading = await panorama.evaluate((host) => {
+      const scroller = host.shadowRoot?.querySelector<HTMLElement>(
+        ".panorama-container"
+      );
+      if (!scroller) throw new Error("the panorama has no container");
+      const line = scroller.getBoundingClientRect().left + 4;
+      const items = Array.from(
+        host.querySelectorAll<HTMLElement>("metro-panorama-item")
+      );
+      const painted = items.find((item) => {
+        const rect = item.getBoundingClientRect();
+        return rect.left <= line && rect.right > line;
+      });
+      return {
+        header: painted?.getAttribute("header") ?? "",
+        clone: painted?.hasAttribute("data-panorama-clone") ?? null,
+      };
+    });
+    expect(
+      leading.header,
+      "the seam crossing must land on a titled item, not empty space"
+    ).not.toBe("");
+    expect(
+      leading.clone,
+      "the seam left a clone in view instead of a real item"
+    ).toBe(false);
+  });
+
   test("dragging back from the first item wraps to the last", async ({
     page,
   }) => {
@@ -590,5 +687,106 @@ test.describe("panorama circular wrap", () => {
       rest.leading,
       "the end of the list should still show the last items, not the first"
     ).not.toBe("Item One");
+  });
+
+  test("seam copies carry no identifiers or tab stops", async ({ page }) => {
+    const panorama = page.locator("#metro-panorama metro-panorama");
+    await gotoReadyRoute(page, "/#/navigation", panorama);
+    await panorama.scrollIntoViewIfNeeded();
+    const container = panorama.locator(".panorama-container");
+
+    // Seed identifiable and focusable content so the copies have something
+    // to sanitize: the clone of the first item must not keep any of it.
+    await panorama.evaluate((host) => {
+      const first = host.querySelector(
+        "metro-panorama-item:not([data-panorama-clone])"
+      );
+      if (!first) throw new Error("the panorama holds no items");
+      first.setAttribute("id", "panorama-real-id");
+      const probe = document.createElement("div");
+      probe.setAttribute("id", "panorama-probe");
+      probe.innerHTML =
+        '<button id="panorama-probe-btn" type="button">Probe</button>' +
+        '<a id="panorama-probe-link" href="#probe">probe link</a>' +
+        '<input id="panorama-probe-input" type="text" />';
+      first.appendChild(probe);
+    });
+
+    // Rebuild the seam copies from the seeded items.
+    await panorama.evaluate((host) => {
+      host.removeAttribute("wrap");
+    });
+    await expect(
+      panorama.locator("metro-panorama-item[data-panorama-clone]")
+    ).toHaveCount(0);
+    await panorama.evaluate((host) => {
+      host.setAttribute("wrap", "");
+    });
+    await expect(
+      panorama.locator("metro-panorama-item[data-panorama-clone]")
+    ).not.toHaveCount(0);
+
+    const hygiene = await panorama.evaluate((host) => {
+      const clones = Array.from(
+        host.querySelectorAll<HTMLElement>(
+          "metro-panorama-item[data-panorama-clone]"
+        )
+      );
+      const withId = clones.filter(
+        (clone) =>
+          clone.hasAttribute("id") ||
+          clone.querySelectorAll("[id]").length > 0
+      ).length;
+      const tabbable = clones.reduce((count, clone) => {
+        const focusables = Array.from(
+          clone.querySelectorAll<HTMLElement>(
+            "a[href],button,input,select,textarea,[tabindex]"
+          )
+        );
+        return (
+          count +
+          focusables.filter((el) => el.getAttribute("tabindex") !== "-1")
+            .length
+        );
+      }, 0);
+      const withoutHidden = clones.filter(
+        (clone) => clone.getAttribute("aria-hidden") !== "true"
+      ).length;
+      const withoutInert = clones.filter((clone) => {
+        if ("inert" in clone) {
+          return !(clone as unknown as { inert: boolean }).inert;
+        }
+        return false;
+      }).length;
+      return {
+        clones: clones.length,
+        withId,
+        tabbable,
+        withoutHidden,
+        withoutInert,
+      };
+    });
+
+    expect(hygiene.clones, "wrap must build seam copies").toBeGreaterThan(0);
+    expect(
+      hygiene.withId,
+      "seam copies must not duplicate identifiers"
+    ).toBe(0);
+    expect(hygiene.tabbable, "seam copies must not keep tab stops").toBe(0);
+    expect(hygiene.withoutHidden, "seam copies must stay hidden").toBe(0);
+    expect(hygiene.withoutInert, "seam copies must be inert").toBe(0);
+
+    // The seam still bridges the cycle onto the real first item.
+    const geometry = await wrapGeometry(container);
+    await container.evaluate((el, offset) => {
+      el.scrollLeft = offset;
+    }, geometry.lastReal);
+    await dragBy(page, container, -(geometry.seam - geometry.lastReal + 60));
+    await waitForSettle(container);
+    const settled = await container.evaluate((el) => el.scrollLeft);
+    expect(
+      Math.abs(settled - geometry.firstReal),
+      `settled at ${settled}, the first item starts at ${geometry.firstReal}`
+    ).toBeLessThanOrEqual(2);
   });
 });

@@ -14,6 +14,7 @@ import { registerMetroContentDialog } from "./components/dialogs/content-dialog.
 import { registerMetroFlyout } from "./components/dialogs/flyout.ts";
 import { registerMetroMessageDialog } from "./components/dialogs/message-dialog.ts";
 import { registerMetroSettingsFlyout } from "./components/dialogs/settings-flyout.ts";
+import { registerMetroTeachingTip } from "./components/dialogs/teaching-tip.ts";
 
 import { registerMetroAutoSuggestBox } from "./components/input/auto-suggest-box.ts";
 import { registerMetroCheckBox } from "./components/input/check-box.ts";
@@ -47,6 +48,8 @@ import { registerMetroPanoramaItem } from "./components/navigation/panorama-item
 import { registerMetroPivot } from "./components/navigation/pivot.ts";
 import { registerMetroPivotItem } from "./components/navigation/pivot-item.ts";
 import { registerMetroSplitView } from "./components/navigation/split-view.ts";
+import { registerMetroTabView } from "./components/navigation/tab-view.ts";
+import { registerMetroTabViewItem } from "./components/navigation/tab-view-item.ts";
 
 import { registerMetroBorder } from "./components/primitives/border.ts";
 import { registerMetroContextMenu } from "./components/primitives/context-menu.ts";
@@ -100,6 +103,7 @@ export function registerDialogs(): void {
   registerMetroFlyout();
   registerMetroMessageDialog();
   registerMetroSettingsFlyout();
+  registerMetroTeachingTip();
 }
 
 export function registerInputs(): void {
@@ -139,6 +143,8 @@ export function registerNavigation(): void {
   registerMetroPivot();
   registerMetroPivotItem();
   registerMetroSplitView();
+  registerMetroTabView();
+  registerMetroTabViewItem();
 }
 
 export function registerPrimitives(): void {

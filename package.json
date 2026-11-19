@@ -229,6 +229,18 @@
         "default": "./dist/components/navigation/split-view.js"
       }
     },
+    "./tab-view": {
+      "import": {
+        "types": "./dist/components/navigation/tab-view.d.ts",
+        "default": "./dist/components/navigation/tab-view.js"
+      }
+    },
+    "./tab-view-item": {
+      "import": {
+        "types": "./dist/components/navigation/tab-view-item.d.ts",
+        "default": "./dist/components/navigation/tab-view-item.js"
+      }
+    },
     "./expander": {
       "import": {
         "types": "./dist/components/primitives/expander.d.ts",

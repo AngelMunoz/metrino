@@ -32,6 +32,34 @@ function hubState(
   }, index);
 }
 
+/**
+ * A section's inline-start gap from the container's gutter line. The edge
+ * follows the direction: in RTL the inline start is the right edge and the
+ * scroll offsets run negative, so left-edge math would measure the wrong
+ * side. Mirrors the component's own `#targets` measurement.
+ */
+function hubInlineGap(hub: Locator, index: number): Promise<number> {
+  return hub.evaluate((host, target) => {
+    const container = host.shadowRoot?.querySelector<HTMLElement>(
+      ".hub-container"
+    );
+    if (!container) throw new Error("the hub renders no section container");
+    const section = Array.from(
+      host.querySelectorAll("metro-hub-section")
+    )[target];
+    if (!section) throw new Error(`the hub has no section ${target + 1}`);
+
+    const style = getComputedStyle(container);
+    const rtl = style.direction === "rtl";
+    const gutter = parseFloat(style.paddingInlineStart) || 0;
+    const rect = container.getBoundingClientRect();
+    const edge = section.getBoundingClientRect();
+    return rtl
+      ? Math.round(edge.right - (rect.right - gutter))
+      : Math.round(edge.left - (rect.left + gutter));
+  }, index);
+}
+
 /** The `data-group-key` of every overview tile, in the order they are drawn. */
 function overviewKeys(hub: Locator): Promise<(string | null)[]> {
   return hub
@@ -104,6 +132,50 @@ test.describe("zoomable hub use cases", () => {
     await expect
       .poll(async () => Math.abs((await hubState(hub, 2)).gap), {
         message: "the overview tile never brought Section 3 to the gutter line",
+        timeout: 10_000,
+      })
+      .toBeLessThanOrEqual(2);
+
+    const state = await hubState(hub, 2);
+    expect(
+      state.selectedIndex,
+      `Section 3 sits on the line, so the hub must read index 2, saw ${state.selectedIndex}`
+    ).toBe(2);
+    await expect(
+      page.locator("#metro-hub .hub-readout"),
+      "the page's readout must follow the re-entry"
+    ).toHaveText("in view: section 3");
+  });
+
+  test("rtl: tapping an overview tile re-enters at that section", async ({
+    page,
+  }) => {
+    const hub = page.locator("#metro-hub metro-hub");
+    await gotoReadyRoute(page, "/#/navigation", hub);
+    await hub.scrollIntoViewIfNeeded();
+
+    // The demo's own direction fixture: the toggle writes dir on the hub host.
+    await page
+      .locator("#metro-hub .hub-controls .control-btn", { hasText: "LTR" })
+      .click();
+    await expect(hub).toHaveAttribute("dir", "rtl");
+
+    const zoom = hub.locator("metro-semantic-zoom");
+    await zoom.locator(".zoom-hint").click();
+    await expect(zoom).toHaveAttribute("zoomed", "out");
+
+    await hub.locator('.hub-overview button[data-group-key="Section 3"]').click();
+
+    await expect(zoom, "re-entering a section must put the sections back").toHaveAttribute(
+      "zoomed",
+      "in"
+    );
+
+    // The third section's inline start has to reach the container's gutter
+    // line from the right side now, which is where the hub itself puts it.
+    await expect
+      .poll(async () => Math.abs(await hubInlineGap(hub, 2)), {
+        message: "the overview tile never brought Section 3 to the gutter line in RTL",
         timeout: 10_000,
       })
       .toBeLessThanOrEqual(2);

@@ -18,6 +18,7 @@ export { MetroContentDialog, registerMetroContentDialog } from "./components/dia
 export { MetroFlyout, registerMetroFlyout } from "./components/dialogs/flyout.ts";
 export { MetroMessageDialog, registerMetroMessageDialog } from "./components/dialogs/message-dialog.ts";
 export { MetroSettingsFlyout, registerMetroSettingsFlyout } from "./components/dialogs/settings-flyout.ts";
+export { MetroTeachingTip, registerMetroTeachingTip } from "./components/dialogs/teaching-tip.ts";
 
 export { MetroAutoSuggestBox, registerMetroAutoSuggestBox } from "./components/input/auto-suggest-box.ts";
 export { MetroCheckBox, registerMetroCheckBox } from "./components/input/check-box.ts";
@@ -44,6 +45,9 @@ export { MetroAppBar, registerMetroAppBar } from "./components/navigation/app-ba
 export { MetroAppBarButton, registerMetroAppBarButton } from "./components/navigation/app-bar-button.ts";
 export { MetroAppBarSeparator, registerMetroAppBarSeparator } from "./components/navigation/app-bar-separator.ts";
 export { MetroAppBarToggleButton, registerMetroAppBarToggleButton } from "./components/navigation/app-bar-toggle-button.ts";
+export { MetroBreadcrumbBar, registerMetroBreadcrumbBar } from "./components/navigation/breadcrumb-bar.ts";
+export type { BreadcrumbItemClickedEventDetail } from "./components/navigation/breadcrumb-bar.ts";
+export { MetroBreadcrumbItem, registerMetroBreadcrumbItem } from "./components/navigation/breadcrumb-item.ts";
 export { MetroHub, registerMetroHub } from "./components/navigation/hub.ts";
 export type { HubSelectionChangedEventDetail } from "./components/navigation/hub.ts";
 export { MetroHubSection, registerMetroHubSection } from "./components/navigation/hub-section.ts";
@@ -52,6 +56,9 @@ export { MetroPanoramaItem, registerMetroPanoramaItem } from "./components/navig
 export { MetroPivot, registerMetroPivot } from "./components/navigation/pivot.ts";
 export { MetroPivotItem, registerMetroPivotItem } from "./components/navigation/pivot-item.ts";
 export { MetroSplitView, registerMetroSplitView } from "./components/navigation/split-view.ts";
+export { MetroTabView, registerMetroTabView } from "./components/navigation/tab-view.ts";
+export type { TabClosedEventDetail, TabViewSelectionChangedEventDetail } from "./components/navigation/tab-view.ts";
+export { MetroTabViewItem, registerMetroTabViewItem } from "./components/navigation/tab-view-item.ts";
 
 export { MetroBorder, registerMetroBorder } from "./components/primitives/border.ts";
 export { MetroContextMenu, registerMetroContextMenu } from "./components/primitives/context-menu.ts";

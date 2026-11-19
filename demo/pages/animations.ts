@@ -273,19 +273,14 @@ export class MetrinoAnimationsPage extends LitElement {
       animation: metro-turnstile-out var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
     }
 
-    /* The continuum previews with the shared keyframes rather than a local copy, so it is
-       the same translate the class and the flight run. The keyframes read the flight
-       offsets off the element, so the preview supplies the item offsets of the source
-       storyboard (TranslateX 130 / TranslateY -70 in, 225 / 73 out) to show a travel. */
+    /* The continuum previews run the shared keyframes with the library's own offsets
+       (TranslateX 130 / TranslateY -70 in, 225 / 73 out), so the preview shows the
+       same travel the class runs without supplying its own values. */
     .animation-target.animate-continuum-enter {
-      --metro-continuum-dx: 130px;
-      --metro-continuum-dy: -70px;
       animation: metro-continuum-enter var(--duration, 150ms) var(--easing, cubic-bezier(0.19, 1, 0.22, 1)) forwards;
     }
 
     .animation-target.animate-continuum-exit {
-      --metro-continuum-dx: 225px;
-      --metro-continuum-dy: 73px;
       animation: metro-continuum-exit var(--duration, 150ms) var(--easing, cubic-bezier(0.19, 1, 0.22, 1)) forwards;
     }
 
