@@ -150,6 +150,37 @@ test.describe("dialogs page use cases", () => {
     await expect.poll(() => isFocused(opener)).toBe(true);
   });
 
+  test("Tab cycles inside the open settings flyout", async ({ page }) => {
+    const opener = page.locator("#settings-flyout-open");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const flyout = page.locator("#settings-flyout");
+    await expect(
+      flyout.locator(".settings-item label", { hasText: "Notifications" })
+    ).toBeVisible();
+    await expect.poll(() => isFocused(flyout)).toBe(true);
+
+    // Close button first, then the three toggle switches the page slotted in.
+    const closeBtn = flyout.locator(".close-btn");
+    const switches = flyout.locator("metro-toggle-switch");
+    const flyoutHost = page.locator("#settings-flyout");
+    await expect.poll(() => isFocused(closeBtn)).toBe(true);
+
+    const reached = { toggles: false, wrappedToClose: false, escaped: false };
+    for (let stop = 0; stop < 8; stop++) {
+      await page.keyboard.press("Tab");
+      if (await isFocused(switches.nth(0))) reached.toggles = true;
+      if (await isFocused(closeBtn)) reached.wrappedToClose = true;
+      if (!(await isFocused(flyoutHost))) reached.escaped = true;
+    }
+
+    expect(reached).toEqual({
+      toggles: true,
+      wrappedToClose: true,
+      escaped: false,
+    });
+  });
+
   test("Tab cycles through the buttons projected into the dialog", async ({
     page,
   }) => {
@@ -194,6 +225,22 @@ test.describe("dialogs page use cases", () => {
     await page.waitForTimeout(350);
     await page.mouse.click(20, 20);
     await expect(flyout.locator("h4")).toBeHidden();
+  });
+
+  test("user dismisses a flyout with Escape and focus returns to its opener", async ({
+    page,
+  }) => {
+    const opener = page.locator("#flyout-bottom-btn");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const flyout = page.locator("#demo-flyout");
+    await expect(flyout.locator("h4")).toBeVisible();
+    // The demo flyout content holds no tab stop, so the panel itself takes focus.
+    await expect.poll(() => isFocused(flyout)).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(flyout.locator("h4")).toBeHidden();
+    await expect.poll(() => isFocused(opener)).toBe(true);
   });
 
   test("user opens narrow and wide settings flyouts", async ({ page }) => {

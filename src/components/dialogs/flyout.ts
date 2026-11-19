@@ -2,6 +2,7 @@ import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { focusFirstInside, rememberedFocus } from "../../utils/dialog-focus.ts";
 
 /**
  * The ::view-transition rules of one flyout instance, keyed to its scoped part
@@ -42,6 +43,7 @@ type FlyoutPlacement = "top" | "bottom" | "left" | "right";
  * - 3D perspective enter animation via View Transitions
  * - Four placement options: top, bottom, left, right
  * - Backdrop overlay for modal-like behavior
+ * - Escape to close, focus moves into the flyout on open and back to the opener on close
  * - Automatic positioning based on target element
  * - Fixed positioning to appear above other content
  *
@@ -114,6 +116,8 @@ export class MetroFlyout extends LitElement {
   ];
 
   #target: Element | null = null;
+  #previousFocus: HTMLElement | null = null;
+  #closing = false;
   #transition = createTransitionScope("flyout", ["panel", "backdrop"]);
   #transitionRules = flyoutTransitionRules(this.#transition.names);
 
@@ -123,10 +127,15 @@ export class MetroFlyout extends LitElement {
     this.placement = "bottom";
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("keydown", this.#handleEscapeKey);
+  }
+
   render() {
     return html`
       <div class="backdrop" @click=${this.#close}></div>
-      <div class="flyout" @keydown=${this.#handleKeydown}>
+      <div class="flyout" tabindex="-1" @keydown=${this.#handleKeydown}>
         <slot></slot>
       </div>
     `;
@@ -137,6 +146,36 @@ export class MetroFlyout extends LitElement {
       e.preventDefault();
       void this.hide();
     }
+  }
+
+  /**
+   * Escape while the flyout is open, listened for on the document: the key is
+   * handled even when focus did not move into the flyout.
+   */
+  #handleEscapeKey = (e: KeyboardEvent): void => {
+    if (e.key === "Escape") void this.hide();
+  };
+
+  /**
+   * Moves focus into the flyout panel, slots included. Slotted content often
+   * holds no tab stop, so the panel itself (tabindex -1) takes focus instead.
+   * @returns void
+   */
+  #focusPanel(): void {
+    const panel = this.shadowRoot?.querySelector<HTMLElement>(".flyout");
+    if (!panel) return;
+    if (!focusFirstInside(panel)) panel.focus();
+  }
+
+  /**
+   * Returns focus to the element that opened the flyout. A custom-element host is
+   * not focusable itself, so the first tab stop inside it takes focus.
+   * @returns void
+   */
+  #restoreFocus(): void {
+    const target = this.#previousFocus;
+    this.#previousFocus = null;
+    if (target) focusFirstInside(target);
   }
 
   /**
@@ -184,11 +223,15 @@ export class MetroFlyout extends LitElement {
    * @returns Promise that resolves when the flyout is fully open.
    */
   async show(target: Element): Promise<void> {
+    const firstOpen = !this.open;
+    if (firstOpen) this.#previousFocus = rememberedFocus();
     this.#target = target;
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
     await this.updateComplete;
     this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
+    document.addEventListener("keydown", this.#handleEscapeKey);
+    this.#focusPanel();
   }
 
   /**
@@ -196,11 +239,15 @@ export class MetroFlyout extends LitElement {
    * @returns Promise that resolves when the flyout is fully closed.
    */
   async hide(): Promise<void> {
-    if (!this.open) return;
+    if (!this.open || this.#closing) return;
+    this.#closing = true;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
     // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
     this.#transition.detach(this.#transitionTargets());
+    document.removeEventListener("keydown", this.#handleEscapeKey);
+    this.#restoreFocus();
+    this.#closing = false;
   }
 
   /**
