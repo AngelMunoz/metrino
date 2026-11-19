@@ -31,6 +31,7 @@ this roadmap. See the component audit summary at the bottom for the hand-off fac
 | Frame-rate-independent inertia/spring; velocities in px/ms | `touch-physics.ts` `stepInertia(state, dtMs)`, `stepSpring(state, dtMs)`, `frameDeltaMs`; independence tests in `touch-physics.test.ts` |
 | Hub auto-hide horizontal scrollbar (pan/point/focus reveal, 1.5 s idle) | `hub.ts` `#showScrollbar`, pointer enter/leave; `e2e/hub-zoom.spec.ts` |
 | Hub section-header click scrolls the section to the gutter and focuses it | `hub.ts` `#handleContainerClick`; `e2e/hub-zoom.spec.ts` |
+| Route motion parity: every route change turns the page (continuum taps included), first visit keeps the previous page, tapped item rides the swivel and lands at settle, glide curve 400/500ms | `demo/main.ts` `#loadRoute`; `src/utils/continuum.ts`; `demo/pages/home.ts`; `e2e/route-motion.spec.ts`, `e2e/continuum.spec.ts` |
 | Settings flyout widths 346 px (narrow) / 646 px (wide) | `src/components/dialogs/settings-flyout.ts:108,122` |
 | ARIA roles: list-view `listbox`, grid-view `grid`, panorama `region` | `list-view.ts:101`, `grid-view.ts:132`, `panorama.ts` |
 | App bar Escape + `aria-controls` | `src/components/navigation/app-bar.ts:167,190` |
@@ -107,6 +108,16 @@ semantic-zoom group sync and the jump grid (PR6), panorama wrap and the zoomable
 ### P3 — Component bugs (landed: PR9)
 
 See the §4.B disposition.
+
+### P3 follow-up — route motion (landed: PR10)
+
+Owner review 2026-11-18: forward navigation must animate like back, and the page
+turnstile must glide rather than snap. First visit now turns the previous page (the
+placeholder never becomes the old snapshot); every route change — continuum taps
+included — runs the root turnstile at 400/500ms on `--metro-easing-page`, and the tapped
+item rides its snapshot group across the swivel, fading into the page as it travels and
+landing as the page settles. Feel tuning, not a fidelity claim. Gates:
+`e2e/route-motion.spec.ts`, `e2e/continuum.spec.ts`.
 
 ### P4 — Packaging and tokens
 

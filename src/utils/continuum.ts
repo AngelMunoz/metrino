@@ -49,10 +49,13 @@ const FLIGHT_ATTRIBUTE = "data-continuum-flight";
 /** Flights currently holding a clone on the body. */
 let activeFlights = 0;
 
+/** Mints the per-clone snapshot name; names must not repeat across flights. */
+let flightSerial = 0;
+
 /**
- * Whether a continuum flight is in the air. The flight IS the page transition while
- * it runs, so a router must not also cross-fade the route underneath it: the root
- * snapshot would capture the clone and dim it for the whole travel.
+ * Whether a continuum flight is in the air. The flight rides over the page turnstile
+ * as its own snapshot group, so callers can tell a tap-driven navigation from a plain
+ * one while the clone is held.
  * @returns true while at least one flight holds a clone
  */
 export function continuumInFlight(): boolean {
@@ -119,6 +122,20 @@ export function beginContinuum(origin: Element): ContinuumFlight {
 
   const originRect = origin.getBoundingClientRect();
   const clone = createFlightClone(origin, originRect);
+  // A light-DOM name keeps the clone out of the root snapshot (Chromium excludes
+  // light-DOM names from root but bakes shadow-nested ones in).
+  const name = `metro-continuum-flight-${(flightSerial += 1)}`;
+  clone.style.setProperty("view-transition-name", name);
+  // One painted copy: the old snapshot hides while the new one's group carries the
+  // clone from the tap point to the destination across the page swivel. The fade
+  // keyframe gives the group the turnstile's duration and dissolves the clone into
+  // the arriving page; at full opacity it reads as a box pasted over the transition.
+  const freeze = document.createElement("style");
+  freeze.textContent =
+    `::view-transition-old(${name}) { animation: none; opacity: 0; }` +
+    `::view-transition-new(${name}) { animation: metro-continuum-flight-fade 500ms linear both; }` +
+    `::view-transition-group(${name}) { animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }`;
+  document.head.append(freeze);
   document.body.append(clone);
   activeFlights += 1;
 
@@ -134,6 +151,7 @@ export function beginContinuum(origin: Element): ContinuumFlight {
     window.clearTimeout(guardTimer);
     clone.removeEventListener("transitionend", onTransitionEnd);
     // Idempotent, so a cancel that races the transition cannot throw.
+    freeze.remove();
     clone.remove();
     const resolve = resolveFlight;
     resolveFlight = undefined;
@@ -155,6 +173,31 @@ export function beginContinuum(origin: Element): ContinuumFlight {
       const dx = box.left - originRect.left;
       const dy = box.top - originRect.top;
 
+      // During the page turnstile the live DOM is not painted, so the clone travels as
+      // its snapshot group: jumping the live clone before the new snapshot is captured
+      // makes the group carry it across the swivel, landing exactly when the page
+      // settles. Called from the route's update callback, this runs before that capture.
+      if (
+        "startViewTransition" in document &&
+        document.documentElement.matches(":active-view-transition")
+      ) {
+        clone.style.transition = "none";
+        clone.style.transform = `translate(${dx}px, ${dy}px)`;
+        pending = new Promise<void>((resolve) => {
+          resolveFlight = resolve;
+          const wait = (): void => {
+            if (landed) return;
+            if (document.documentElement.matches(":active-view-transition")) {
+              requestAnimationFrame(wait);
+            } else {
+              land();
+            }
+          };
+          requestAnimationFrame(wait);
+        });
+        return pending;
+      }
+
       pending = new Promise<void>((resolve) => {
         resolveFlight = resolve;
         clone.addEventListener("transitionend", onTransitionEnd);
@@ -164,6 +207,7 @@ export function beginContinuum(origin: Element): ContinuumFlight {
         requestAnimationFrame(() => {
           if (landed) return;
           clone.style.transform = `translate(${dx}px, ${dy}px)`;
+          clone.style.opacity = "0";
           guardTimer = window.setTimeout(land, SETTLE_GUARD_MS);
         });
       });
@@ -197,9 +241,8 @@ function createFlightClone(origin: Element, rect: DOMRect): HTMLElement {
     margin: "0",
     "pointer-events": "none",
     "z-index": FLIGHT_Z_INDEX,
-    "view-transition-name": "none",
     transform: "translate(0px, 0px)",
-    transition: `transform ${FLIGHT_DURATION_MS}ms ${FLIGHT_EASING}`
+    transition: `transform ${FLIGHT_DURATION_MS}ms ${FLIGHT_EASING}, opacity ${FLIGHT_DURATION_MS}ms linear`
   };
   for (const [property, value] of Object.entries(flightStyles)) {
     clone.style.setProperty(property, value);
