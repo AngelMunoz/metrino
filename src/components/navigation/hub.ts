@@ -1,7 +1,8 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, nothing } from "lit";
 import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
 import { METRO_EASING_VALUES } from "../../utils/animations.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { registerMetroSemanticZoom } from "../selection/semantic-zoom.ts";
 import type { MetroHubSection } from "./hub-section.ts";
 
 /** Time without scroll events before the hub treats a pan as settled. */
@@ -9,6 +10,9 @@ const SETTLE_DEBOUNCE_MS = 100;
 
 /** Fallback duration for the opt-in smooth scroll, in milliseconds. */
 const SMOOTH_SCROLL_FALLBACK_MS = 333;
+
+/** Attribute the semantic zoom matches groups with across its two views. */
+const GROUP_KEY_ATTRIBUTE = "data-group-key";
 
 /**
  * Detail payload of the hub `selectionchanged` event. The shape matches
@@ -117,6 +121,7 @@ export function metroEase(
  * - Smooth programmatic navigation with the Metro easing and duration
  *   tokens; instant under `prefers-reduced-motion: reduce`
  * - Opt-in `[snap]` section boundary settling (off by default)
+ * - Opt-in `[zoomable]` section overview, through `metro-semantic-zoom`
  * - Keyboard focus and arrow-key scrolling on the section container
  *
  * The hub owns no selection state. `selectedIndex` reads the section whose
@@ -159,6 +164,18 @@ export class MetroHub extends LitElement {
      */
     snap: { type: Boolean, reflect: true },
     /**
+     * Section overview through `metro-semantic-zoom`: the section container is
+     * placed in the zoom's zoomed-in view and one tile per section is rendered
+     * in its zoomed-out view. Tapping a tile re-enters the hub at that section
+     * and reports it through `selectionchanged` like any other pan. Absent by
+     * default: the container is rendered on its own, as before.
+     *
+     * The zoom is a fixed-height region, so a zoomable hub has to be given a
+     * height; without one the section container scrolls inside the zoom's
+     * 200px minimum.
+     */
+    zoomable: { type: Boolean, reflect: true },
+    /**
      * Accessible name for the section container region. Falls back to
      * `title`, then to "hub".
      */
@@ -167,6 +184,7 @@ export class MetroHub extends LitElement {
 
   declare title: string;
   declare snap: boolean;
+  declare zoomable: boolean;
   declare ariaLabel: string | null;
 
   #supportsScrollEnd = false;
@@ -176,6 +194,8 @@ export class MetroHub extends LitElement {
   /* Inline scroll-snap-type saved while a glide suppresses mandatory snap. */
   #restoreSnap: string | null = null;
   #lastReportedIndex = -1;
+  /* Group keys this hub wrote on a section, so only those may be removed. */
+  #mirroredKeys = new WeakMap<MetroHubSection, string>();
 
   static styles = [
     baseTypography,
@@ -183,6 +203,17 @@ export class MetroHub extends LitElement {
     css`
       :host {
         display: block;
+      }
+      /* The zoom stacks its two views as absolutely positioned layers, so it
+         contributes no height of its own: the hub feeds it the space that is
+         left over from the title instead. */
+      :host([zoomable]) {
+        display: flex;
+        flex-direction: column;
+      }
+      :host([zoomable]) metro-semantic-zoom {
+        flex: 1 1 auto;
+        min-height: 200px;
       }
       .hub-title {
         font-size: var(--metro-font-size-xxlarge, 42px);
@@ -196,11 +227,43 @@ export class MetroHub extends LitElement {
         gap: var(--metro-spacing-xl, 24px);
         padding: 0 var(--metro-spacing-lg, 16px);
         overflow-x: auto;
+        /* The hub pans on one axis only. Saying so keeps the scroll container
+           single-axis and lets the zoom align a group on that axis. */
+        overflow-y: hidden;
         overscroll-behavior-x: contain;
       }
       .hub-container:focus-visible {
         outline: 2px solid var(--metro-accent, #0078d4);
         outline-offset: -2px;
+      }
+      .hub-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: var(--metro-spacing-md, 12px);
+        padding: var(--metro-spacing-xl, 24px);
+        box-sizing: border-box;
+        height: 100%;
+        overflow: auto;
+      }
+      .hub-overview button {
+        display: flex;
+        align-items: flex-end;
+        min-height: 120px;
+        padding: var(--metro-spacing-md, 12px);
+        box-sizing: border-box;
+        border: 2px solid var(--metro-accent, #0078d4);
+        background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
+        color: var(--metro-foreground, #ffffff);
+        font-family: inherit;
+        font-size: var(--metro-font-size-large, 20px);
+        font-weight: 200;
+        text-align: start;
+        cursor: pointer;
+        transition: background-color var(--metro-transition-fast, 167ms)
+          var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+      }
+      .hub-overview button:hover {
+        background: var(--metro-accent, #0078d4);
       }
       ::slotted(metro-hub-section) {
         flex: 0 0 auto;
@@ -245,13 +308,16 @@ export class MetroHub extends LitElement {
   }
 
   render() {
-    return html`
-      ${this.title ? html`<h2 class="hub-title" part="hub-title">${this.title}</h2>` : ""}
+    const title = this.title
+      ? html`<h2 class="hub-title" part="hub-title">${this.title}</h2>`
+      : nothing;
+    const container = html`
       <div
         class="hub-container scrollbar-hidden"
         part="hub-container"
         role="region"
         tabindex="0"
+        slot=${this.zoomable ? "zoomed-in" : nothing}
         aria-label=${this.ariaLabel ?? this.title ?? "hub"}
         @scroll=${this.#handleScroll}
         @scrollend=${this.#handleScrollEnd}
@@ -259,9 +325,75 @@ export class MetroHub extends LitElement {
         @pointerdown=${this.#cancelSmoothScroll}
         @wheel=${this.#cancelSmoothScroll}
       >
-        <slot></slot>
+        <slot @slotchange=${this.#handleSectionsChange}></slot>
       </div>
     `;
+
+    if (!this.zoomable) {
+      return html`${title}${container}`;
+    }
+
+    return html`
+      ${title}
+      <metro-semantic-zoom>
+        ${container}
+        <div slot="zoomed-out" class="hub-overview">
+          ${this.sections.map(
+            (section, index) => html`<button
+              type="button"
+              data-group-key=${this.#groupKey(section, index)}
+            >
+              ${section.header || this.#groupKey(section, index)}
+            </button>`
+          )}
+        </div>
+      </metro-semantic-zoom>
+    `;
+  }
+
+  updated(): void {
+    this.#syncGroupKeys();
+  }
+
+  /**
+   * The key that names a section in both views of the zoom.
+   * @param section - The section to name
+   * @param index - Its position in the hub
+   * @returns string
+   */
+  #groupKey(section: MetroHubSection, index: number): string {
+    return section.header || `section-${index}`;
+  }
+
+  /**
+   * Publishes the sections as the zoom's groups. The keyed element has to be
+   * the section itself: it is what the zoomed-in view scrolls to, and what the
+   * overview's tiles point at. Keys this hub wrote are the only ones it takes
+   * back off, so an app's own `data-group-key` values stay untouched.
+   * @returns void
+   */
+  #syncGroupKeys(): void {
+    this.sections.forEach((section, index) => {
+      const key = this.#groupKey(section, index);
+      const current = section.getAttribute(GROUP_KEY_ATTRIBUTE);
+      if (this.zoomable) {
+        if (current !== key) {
+          section.setAttribute(GROUP_KEY_ATTRIBUTE, key);
+        }
+        this.#mirroredKeys.set(section, key);
+      } else if (this.#mirroredKeys.get(section) === current) {
+        section.removeAttribute(GROUP_KEY_ATTRIBUTE);
+        this.#mirroredKeys.delete(section);
+      }
+    });
+  }
+
+  /**
+   * Keeps the overview and the group keys in step with the sections.
+   * @returns void
+   */
+  #handleSectionsChange(): void {
+    this.requestUpdate();
   }
 
   /**
@@ -497,6 +629,7 @@ export class MetroHub extends LitElement {
 }
 
 export function registerMetroHub(): void {
+  registerMetroSemanticZoom();
   if (!customElements.get("metro-hub")) {
     customElements.define("metro-hub", MetroHub);
   }

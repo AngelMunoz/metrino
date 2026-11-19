@@ -7,7 +7,51 @@ declare global {
     __panoramaSnap?: string[];
     /** `scrollLeft` of the panorama container, sampled once per frame. */
     __panoramaScroll?: number[];
+    /** One cycle of the wrap seam, sampled once per frame. */
+    __seam?: SeamSample[];
   }
+}
+
+/**
+ * What one frame of the wrap looks like: where the container is and which
+ * item's header is painted 200 px into the scrollport. The text is what the
+ * reader sees, so it is what a seam may not change.
+ */
+interface SeamSample {
+  scroll: number;
+  leading: string;
+}
+
+/** The seam positions the component measures from its own copies. */
+interface WrapGeometry {
+  firstReal: number;
+  lastReal: number;
+  seam: number;
+  period: number;
+  step: number;
+  maxScroll: number;
+}
+
+/**
+ * What one frame of the wrap looks like: where the container is, who owns the
+ * snap points, and which item's header is painted 200 px into the scrollport.
+ * The text is what the reader sees, so it is what crossing the seam may not
+ * change.
+ */
+interface SeamSample {
+  scroll: number;
+  snap: string;
+  leading: string;
+}
+
+/** The seam positions the component normalizes the scroll position against. */
+interface WrapGeometry {
+  firstReal: number;
+  lastReal: number;
+  seam: number;
+  period: number;
+  step: number;
+  maxScroll: number;
 }
 
 /**
@@ -47,6 +91,162 @@ async function flingLeft(page: Page, container: Locator): Promise<void> {
     await page.waitForTimeout(8);
   }
   await page.mouse.up();
+}
+
+/**
+ * The seam the wrap normalizes against: the real items' offsets, the offset of
+ * the first copy of the first item, and one cycle of the cycle.
+ */
+async function wrapGeometry(container: Locator): Promise<WrapGeometry> {
+  const measured = await container.evaluate((el) => {
+    const host = (el.getRootNode() as ShadowRoot).host as HTMLElement;
+    const real = Array.from(
+      host.querySelectorAll<HTMLElement>(
+        "metro-panorama-item:not([data-panorama-clone])"
+      )
+    );
+    const copy = host.querySelector<HTMLElement>(
+      'metro-panorama-item[data-panorama-clone="end"]'
+    );
+    const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    return {
+      offsets: real.map((item) => item.offsetLeft - padding),
+      seam: copy ? copy.offsetLeft - padding : null,
+      maxScroll: el.scrollWidth - el.clientWidth,
+    };
+  });
+
+  const firstReal = measured.offsets[0];
+  const lastReal = measured.offsets[measured.offsets.length - 1];
+  if (firstReal === undefined || lastReal === undefined) {
+    throw new Error("the panorama holds no items to wrap");
+  }
+  if (measured.seam === null) {
+    throw new Error("the panorama has no seam copy of its first item");
+  }
+
+  return {
+    firstReal,
+    lastReal,
+    seam: measured.seam,
+    period: measured.seam - firstReal,
+    step:
+      measured.offsets.length > 1
+        ? measured.offsets[1] - firstReal
+        : measured.seam - firstReal,
+    maxScroll: measured.maxScroll,
+  };
+}
+
+/**
+ * The ends of a panorama with the wrap off: without copies the list simply
+ * stops, and the last item can only be pulled to the end of the scroll range.
+ */
+async function wrapEnds(
+  container: Locator
+): Promise<{ firstReal: number; end: number }> {
+  const measured = await container.evaluate((el) => {
+    const host = (el.getRootNode() as ShadowRoot).host as HTMLElement;
+    const real = Array.from(
+      host.querySelectorAll<HTMLElement>(
+        "metro-panorama-item:not([data-panorama-clone])"
+      )
+    );
+    const padding = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    const offsets = real.map((item) => item.offsetLeft - padding);
+    return {
+      first: offsets[0],
+      last: offsets[offsets.length - 1],
+      maxScroll: el.scrollWidth - el.clientWidth,
+    };
+  });
+
+  if (measured.first === undefined || measured.last === undefined) {
+    throw new Error("the panorama holds no items");
+  }
+  return {
+    firstReal: measured.first,
+    end: Math.min(measured.last, measured.maxScroll),
+  };
+}
+
+/** Records one position, its snap owner and its painted header every frame. */
+async function recordSeam(container: Locator): Promise<void> {
+  await container.evaluate((el) => {
+    window.__seam = [];
+    const host = (el.getRootNode() as ShadowRoot).host as HTMLElement;
+    const items = Array.from(
+      host.querySelectorAll<HTMLElement>("metro-panorama-item")
+    );
+    const sample = () => {
+      const line = el.getBoundingClientRect().left + 200;
+      const painted = items.find((item) => {
+        const rect = item.getBoundingClientRect();
+        return rect.left <= line && rect.right > line;
+      });
+      window.__seam?.push({
+        scroll: el.scrollLeft,
+        snap: getComputedStyle(el).scrollSnapType,
+        leading: painted?.getAttribute("header") ?? "",
+      });
+      requestAnimationFrame(sample);
+    };
+    sample();
+  });
+}
+
+/**
+ * Drags the container sideways by `distance` pixels and lets go. The steps are
+ * small so one frame of direct manipulation stays well under a cycle, and the
+ * gesture decelerates at the end so the release settles where the finger left
+ * the content instead of gliding on past it.
+ */
+async function dragBy(
+  page: Page,
+  container: Locator,
+  distance: number
+): Promise<void> {
+  const box = await container.boundingBox();
+  if (!box) throw new Error("panorama container has no bounding box");
+
+  const direction = Math.sign(distance);
+  const y = Math.round(box.y + 40);
+  let x = Math.round(
+    box.x + (direction < 0 ? box.width - 15 : 15)
+  );
+  const travel = Math.abs(distance);
+  const stride = 20;
+  const strides = Math.floor(travel / stride);
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let step = 0; step < strides; step++) {
+    x += direction * stride;
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(20);
+  }
+  for (let left = travel - strides * stride; left > 0; left -= 4) {
+    const move = Math.min(4, left);
+    x += direction * move;
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(20);
+  }
+  for (let step = 0; step < 6; step++) {
+    x += direction * 2;
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(20);
+  }
+  await page.mouse.up();
+}
+
+/** Waits until the panorama hands the snap points back to the browser. */
+async function waitForSettle(container: Locator): Promise<void> {
+  await expect
+    .poll(
+      () => container.evaluate((el) => getComputedStyle(el).scrollSnapType),
+      { message: "the release never handed the snap points back", timeout: 15_000 }
+    )
+    .toContain("mandatory");
 }
 
 test.describe("panorama use cases", () => {
@@ -206,5 +406,189 @@ test.describe("panorama use cases", () => {
 
     await expect(parallax).toHaveCount(1);
     await expect(parallax).toHaveCSS("transition-duration", "0s");
+  });
+});
+
+test.describe("panorama circular wrap", () => {
+  test("a fling past the last item arrives at the first", async ({ page }) => {
+    const panorama = page.locator("#metro-panorama metro-panorama");
+    await gotoReadyRoute(page, "/#/navigation", panorama);
+    await panorama.scrollIntoViewIfNeeded();
+    const container = panorama.locator(".panorama-container");
+
+    const geometry = await wrapGeometry(container);
+    expect(
+      geometry.seam,
+      "the seam copy has to be inside the scrollable range, or the wrap can never trigger"
+    ).toBeLessThanOrEqual(geometry.maxScroll);
+
+    // Park on the last item, then keep dragging left: past the end the first
+    // item has to come back around.
+    await container.evaluate(
+      (el, offset) => {
+        el.scrollLeft = offset;
+      },
+      geometry.lastReal
+    );
+    await recordSeam(container);
+    await dragBy(page, container, -(geometry.seam - geometry.lastReal + 60));
+    await waitForSettle(container);
+
+    const settled = await container.evaluate((el) => el.scrollLeft);
+    expect(
+      Math.abs(settled - geometry.firstReal),
+      `settled at ${settled}, the first item starts at ${geometry.firstReal}`
+    ).toBeLessThanOrEqual(2);
+
+    const samples = await page.evaluate(() => window.__seam ?? []);
+    expect(samples.length, "the sampler missed the gesture").toBeGreaterThan(10);
+
+    const halfCycle = geometry.step / 2;
+    let crossings = 0;
+    for (let index = 1; index < samples.length; index++) {
+      const before = samples[index - 1];
+      const after = samples[index];
+      if (!before || !after) continue;
+
+      const delta = Math.abs(after.scroll - before.scroll);
+      // Handing the snap points back lands the glide on the nearest item
+      // start, which is the settle the assertion above already pins down.
+      if (before.snap === "none" && after.snap !== "none") {
+        expect(
+          delta,
+          `frame ${index} jumped ${delta} px to hand the snap points back`
+        ).toBeLessThanOrEqual(halfCycle + 2);
+        continue;
+      }
+      if (delta <= 120) continue;
+
+      const cycles = Math.round(delta / geometry.period);
+      expect(
+        Math.abs(delta - cycles * geometry.period),
+        `frame ${index} moved ${delta} px, which is no number of whole cycles (${geometry.period} px each) plus one frame of motion: the content was moved, not wrapped`
+      ).toBeLessThanOrEqual(120);
+      expect(
+        after.leading,
+        `the seam jump at frame ${index} changed what is painted 200 px into the scrollport`
+      ).toBe(before.leading);
+      crossings += 1;
+    }
+
+    expect(crossings, "the drag never crossed the seam").toBeGreaterThan(0);
+
+    const painted = await panorama
+      .locator("metro-panorama-item:not([data-panorama-clone])")
+      .first()
+      .evaluate((item) => {
+        const host = item.parentElement as HTMLElement;
+        const container = host.shadowRoot?.querySelector(".panorama-container");
+        if (!container) throw new Error("the panorama has no container");
+        const edge = container.getBoundingClientRect().left;
+        const rect = item.getBoundingClientRect();
+        return {
+          header: item.getAttribute("header") ?? "",
+          onTheLine: Math.abs(rect.left - edge),
+          inView: rect.right > edge && rect.left < edge + container.clientWidth,
+        };
+      });
+    expect(painted.header, "the first item is the one that should come back").toBe(
+      "Item One"
+    );
+    expect(painted.inView, "the first item never came into view").toBe(true);
+    expect(painted.onTheLine, "the first item is not aligned to the seam line").toBeLessThanOrEqual(
+      2
+    );
+  });
+
+  test("dragging back from the first item wraps to the last", async ({
+    page,
+  }) => {
+    const panorama = page.locator("#metro-panorama metro-panorama");
+    await gotoReadyRoute(page, "/#/navigation", panorama);
+    await panorama.scrollIntoViewIfNeeded();
+    const container = panorama.locator(".panorama-container");
+
+    const geometry = await wrapGeometry(container);
+    await container.evaluate(
+      (el, offset) => {
+        el.scrollLeft = offset;
+      },
+      geometry.firstReal
+    );
+
+    // Drag the content to the right, which scrolls the position backwards:
+    // before the first item there is only its copy of the last one.
+    await dragBy(page, container, 150);
+    await waitForSettle(container);
+
+    const settled = await container.evaluate((el) => el.scrollLeft);
+    expect(
+      Math.abs(settled - geometry.lastReal),
+      `settled at ${settled}, the last item starts at ${geometry.lastReal}`
+    ).toBeLessThanOrEqual(2);
+  });
+
+  test("wrap off keeps the bounded behavior", async ({ page }) => {
+    const panorama = page.locator("#metro-panorama metro-panorama");
+    await gotoReadyRoute(page, "/#/navigation", panorama);
+    await panorama.scrollIntoViewIfNeeded();
+    const container = panorama.locator(".panorama-container");
+
+    await panorama.evaluate((host) => {
+      host.removeAttribute("wrap");
+    });
+    await expect(
+      panorama.locator("metro-panorama-item[data-panorama-clone]")
+    ).toHaveCount(0);
+
+    const bounded = await wrapEnds(container);
+    // Start from the first item, so the only way to the end is the fling.
+    await container.evaluate((el) => {
+      el.scrollLeft = 0;
+    });
+    await recordGlide(container);
+
+    // One fling is not always enough to cross the whole list; the point is that
+    // the end stops it instead of wrapping it back round.
+    await flingLeft(page, container);
+    await waitForSettle(container);
+    await flingLeft(page, container);
+    await waitForSettle(container);
+
+    const rest = await container.evaluate((el) => ({
+      scrollLeft: el.scrollLeft,
+      leading: (() => {
+        const host = (el.getRootNode() as ShadowRoot).host as HTMLElement;
+        const line = el.getBoundingClientRect().left + 200;
+        const items = Array.from(
+          host.querySelectorAll<HTMLElement>("metro-panorama-item")
+        );
+        const painted = items.find((item) => {
+          const rect = item.getBoundingClientRect();
+          return rect.left <= line && rect.right > line;
+        });
+        return painted?.getAttribute("header") ?? "";
+      })(),
+    }));
+    const glide = await page.evaluate(() => window.__panoramaScroll ?? []);
+
+    expect(
+      Math.max(...glide),
+      `the flings never ran the bounded list to its end (furthest ${Math.max(
+        ...glide
+      )}, end ${bounded.end})`
+    ).toBeGreaterThanOrEqual(bounded.end - 2);
+    expect(
+      Math.max(...glide),
+      "a bounded panorama must not scroll past the end of its list"
+    ).toBeLessThanOrEqual(bounded.end + 2);
+    expect(
+      rest.scrollLeft,
+      "a bounded panorama must not come back around to the first item"
+    ).toBeGreaterThan(bounded.firstReal);
+    expect(
+      rest.leading,
+      "the end of the list should still show the last items, not the first"
+    ).not.toBe("Item One");
   });
 });

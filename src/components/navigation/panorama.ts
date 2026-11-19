@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 import {
@@ -16,6 +16,28 @@ import {
 } from "../../utils/touch-physics.ts";
 
 const SAFE_BACKGROUND_SCHEMES = new Set(["http:", "https:"]);
+
+/**
+ * Marks a light-DOM copy of a panorama item that only exists to bridge the
+ * circular seam. Its value names the side it sits on.
+ */
+const CLONE_ATTRIBUTE = "data-panorama-clone";
+
+/** Selector for the real (non-clone) items, in document order. */
+const REAL_ITEMS = `metro-panorama-item:not([${CLONE_ATTRIBUTE}])`;
+
+/**
+ * Where the circular seam of one item sits. Everything is measured against the
+ * container's scroll content edge, the same basis `scrollLeft` uses.
+ */
+interface WrapGeometry {
+  /** `scrollLeft` that puts the first real item at the seam line. */
+  firstReal: number;
+  /** `scrollLeft` that puts the first copy of that item at the same line. */
+  seam: number;
+  /** Distance between an item and its copy: one full turn of the cycle. */
+  period: number;
+}
 
 /**
  * Builds a quoted CSS url() for a background image, or null when the value is
@@ -55,6 +77,7 @@ function safeBackgroundStyle(value: string): string | null {
  * - Spring-back boundary animation when scrolling past edges
  * - Snap points for each panorama item
  * - Smooth scroll behavior with optional scroll-snap
+ * - Opt-in circular scrolling through the `wrap` attribute
  *
  * The Panorama is ideal for showcasing featured content, image galleries,
  * or any full-screen horizontally-navigable content.
@@ -85,10 +108,18 @@ export class MetroPanorama extends LitElement {
      * @default ""
      */
     backgroundImage: { type: String, reflect: true, attribute: "background-image" },
+    /**
+     * Circular scrolling. When present, the item after the last one is the
+     * first item and the item before the first one is the last: a fling that
+     * runs off either end continues at the other without a visible cut.
+     * Absent by default: the ends are bounds and spring back.
+     */
+    wrap: { type: Boolean, reflect: true },
   };
 
   declare title: string;
   declare backgroundImage: string;
+  declare wrap: boolean;
 
   static styles = [
     baseTypography,
@@ -144,6 +175,17 @@ export class MetroPanorama extends LitElement {
    * the scroll position, or null while the browser owns it.
    */
   #savedSnapType: string | null = null;
+  /** Set from the frame a wrap jump was written until the next frame begins. */
+  #wrapJumpPending = false;
+  /** Frame that clears {@link #wrapJumpPending}, or 0 when none is queued. */
+  #wrapJumpFrame = 0;
+  /** The real items the clones were built from, so `slotchange` can ignore itself. */
+  #clonedFrom: HTMLElement[] = [];
+
+  constructor() {
+    super();
+    this.wrap = false;
+  }
 
   render() {
     return html`
@@ -162,7 +204,7 @@ export class MetroPanorama extends LitElement {
         @pointerup=${this.#handlePointerUp}
         @pointercancel=${this.#handlePointerUp}
       >
-        <slot></slot>
+        <slot @slotchange=${this.#handleSlotChange}></slot>
       </div>
     `;
   }
@@ -176,27 +218,50 @@ export class MetroPanorama extends LitElement {
     this.#scrollContainer = this.shadowRoot?.querySelector(".panorama-container") || null;
   }
 
-  protected updated(): void {
+  protected updated(changed: PropertyValues<this>): void {
     const parallaxBg = this.shadowRoot?.querySelector<HTMLElement>(".parallax-bg");
-    if (!parallaxBg) return;
-    parallaxBg.style.backgroundImage = safeBackgroundStyle(this.backgroundImage) ?? "";
+    if (parallaxBg) {
+      parallaxBg.style.backgroundImage = safeBackgroundStyle(this.backgroundImage) ?? "";
+    }
+    if (changed.has("wrap")) {
+      this.#applyWrap();
+    }
   }
 
   /**
-   * Handles scroll events to update the parallax background position.
-   * The background moves at 20% of the scroll speed for a subtle effect.
+   * Handles scroll events: keeps the wrap seam normalized and moves the
+   * parallax background.
    * @returns void
    */
   #handleScroll(): void {
+    // A wrap jump is itself a scripted scroll write, so the scroll event it
+    // produces must not normalize the position a second time.
+    if (!this.#wrapJumpPending) {
+      this.#normalizeWrap();
+    }
+    this.#updateParallax();
+  }
+
+  /**
+   * Moves the parallax background to the logical scroll position, so the
+   * image stays continuous across the wrap seam.
+   * @returns void
+   */
+  #updateParallax(): void {
     if (!this.#scrollContainer || !this.backgroundImage) return;
 
     const parallaxBg = this.shadowRoot?.querySelector(".parallax-bg") as HTMLElement;
     if (!parallaxBg) return;
 
+    const geometry = this.#wrapGeometry();
     const scrollLeft = this.#scrollContainer.scrollLeft;
-    const parallaxOffset = scrollLeft * 0.2;
+    const logical =
+      geometry === null
+        ? scrollLeft
+        : ((scrollLeft - geometry.firstReal) % geometry.period + geometry.period) %
+          geometry.period;
 
-    parallaxBg.style.transform = `translateX(-${parallaxOffset}px)`;
+    parallaxBg.style.transform = `translateX(-${logical * 0.2}px)`;
   }
 
   /**
@@ -239,6 +304,9 @@ export class MetroPanorama extends LitElement {
       } else {
         this.#scrollContainer.scrollLeft = newScroll;
       }
+      // The drag owns the position, so the seam has to be normalized here and
+      // not only on the scroll event the write produces one frame later.
+      this.#normalizeWrap();
     }
   }
 
@@ -284,6 +352,7 @@ export class MetroPanorama extends LitElement {
       lastFrame = timestamp;
       inertia = stepInertia(inertia, dt);
       container.scrollLeft += inertia.velocity * dt;
+      this.#normalizeWrap();
 
       // Boundary bounce
       if (container.scrollLeft <= 0 || container.scrollLeft >= maxScroll) {
@@ -326,6 +395,7 @@ export class MetroPanorama extends LitElement {
       lastFrame = timestamp;
       spring = stepSpring(spring, dt);
       container.scrollLeft -= spring.velocity * dt;
+      this.#normalizeWrap();
       if (!spring.settled && this.isConnected) {
         this.#animFrameId = requestAnimationFrame(tick);
       } else {
@@ -361,13 +431,19 @@ export class MetroPanorama extends LitElement {
     if (container && this.#savedSnapType !== null) {
       container.scrollLeft = this.#nearestSnapPoint(container);
       container.style.scrollSnapType = this.#savedSnapType;
+      // The nearest real item start can sit on the far side of the seam after
+      // a wrap, and the snap areas include the clones: normalize maps whatever
+      // landed there onto its real twin, at identical pixels.
+      this.#normalizeWrap();
     }
     this.#savedSnapType = null;
   }
 
   /**
    * The scroll position that puts each item's start edge on the scrollport,
-   * pulled into the range the container can actually scroll to.
+   * pulled into the range the container can actually scroll to. The seam
+   * clones are not snap points: they only stand in for a real item while the
+   * position is mid-cycle.
    * @param container - The scroll container element
    * @returns number[]
    */
@@ -375,7 +451,7 @@ export class MetroPanorama extends LitElement {
     const padding = parseFloat(getComputedStyle(container).paddingLeft) || 0;
     const maxScroll = container.scrollWidth - container.clientWidth;
     return Array.from(
-      this.querySelectorAll<HTMLElement>("metro-panorama-item")
+      this.querySelectorAll<HTMLElement>(REAL_ITEMS)
     ).map((item) =>
       Math.min(Math.max(item.offsetLeft - padding, 0), maxScroll)
     );
@@ -395,6 +471,164 @@ export class MetroPanorama extends LitElement {
         ? point
         : nearest
     );
+  }
+
+  /**
+   * The items the reader authored, in document order: the children that are
+   * not seam copies.
+   * @returns HTMLElement[]
+   */
+  #realItems(): HTMLElement[] {
+    return Array.from(this.children).filter(
+      (child): child is HTMLElement =>
+        child instanceof HTMLElement &&
+        child.tagName === "METRO-PANORAMA-ITEM" &&
+        !child.hasAttribute(CLONE_ATTRIBUTE),
+    );
+  }
+
+  /**
+   * Rebuilds the seam copies. One copy per end is only enough when an item is
+   * narrower than half the scrollport: an item is 85% wide, so the copy of the
+   * first item has to sit far enough past the last one that the container can
+   * actually scroll to it. Each side therefore carries as many copies as cover
+   * one scrollport, taken from the ends of the cycle in cycle order, which
+   * keeps the whole strip periodic.
+   * @returns void
+   */
+  #syncClones(): void {
+    const real = this.#realItems();
+    this.#clonedFrom = real;
+
+    for (const child of Array.from(this.children)) {
+      if (child instanceof HTMLElement && child.hasAttribute(CLONE_ATTRIBUTE)) {
+        child.remove();
+      }
+    }
+
+    const container = this.#scrollContainer;
+    if (!this.wrap || !container || real.length < 2) return;
+
+    const step = real[1].offsetLeft - real[0].offsetLeft;
+    if (step <= 0 || container.clientWidth <= 0) return;
+
+    const copies = Math.min(
+      real.length,
+      Math.max(1, Math.ceil(container.clientWidth / step))
+    );
+    const first = real[0];
+    for (let i = real.length - copies; i < real.length; i++) {
+      this.insertBefore(this.#seamCopy(real[i], "start"), first);
+    }
+    for (let i = 0; i < copies; i++) {
+      this.appendChild(this.#seamCopy(real[i], "end"));
+    }
+  }
+
+  /**
+   * A decorative copy of one item, marked with the side of the seam it bridges.
+   * @param item - The real item to copy
+   * @param side - `"start"` before the first item, `"end"` after the last
+   * @returns HTMLElement
+   */
+  #seamCopy(item: HTMLElement, side: "start" | "end"): HTMLElement {
+    const clone = item.cloneNode(true) as HTMLElement;
+    clone.setAttribute(CLONE_ATTRIBUTE, side);
+    clone.setAttribute("aria-hidden", "true");
+    return clone;
+  }
+
+  /**
+   * The seam positions of the current cycle, or null while wrap is off, the
+   * copies are missing, or there is nothing to wrap.
+   * @returns WrapGeometry | null
+   */
+  #wrapGeometry(): WrapGeometry | null {
+    const container = this.#scrollContainer;
+    if (!container || !this.wrap) return null;
+
+    const first = this.querySelector<HTMLElement>(REAL_ITEMS);
+    const seamItem = this.querySelector<HTMLElement>(
+      `metro-panorama-item[${CLONE_ATTRIBUTE}="end"]`
+    );
+    if (!first || !seamItem) return null;
+
+    const padding = parseFloat(getComputedStyle(container).paddingLeft) || 0;
+    const firstReal = first.offsetLeft - padding;
+    const seam = seamItem.offsetLeft - padding;
+    const period = seam - firstReal;
+
+    return period > 0 ? { firstReal, seam, period } : null;
+  }
+
+  /**
+   * Brings a scroll position that ran past either seam back onto the matching
+   * spot one cycle away. The two positions draw the same pixels, so the jump
+   * reads as the scroll continuing instead of the content being moved.
+   * @returns void
+   */
+  #normalizeWrap(): void {
+    const container = this.#scrollContainer;
+    if (!container) return;
+
+    const geometry = this.#wrapGeometry();
+    if (geometry === null) return;
+
+    const scrollLeft = container.scrollLeft;
+    let next: number | null = null;
+    if (scrollLeft >= geometry.seam) {
+      next = scrollLeft - geometry.period;
+    } else if (scrollLeft < geometry.firstReal - 1) {
+      next = scrollLeft + geometry.period;
+    }
+    if (next === null) return;
+
+    this.#wrapJumpPending = true;
+    if (this.#wrapJumpFrame === 0) {
+      this.#wrapJumpFrame = requestAnimationFrame(() => {
+        this.#wrapJumpFrame = 0;
+        this.#wrapJumpPending = false;
+      });
+    }
+    container.scrollLeft = next;
+  }
+
+  /**
+   * Applies a `wrap` change: rebuilds the copies and takes up the position the
+   * cycle starts from, so turning wrap on does not rest on the first item's
+   * copy.
+   * @returns void
+   */
+  #applyWrap(): void {
+    this.#syncClones();
+
+    const container = this.#scrollContainer;
+    const geometry = this.#wrapGeometry();
+    // The write is what moves the parallax as well: it produces the scroll
+    // event that `#handleScroll` reads, so nothing needs refreshing by hand.
+    if (container && geometry) {
+      container.scrollLeft = geometry.firstReal;
+    }
+  }
+
+  /**
+   * Rebuilds the seam when the authored items change. The copies are slotted
+   * too, so this also fires for the rebuild itself: the guard against the items
+   * the copies were made from keeps that pass a no-op.
+   * @returns void
+   */
+  #handleSlotChange(): void {
+    const real = this.#realItems();
+    if (
+      real.length === this.#clonedFrom.length &&
+      real.every((item, index) => item === this.#clonedFrom[index])
+    ) {
+      return;
+    }
+    this.#syncClones();
+    // Normalizing writes the position when the cycle moved, and that write is
+    // what re-reads the parallax through the scroll event it produces.
+    this.#normalizeWrap();
   }
 
   /**
