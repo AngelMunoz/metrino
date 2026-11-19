@@ -398,6 +398,7 @@ export class MetrinoSelectionPage extends LitElement {
     longListMode: { state: true },
     zoomGroups: { state: true },
     treeSelected: { state: true },
+    flipIndex: { state: true },
     renderedListViewCount: { state: true },
     renderedGridViewCount: { state: true },
     renderedLongListCount: { state: true },
@@ -416,6 +417,7 @@ export class MetrinoSelectionPage extends LitElement {
   declare longListMode: "none" | "single" | "multiple";
   declare zoomGroups: { key: string; items: { name: string }[] }[];
   declare treeSelected: string;
+  declare flipIndex: number;
   declare renderedListViewCount: number;
   declare renderedGridViewCount: number;
   declare renderedLongListCount: number;
@@ -440,6 +442,7 @@ export class MetrinoSelectionPage extends LitElement {
         .map((item) => ({ name: item.name })),
     }));
     this.treeSelected = "";
+    this.flipIndex = 0;
     this.renderedListViewCount = 0;
     this.renderedGridViewCount = 0;
     this.renderedLongListCount = 0;
@@ -486,6 +489,10 @@ export class MetrinoSelectionPage extends LitElement {
 
   #handleTreeSelection(e: CustomEvent): void {
     this.treeSelected = e.detail.selectedId || "None";
+  }
+
+  #handleFlipChange(e: CustomEvent): void {
+    this.flipIndex = e.detail.index ?? 0;
   }
 
   #showListPicker(): void {
@@ -709,7 +716,12 @@ export class MetrinoSelectionPage extends LitElement {
           .items=${FLIP_VIEW_ITEMS}
           show-nav
           show-indicators
+          @change=${this.#handleFlipChange}
         ></metro-flip-view>
+
+        <div class="selection-info" id="flip-index">
+          Index: ${this.flipIndex}
+        </div>
         <api-docs component="MetroFlipView"></api-docs>
       </div>
 

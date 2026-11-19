@@ -72,6 +72,7 @@ export class MetrinoDatetimePage extends LitElement {
     rollerTime12Value: { state: true },
     rollerTime24Value: { state: true },
     calendarValue: { state: true },
+    calendarBoundedValue: { state: true },
     calendarPickerValue: { state: true },
   };
 
@@ -80,6 +81,7 @@ export class MetrinoDatetimePage extends LitElement {
   declare rollerDateValue: string;
   declare rollerTime12Value: string;
   declare rollerTime24Value: string;
+  declare calendarBoundedValue: string;
   declare calendarValue: string;
   declare calendarPickerValue: string;
 
@@ -90,6 +92,7 @@ export class MetrinoDatetimePage extends LitElement {
     this.rollerDateValue = "";
     this.rollerTime12Value = "";
     this.rollerTime24Value = "";
+    this.calendarBoundedValue = "";
     this.calendarValue = "";
     this.calendarPickerValue = "";
   }
@@ -336,6 +339,22 @@ export class MetrinoDatetimePage extends LitElement {
                 ></metro-calendar>
                 <div class="calendar-value">
                   Selected: ${this.#formatDateForDisplay(this.calendarValue)}
+                </div>
+              </div>
+            </div>
+            <div class="demo-row" style="margin-top: 12px;">
+              <div class="demo-item">
+                <metro-calendar
+                  id="bounded-calendar"
+                  display-date="2025-06-15"
+                  min-date="2025-06-10"
+                  max-date="2025-06-20"
+                  @dateselected=${(e: CustomEvent) =>
+                    (this.calendarBoundedValue = e.detail.value)}
+                ></metro-calendar>
+                <div class="calendar-value" id="bounded-value">
+                  Selected:
+                  ${this.#formatDateForDisplay(this.calendarBoundedValue)}
                 </div>
               </div>
             </div>

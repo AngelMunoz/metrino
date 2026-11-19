@@ -15,6 +15,10 @@ import { clampIndex } from "@src/components/navigation/hub.ts";
 import { registerMetroPanorama } from "@src/components/navigation/panorama.ts";
 import { registerMetroPanoramaItem } from "@src/components/navigation/panorama-item.ts";
 import { registerMetroSplitView } from "@src/components/navigation/split-view.ts";
+import { registerMetroTabView } from "@src/components/navigation/tab-view.ts";
+import { registerMetroTabViewItem } from "@src/components/navigation/tab-view-item.ts";
+import { registerMetroBreadcrumbBar } from "@src/components/navigation/breadcrumb-bar.ts";
+import { registerMetroBreadcrumbItem } from "@src/components/navigation/breadcrumb-item.ts";
 import { registerMetroAppBar } from "@src/components/navigation/app-bar.ts";
 import { registerMetroAppBarButton } from "@src/components/navigation/app-bar-button.ts";
 import { registerMetroAppBarSeparator } from "@src/components/navigation/app-bar-separator.ts";
@@ -28,6 +32,10 @@ registerMetroHubSection();
 registerMetroPanorama();
 registerMetroPanoramaItem();
 registerMetroSplitView();
+registerMetroTabView();
+registerMetroTabViewItem();
+registerMetroBreadcrumbBar();
+registerMetroBreadcrumbItem();
 registerMetroAppBar();
 registerMetroAppBarButton();
 registerMetroAppBarSeparator();
@@ -44,6 +52,8 @@ export class MetrinoNavigationPage extends LitElement {
     hubRtl: { state: true },
     hubSmooth: { state: true },
     hubSelectedIndex: { state: true },
+    tabSelectedIndex: { state: true },
+    crumbClicked: { state: true },
   };
 
   declare splitViewOpen: boolean;
@@ -53,6 +63,8 @@ export class MetrinoNavigationPage extends LitElement {
   declare hubRtl: boolean;
   declare hubSmooth: boolean;
   declare hubSelectedIndex: number;
+  declare tabSelectedIndex: number;
+  declare crumbClicked: string;
 
   static styles = [
     reducedMotionBlanket,
@@ -163,6 +175,13 @@ export class MetrinoNavigationPage extends LitElement {
     .demo-app-bar {
       position: absolute;
     }
+    .selection-info {
+      margin-top: var(--metro-spacing-sm, 8px);
+      padding: var(--metro-spacing-sm, 8px);
+      background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
+      font-size: var(--metro-font-size-small, 12px);
+      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7));
+    }
     `,
   ];
 
@@ -175,6 +194,8 @@ export class MetrinoNavigationPage extends LitElement {
     this.hubRtl = false;
     this.hubSmooth = true;
     this.hubSelectedIndex = 0;
+    this.tabSelectedIndex = 0;
+    this.crumbClicked = "None";
   }
 
   render() {
@@ -484,6 +505,36 @@ export class MetrinoNavigationPage extends LitElement {
           ></metro-app-bar-toggle-button>
         </div>
       </div>
+
+      <div class="demo-card" id="metro-tab-view">
+        <h2 class="component-title">metro-tab-view (tabbed content with keyboard navigation)</h2>
+        <metro-tab-view @selectionchanged=${this.#handleTabSelection}>
+          <metro-tab-view-item header="Home">
+            <p>Home panel content. Click another tab to switch.</p>
+          </metro-tab-view-item>
+          <metro-tab-view-item header="Documents">
+            <p>Documents panel content. Only the selected panel is shown.</p>
+          </metro-tab-view-item>
+          <metro-tab-view-item header="Settings">
+            <p>Settings panel content. Arrow keys move between tabs.</p>
+          </metro-tab-view-item>
+        </metro-tab-view>
+        <div class="selection-info" id="tab-selection">
+          Selected tab: ${this.tabSelectedIndex}
+        </div>
+      </div>
+
+      <div class="demo-card" id="metro-breadcrumb-bar">
+        <h2 class="component-title">metro-breadcrumb-bar (crumb trail navigation)</h2>
+        <metro-breadcrumb-bar @itemclicked=${this.#handleCrumbClick}>
+          <metro-breadcrumb-item header="Home"></metro-breadcrumb-item>
+          <metro-breadcrumb-item header="Documents"></metro-breadcrumb-item>
+          <metro-breadcrumb-item header="Report.docx"></metro-breadcrumb-item>
+        </metro-breadcrumb-bar>
+        <div class="selection-info" id="crumb-selection">
+          Last clicked: ${this.crumbClicked}
+        </div>
+      </div>
       </metro-grid>
     `;
   }
@@ -528,6 +579,17 @@ export class MetrinoNavigationPage extends LitElement {
 
   #toggleAppBar(): void {
     this.appBarExpanded = !this.appBarExpanded;
+  }
+
+  #handleTabSelection(event: CustomEvent<{ selectedIndex: number }>): void {
+    this.tabSelectedIndex = event.detail.selectedIndex;
+  }
+
+  #handleCrumbClick(
+    event: CustomEvent<{ index: number; item: { label: string } | null }>,
+  ): void {
+    const label = event.detail.item?.label ?? "unknown";
+    this.crumbClicked = `${label} (index ${event.detail.index})`;
   }
 }
 

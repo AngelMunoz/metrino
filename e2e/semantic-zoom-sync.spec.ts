@@ -243,29 +243,18 @@ test.describe("semantic zoom group contract", () => {
       window.__groupChanges = [];
     });
 
-    // A nudge that stays inside the first group must report nothing: the
-    // read is throttled to one pass per frame, so waiting out several
-    // frames proves no event is coming rather than racing it.
+    // A nudge that stays inside the first group must report nothing, and
+    // crossing into the next group must report exactly that group, once.
+    // The final equality proves both: a spurious nudge event or a duplicate
+    // crossing event would both change the recorded list.
     await nudgeZoomedIn(zoom, 10);
-    await page.waitForTimeout(600);
-    expect(
-      await page.evaluate(() => window.__groupChanges ?? []),
-      "a scroll inside one group reported a group change",
-    ).toEqual([]);
-
-    // Crossing into the next group reports exactly that group, once.
     await scrollZoomedIn(zoom, second);
     await expect
       .poll(() => page.evaluate(() => window.__groupChanges ?? []), {
         message: `the page never saw groupchanged for "${second}"`,
         timeout: 10_000,
       })
-      .toContain(second);
-    await page.waitForTimeout(600);
-    expect(
-      await page.evaluate(() => window.__groupChanges ?? []),
-      "crossing one group boundary must fire exactly one groupchanged",
-    ).toEqual([second]);
+      .toEqual([second]);
   });
 
   test("scrollToGroup realigns the list while already zoomed in", async ({

@@ -24,19 +24,13 @@ pnpx tsc --noEmit
 # Run type check on a single file
 pnpx tsc --noEmit src/components/button.ts
 
-# Run tests in real browsers (Chromium, Firefox, WebKit)
+# Run all tests in real browsers (Chromium + Firefox)
 pnpm test
 
-# Run tests in watch mode
-pnpm test:watch
+# Run a specific test file
+pnpx playwright test e2e/buttons.spec.ts
 
-# Run specific test file
-pnpx web-test-runner src/components/button.test.ts --node-resolve
-
-# Run e2e use-case tests against the demo app (Chromium + Firefox)
-pnpm test:e2e
-
-# Run e2e tests for one browser project
+# Run tests for one browser project
 pnpx playwright test --project=chromium
 ```
 
@@ -51,11 +45,17 @@ One rule: **tests exercise use cases, not implementation internals.**
   assertions; screenshots and traces are review artifacts, never pixel-diff
   gates. New behavior ships with a use-case test that fails before the fix and
   passes after.
-- **Logic tests (non-DOM utils only):** `@web/test-runner` for pure functions
-  (`touch-physics`, `sanitize`, `virtualization`). Files use `.test.ts` beside
-  the source, TDD mode (suite/test). The config loads `.css` as empty, so this
-  suite cannot verify styles — never use it for motion or spacing.
-- Both suites run Chromium + Firefox.
+- **Logic-only exception:** pure non-DOM functions (`touch-physics`, `sanitize`,
+  `virtualization`) may be tested directly, but still in the real browser
+  projects (`e2e/logic/*.spec.ts` via `page.evaluate`) — never in Node.
+- **No fake DOM:** never jsdom, happy-dom, linkedom, or hand-rolled DOM globals.
+  Every test runs against a real Chromium/Firefox DOM via Playwright.
+- **No artificial sleeps:** never `page.waitForTimeout` / `setTimeout` waits /
+  `sleep`. Wait only on defined signals: `expect.poll`, locator waits,
+  `animationend`, page events, or the library's defined durations
+  (`--metro-transition-fast` 167ms, normal 250ms, slow 333ms) via polling for
+  the resulting state.
+- All tests run in both Chromium + Firefox.
 
 ## Code Style Guidelines
 

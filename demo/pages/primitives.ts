@@ -526,6 +526,11 @@ export class MetrinoPrimitivesPage extends LitElement {
           Right-click on the box below to show the context menu. Long-press also
           works on touch devices.
         </p>
+        <div class="demo-row">
+          <metro-button id="context-menu-btn" @click=${this.#openContextMenu}
+            >Open Context Menu</metro-button
+          >
+        </div>
         <div class="context-demo" id="context-target">
           Right-click here for context menu
         </div>
@@ -583,6 +588,18 @@ export class MetrinoPrimitivesPage extends LitElement {
     if (tooltip) {
       tooltip.hideImmediate();
     }
+  }
+
+  #openContextMenu(): void {
+    const menu = this.shadowRoot?.querySelector(
+      "metro-context-menu",
+    ) as HTMLElement & { show: (x: number, y: number) => void };
+    const target = this.shadowRoot?.querySelector("#context-target");
+    const rect = target?.getBoundingClientRect();
+    menu?.show(
+      (rect?.left ?? 100) + (rect?.width ?? 0) / 2,
+      (rect?.top ?? 100) + (rect?.height ?? 0) / 2,
+    );
   }
 }
 

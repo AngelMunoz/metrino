@@ -361,9 +361,8 @@
     "build:vite": "vite build",
     "build:types": "tsc -p tsconfig.build.json",
     "preview": "vite preview",
-    "test": "web-test-runner \"src/**/*.test.ts\" --node-resolve",
-    "test:watch": "web-test-runner \"src/**/*.test.ts\" --node-resolve --watch",
-    "test:e2e": "playwright test",
+    "test": "playwright test",
+    "test:e2e": "playwright test --project=chromium --project=firefox",
     "prepublishOnly": "pnpm run build",
     "analyze": "cem analyze --litelement --globs \"src/components/**/*.ts\" --outdir public && node scripts/sort-manifest.mjs"
   },
@@ -374,13 +373,7 @@
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "0.11.0",
     "@playwright/test": "1.63.0",
-    "@types/chai": "5.2.3",
-    "@types/mocha": "10.0.10",
-    "@web/dev-server-esbuild": "2.0.0",
-    "@web/test-runner": "1.0.0",
-    "@web/test-runner-playwright": "1.0.0",
-    "chai": "6.2.2",
-    "mocha": "12.0.2",
+    "@types/node": "^26.6.6",
     "playwright": "1.63.0",
     "typescript": "7.0.2",
     "vite": "8.0.16"

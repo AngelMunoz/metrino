@@ -1,23 +1,23 @@
-import { assert } from "chai";
+import { expect, test } from "@playwright/test";
 import {
+  DEFAULT_CONFIG,
+  calculateGridVisibleRange,
   calculateVisibleRange,
   calculateVisibleRangeWithGroups,
-  groupItems,
-  getScrollPositionForIndex,
-  getScrollPositionForGroup,
   createJumpListCache,
-  calculateGridVisibleRange,
-  DEFAULT_CONFIG,
-} from "./virtualization.ts";
+  getScrollPositionForGroup,
+  getScrollPositionForIndex,
+  groupItems,
+} from "../../src/utils/virtualization.ts";
 
-suite("virtualization", () => {
-  suite("calculateVisibleRange", () => {
+test.describe("virtualization", () => {
+  test.describe("calculateVisibleRange", () => {
     test("returns empty range for zero items", () => {
       const result = calculateVisibleRange(0, 500, 0, DEFAULT_CONFIG);
-      assert.equal(result.startIndex, 0);
-      assert.equal(result.endIndex, 0);
-      assert.equal(result.offsetY, 0);
-      assert.equal(result.totalHeight, 0);
+      expect(result.startIndex).toBe(0);
+      expect(result.endIndex).toBe(0);
+      expect(result.offsetY).toBe(0);
+      expect(result.totalHeight).toBe(0);
     });
 
     test("calculates correct range for first viewport", () => {
@@ -28,10 +28,10 @@ suite("virtualization", () => {
 
       const result = calculateVisibleRange(0, clientHeight, itemsCount, config);
 
-      assert.equal(result.startIndex, 0);
-      assert.isAtMost(result.endIndex, 20);
-      assert.equal(result.offsetY, 0);
-      assert.equal(result.totalHeight, itemsCount * itemHeight);
+      expect(result.startIndex).toBe(0);
+      expect(result.endIndex).toBeLessThanOrEqual(20);
+      expect(result.offsetY).toBe(0);
+      expect(result.totalHeight).toBe(itemsCount * itemHeight);
     });
 
     test("calculates correct range with overscan", () => {
@@ -42,10 +42,15 @@ suite("virtualization", () => {
       const itemsCount = 100;
       const config = { itemHeight, overscan };
 
-      const result = calculateVisibleRange(scrollTop, clientHeight, itemsCount, config);
+      const result = calculateVisibleRange(
+        scrollTop,
+        clientHeight,
+        itemsCount,
+        config,
+      );
 
       const expectedStart = Math.floor(scrollTop / itemHeight) - overscan;
-      assert.equal(result.startIndex, Math.max(0, expectedStart));
+      expect(result.startIndex).toBe(Math.max(0, expectedStart));
     });
 
     test("clamps end index to total items", () => {
@@ -55,26 +60,32 @@ suite("virtualization", () => {
       const itemsCount = 50;
       const config = { itemHeight, overscan: 10 };
 
-      const result = calculateVisibleRange(scrollTop, clientHeight, itemsCount, config);
+      const result = calculateVisibleRange(
+        scrollTop,
+        clientHeight,
+        itemsCount,
+        config,
+      );
 
-      assert.isAtMost(result.endIndex, itemsCount - 1);
+      expect(result.endIndex).toBeLessThanOrEqual(itemsCount - 1);
     });
 
     test("supports function-based item height", () => {
-      const getItemHeight = (index: number) => index % 2 === 0 ? 60 : 40;
+      const getItemHeight = (index: number): number =>
+        index % 2 === 0 ? 60 : 40;
       const config = { itemHeight: getItemHeight, overscan: 5 };
 
       const result = calculateVisibleRange(0, 500, 100, config);
 
-      assert.isAtLeast(result.startIndex, 0);
-      assert.isAtLeast(result.endIndex, result.startIndex);
+      expect(result.startIndex).toBeGreaterThanOrEqual(0);
+      expect(result.endIndex).toBeGreaterThanOrEqual(result.startIndex);
     });
   });
 
-  suite("groupItems", () => {
+  test.describe("groupItems", () => {
     test("returns empty array for empty items", () => {
       const result = groupItems([], "category" as never, DEFAULT_CONFIG);
-      assert.deepEqual(result, []);
+      expect(result).toEqual([]);
     });
 
     test("groups items by key", () => {
@@ -87,13 +98,13 @@ suite("virtualization", () => {
 
       const result = groupItems(items, "category", DEFAULT_CONFIG);
 
-      assert.equal(result.length, 3);
-      assert.equal(result[0].key, "A");
-      assert.equal(result[0].items.length, 2);
-      assert.equal(result[1].key, "B");
-      assert.equal(result[1].items.length, 1);
-      assert.equal(result[2].key, "C");
-      assert.equal(result[2].items.length, 1);
+      expect(result.length).toBe(3);
+      expect(result[0].key).toBe("A");
+      expect(result[0].items.length).toBe(2);
+      expect(result[1].key).toBe("B");
+      expect(result[1].items.length).toBe(1);
+      expect(result[2].key).toBe("C");
+      expect(result[2].items.length).toBe(1);
     });
 
     test("sorts groups alphabetically", () => {
@@ -105,9 +116,9 @@ suite("virtualization", () => {
 
       const result = groupItems(items, "category", DEFAULT_CONFIG);
 
-      assert.equal(result[0].key, "A");
-      assert.equal(result[1].key, "M");
-      assert.equal(result[2].key, "Z");
+      expect(result[0].key).toBe("A");
+      expect(result[1].key).toBe("M");
+      expect(result[2].key).toBe("Z");
     });
 
     test("calculates correct header offsets", () => {
@@ -123,46 +134,39 @@ suite("virtualization", () => {
 
       const result = groupItems(items, "category", config);
 
-      assert.equal(result[0].headerOffset, 0);
-      assert.equal(result[0].contentHeight, 2 * itemHeight);
-      assert.equal(result[1].headerOffset, groupHeaderHeight + 2 * itemHeight);
-      assert.equal(result[1].contentHeight, itemHeight);
+      expect(result[0].headerOffset).toBe(0);
+      expect(result[0].contentHeight).toBe(2 * itemHeight);
+      expect(result[1].headerOffset).toBe(groupHeaderHeight + 2 * itemHeight);
+      expect(result[1].contentHeight).toBe(itemHeight);
     });
 
     test("supports function-based group key", () => {
-      const items = [
-        { name: "Apple" },
-        { name: "Apricot" },
-        { name: "Banana" },
-      ];
+      const items = [{ name: "Apple" }, { name: "Apricot" }, { name: "Banana" }];
 
-      const getGroupKey = (item: { name: string }) => item.name[0];
+      const getGroupKey = (item: { name: string }): string => item.name[0];
       const result = groupItems(items, getGroupKey, DEFAULT_CONFIG);
 
-      assert.equal(result.length, 2);
-      assert.equal(result[0].key, "A");
-      assert.equal(result[1].key, "B");
+      expect(result.length).toBe(2);
+      expect(result[0].key).toBe("A");
+      expect(result[1].key).toBe("B");
     });
 
     test("uses # for undefined group key", () => {
-      const items = [
-        { name: "Apple" },
-        { name: "Banana", category: "B" },
-      ];
+      const items = [{ name: "Apple" }, { name: "Banana", category: "B" }];
 
       const result = groupItems(items, "category" as never, DEFAULT_CONFIG);
 
-      assert.equal(result.length, 2);
-      assert.isTrue(result.some(g => g.key === "#"));
-      assert.isTrue(result.some(g => g.key === "B"));
+      expect(result.length).toBe(2);
+      expect(result.some((g) => g.key === "#")).toBe(true);
+      expect(result.some((g) => g.key === "B")).toBe(true);
     });
   });
 
-  suite("calculateVisibleRangeWithGroups", () => {
+  test.describe("calculateVisibleRangeWithGroups", () => {
     test("returns empty for no groups", () => {
       const result = calculateVisibleRangeWithGroups(0, 500, [], DEFAULT_CONFIG);
-      assert.deepEqual(result.visibleGroups, []);
-      assert.equal(result.totalHeight, 0);
+      expect(result.visibleGroups).toEqual([]);
+      expect(result.totalHeight).toBe(0);
     });
 
     test("filters groups outside viewport", () => {
@@ -171,14 +175,31 @@ suite("virtualization", () => {
       const config = { itemHeight, overscan: 5, groupHeaderHeight };
 
       const groups = [
-        { key: "A", items: [{}, {}], indices: [0, 1], headerOffset: 0, contentHeight: 2 * itemHeight },
-        { key: "B", items: [{}], indices: [2], headerOffset: groupHeaderHeight + 2 * itemHeight, contentHeight: itemHeight },
+        {
+          key: "A",
+          items: [{}, {}],
+          indices: [0, 1],
+          headerOffset: 0,
+          contentHeight: 2 * itemHeight,
+        },
+        {
+          key: "B",
+          items: [{}],
+          indices: [2],
+          headerOffset: groupHeaderHeight + 2 * itemHeight,
+          contentHeight: itemHeight,
+        },
       ];
 
       const scrollTop = 2000;
-      const result = calculateVisibleRangeWithGroups(scrollTop, 500, groups, config);
+      const result = calculateVisibleRangeWithGroups(
+        scrollTop,
+        500,
+        groups,
+        config,
+      );
 
-      assert.isArray(result.visibleGroups);
+      expect(Array.isArray(result.visibleGroups)).toBe(true);
     });
 
     test("calculates correct total height", () => {
@@ -187,25 +208,38 @@ suite("virtualization", () => {
       const config = { itemHeight, overscan: 5, groupHeaderHeight };
 
       const groups = [
-        { key: "A", items: [{}, {}], indices: [0, 1], headerOffset: 0, contentHeight: 2 * itemHeight },
-        { key: "B", items: [{}], indices: [2], headerOffset: groupHeaderHeight + 2 * itemHeight, contentHeight: itemHeight },
+        {
+          key: "A",
+          items: [{}, {}],
+          indices: [0, 1],
+          headerOffset: 0,
+          contentHeight: 2 * itemHeight,
+        },
+        {
+          key: "B",
+          items: [{}],
+          indices: [2],
+          headerOffset: groupHeaderHeight + 2 * itemHeight,
+          contentHeight: itemHeight,
+        },
       ];
 
       const result = calculateVisibleRangeWithGroups(0, 500, groups, config);
 
-      const expectedTotal = groupHeaderHeight + 2 * itemHeight + groupHeaderHeight + itemHeight;
-      assert.equal(result.totalHeight, expectedTotal);
+      const expectedTotal =
+        groupHeaderHeight + 2 * itemHeight + groupHeaderHeight + itemHeight;
+      expect(result.totalHeight).toBe(expectedTotal);
     });
   });
 
-  suite("getScrollPositionForIndex", () => {
+  test.describe("getScrollPositionForIndex", () => {
     test("returns correct position for flat list", () => {
       const itemHeight = 44;
       const config = { itemHeight, overscan: 10 };
 
       const result = getScrollPositionForIndex(5, [], config);
 
-      assert.equal(result, 5 * itemHeight);
+      expect(result).toBe(5 * itemHeight);
     });
 
     test("returns correct position within group", () => {
@@ -214,13 +248,27 @@ suite("virtualization", () => {
       const config = { itemHeight, overscan: 10, groupHeaderHeight };
 
       const groups = [
-        { key: "A", items: [{}, {}, {}], indices: [0, 1, 2], headerOffset: 0, contentHeight: 3 * itemHeight },
-        { key: "B", items: [{}, {}], indices: [3, 4], headerOffset: groupHeaderHeight + 3 * itemHeight, contentHeight: 2 * itemHeight },
+        {
+          key: "A",
+          items: [{}, {}, {}],
+          indices: [0, 1, 2],
+          headerOffset: 0,
+          contentHeight: 3 * itemHeight,
+        },
+        {
+          key: "B",
+          items: [{}, {}],
+          indices: [3, 4],
+          headerOffset: groupHeaderHeight + 3 * itemHeight,
+          contentHeight: 2 * itemHeight,
+        },
       ];
 
       const result = getScrollPositionForIndex(4, groups, config);
 
-      assert.equal(result, groupHeaderHeight + 3 * itemHeight + groupHeaderHeight + itemHeight);
+      expect(result).toBe(
+        groupHeaderHeight + 3 * itemHeight + groupHeaderHeight + itemHeight,
+      );
     });
 
     test("returns 0 for index not in groups", () => {
@@ -231,18 +279,24 @@ suite("virtualization", () => {
 
       const result = getScrollPositionForIndex(99, groups, config);
 
-      assert.equal(result, 0);
+      expect(result).toBe(0);
     });
   });
 
-  suite("getScrollPositionForGroup", () => {
+  test.describe("getScrollPositionForGroup", () => {
     test("returns correct offset for existing group", () => {
       const groups = [
         { key: "A", items: [], indices: [], headerOffset: 0, contentHeight: 0 },
-        { key: "B", items: [], indices: [], headerOffset: 100, contentHeight: 0 },
+        {
+          key: "B",
+          items: [],
+          indices: [],
+          headerOffset: 100,
+          contentHeight: 0,
+        },
       ];
 
-      assert.equal(getScrollPositionForGroup("B", groups), 100);
+      expect(getScrollPositionForGroup("B", groups)).toBe(100);
     });
 
     test("is case-insensitive", () => {
@@ -250,7 +304,7 @@ suite("virtualization", () => {
         { key: "A", items: [], indices: [], headerOffset: 50, contentHeight: 0 },
       ];
 
-      assert.equal(getScrollPositionForGroup("a", groups), 50);
+      expect(getScrollPositionForGroup("a", groups)).toBe(50);
     });
 
     test("returns 0 for non-existent group", () => {
@@ -258,22 +312,34 @@ suite("virtualization", () => {
         { key: "A", items: [], indices: [], headerOffset: 50, contentHeight: 0 },
       ];
 
-      assert.equal(getScrollPositionForGroup("Z", groups), 0);
+      expect(getScrollPositionForGroup("Z", groups)).toBe(0);
     });
   });
 
-  suite("createJumpListCache", () => {
+  test.describe("createJumpListCache", () => {
     test("creates cache from groups", () => {
       const groups = [
-        { key: "A", items: [1], indices: [0], headerOffset: 0, contentHeight: 44 },
-        { key: "B", items: [2], indices: [1], headerOffset: 76, contentHeight: 44 },
+        {
+          key: "A",
+          items: [1],
+          indices: [0],
+          headerOffset: 0,
+          contentHeight: 44,
+        },
+        {
+          key: "B",
+          items: [2],
+          indices: [1],
+          headerOffset: 76,
+          contentHeight: 44,
+        },
       ];
 
       const cache = createJumpListCache(groups);
 
-      assert.isTrue(cache.has("A"));
-      assert.isTrue(cache.has("B"));
-      assert.equal(cache.get("A")?.items[0], 1);
+      expect(cache.has("A")).toBe(true);
+      expect(cache.has("B")).toBe(true);
+      expect(cache.get("A")?.items[0]).toBe(1);
     });
 
     test("keys are uppercase", () => {
@@ -283,12 +349,12 @@ suite("virtualization", () => {
 
       const cache = createJumpListCache(groups);
 
-      assert.isTrue(cache.has("A"));
-      assert.isFalse(cache.has("a"));
+      expect(cache.has("A")).toBe(true);
+      expect(cache.has("a")).toBe(false);
     });
   });
 
-  suite("calculateGridVisibleRange", () => {
+  test.describe("calculateGridVisibleRange", () => {
     test("calculates visible indices for grid", () => {
       const scrollTop = 0;
       const scrollLeft = 0;
@@ -300,13 +366,20 @@ suite("virtualization", () => {
       const totalItems = 50;
 
       const result = calculateGridVisibleRange(
-        scrollTop, scrollLeft, clientHeight, clientWidth,
-        totalItems, itemWidth, itemHeight, columns, 1
+        scrollTop,
+        scrollLeft,
+        clientHeight,
+        clientWidth,
+        totalItems,
+        itemWidth,
+        itemHeight,
+        columns,
+        1,
       );
 
-      assert.isTrue(result.visibleIndices.size > 0);
-      assert.isTrue(result.visibleIndices.has(0));
-      assert.isFalse(result.visibleIndices.has(49));
+      expect(result.visibleIndices.size > 0).toBe(true);
+      expect(result.visibleIndices.has(0)).toBe(true);
+      expect(result.visibleIndices.has(49)).toBe(false);
     });
 
     test("calculates correct total dimensions", () => {
@@ -316,13 +389,20 @@ suite("virtualization", () => {
       const columns = 3;
 
       const result = calculateGridVisibleRange(
-        0, 0, 200, 300,
-        totalItems, itemWidth, itemHeight, columns, 1
+        0,
+        0,
+        200,
+        300,
+        totalItems,
+        itemWidth,
+        itemHeight,
+        columns,
+        1,
       );
 
       const expectedRows = Math.ceil(totalItems / columns);
-      assert.equal(result.totalHeight, expectedRows * itemHeight);
-      assert.equal(result.totalWidth, columns * itemWidth);
+      expect(result.totalHeight).toBe(expectedRows * itemHeight);
+      expect(result.totalWidth).toBe(columns * itemWidth);
     });
 
     test("handles scrolling correctly", () => {
@@ -336,16 +416,24 @@ suite("virtualization", () => {
       const totalItems = 100;
 
       const result = calculateGridVisibleRange(
-        scrollTop, scrollLeft, clientHeight, clientWidth,
-        totalItems, itemWidth, itemHeight, columns, 2
+        scrollTop,
+        scrollLeft,
+        clientHeight,
+        clientWidth,
+        totalItems,
+        itemWidth,
+        itemHeight,
+        columns,
+        2,
       );
 
       for (const index of result.visibleIndices) {
         const row = Math.floor(index / columns);
         const expectedMinRow = Math.floor(scrollTop / itemHeight) - 2;
-        const expectedMaxRow = Math.ceil((scrollTop + clientHeight) / itemHeight) + 2;
-        assert.isAtLeast(row, Math.max(0, expectedMinRow));
-        assert.isAtMost(row, expectedMaxRow);
+        const expectedMaxRow =
+          Math.ceil((scrollTop + clientHeight) / itemHeight) + 2;
+        expect(row).toBeGreaterThanOrEqual(Math.max(0, expectedMinRow));
+        expect(row).toBeLessThanOrEqual(expectedMaxRow);
       }
     });
 
@@ -356,12 +444,19 @@ suite("virtualization", () => {
       const columns = 3;
 
       const result = calculateGridVisibleRange(
-        scrollTop, 0, 200, 300,
-        totalItems, 100, itemHeight, columns, 1
+        scrollTop,
+        0,
+        200,
+        300,
+        totalItems,
+        100,
+        itemHeight,
+        columns,
+        1,
       );
 
       for (const index of result.visibleIndices) {
-        assert.isAtMost(index, totalItems - 1);
+        expect(index).toBeLessThanOrEqual(totalItems - 1);
       }
     });
   });

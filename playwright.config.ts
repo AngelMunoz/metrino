@@ -6,7 +6,10 @@ const port = Number(process.env.DEMO_PORT ?? 5173);
 
 export default defineConfig({
   testDir: "./e2e",
-  workers: 1,
+  // Default (half the cores) oversubscribes two real browsers on this demo:
+  // animation-heavy pages starve and clicks land late. Four workers keep
+  // both engines fed without starving frames.
+  workers: 4,
   retries: 0,
   timeout: 30_000,
   expect: { timeout: 5_000 },
@@ -17,15 +20,22 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
   ],
   webServer: {
     command: `pnpm exec vite --mode demo --strictPort --no-open --port ${port}`,
     url: `http://localhost:${port}`,
-    // Never reuse a server this run did not start: a leftover server from another
-    // session can die mid-run and every later test then fails with connection refused.
-    reuseExistingServer: false,
+    // One demo server serves every run: if one is already listening on the
+    // port, reuse it (Playwright leaves a reused server running afterwards);
+    // otherwise Playwright starts it for this run.
+    reuseExistingServer: true,
     timeout: 60_000,
   },
 });

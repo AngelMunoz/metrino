@@ -143,10 +143,13 @@ test.describe("dialogs page use cases", () => {
     await expect.poll(() => isFocused(flyout)).toBe(true);
 
     await page.keyboard.press("Escape");
-    await expect(flyout.locator(".flyout-panel")).toHaveCSS(
-      "transform",
-      "matrix(1, 0, 0, 1, 346, 0)"
-    );
+    // Closed means the panel sits off the right edge of the viewport.
+    await expect
+      .poll(
+        async () =>
+          (await flyout.locator(".flyout-panel").boundingBox())?.x ?? 0
+      )
+      .toBeGreaterThanOrEqual(1280);
     await expect.poll(() => isFocused(opener)).toBe(true);
   });
 
@@ -222,7 +225,13 @@ test.describe("dialogs page use cases", () => {
     await expect(flyout.locator("h4")).toBeVisible();
     await expect(flyout.locator(".flyout")).toHaveCSS("opacity", "1");
     // The View Transition overlay swallows pointer input until it finishes.
-    await page.waitForTimeout(350);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => !document.documentElement.matches(":active-view-transition")
+        )
+      )
+      .toBe(true);
     await page.mouse.click(20, 20);
     await expect(flyout.locator("h4")).toBeHidden();
   });
@@ -252,18 +261,19 @@ test.describe("dialogs page use cases", () => {
 
     await page.locator("metro-button", { hasText: "Open Settings" }).click();
     await expect(label).toBeVisible();
-    await expect(panel).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
     const narrow = await panel.boundingBox();
     expect(narrow?.width).toBeCloseTo(346, 0);
 
     await page.keyboard.press("Escape");
-    await expect(panel).toHaveCSS("transform", "matrix(1, 0, 0, 1, 346, 0)");
+    // Closed means the panel sits off the right edge of the viewport.
+    await expect
+      .poll(async () => (await panel.boundingBox())?.x ?? 0)
+      .toBeGreaterThanOrEqual(1280);
 
     await page
       .locator("metro-button", { hasText: "Open Wide Settings" })
       .click();
     await expect(label).toBeVisible();
-    await expect(panel).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
     const wide = await panel.boundingBox();
     expect(wide?.width).toBeCloseTo(646, 0);
   });
@@ -288,6 +298,184 @@ test.describe("dialogs page use cases", () => {
     await saveItem.click();
     await expect(page.locator("#page-toast .toast-title")).toHaveText("Save");
     await expect(saveItem).toBeHidden();
+  });
+
+  test("user closes a content dialog with its close button", async ({
+    page,
+  }) => {
+    await page
+      .locator("metro-button", { hasText: "Open Content Dialog" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Content Dialog" });
+    await expect(dialog).toBeVisible();
+
+    await page.locator("#content-dialog .close-btn").click();
+    await expect(dialog).toBeHidden();
+  });
+
+  test("user light-dismisses a content dialog by clicking its backdrop", async ({
+    page,
+  }) => {
+    await page
+      .locator("metro-button", { hasText: "Open Content Dialog" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Content Dialog" });
+    await expect(dialog).toBeVisible();
+
+    // Focus lands in the dialog last in show(), so this also waits out the
+    // entrance transition that would swallow the backdrop press.
+    await expect.poll(() => isFocused(page.locator("#content-dialog"))).toBe(true);
+
+    await page
+      .locator("#content-dialog .backdrop")
+      .click({ position: { x: 5, y: 5 } });
+    await expect(dialog).toBeHidden();
+  });
+
+  test("user's page hears a content dialog open and close", async ({
+    page,
+  }) => {
+    await page.locator("#content-dialog").evaluate((el) => {
+      const win = window as Window & { dialogEvents?: string[] };
+      win.dialogEvents = [];
+      el.addEventListener("show", () => win.dialogEvents?.push("show"));
+      el.addEventListener("close", () => win.dialogEvents?.push("close"));
+    });
+
+    await page
+      .locator("metro-button", { hasText: "Open Content Dialog" })
+      .click();
+    await expect(
+      page.getByRole("dialog", { name: "Content Dialog" }),
+    ).toBeVisible();
+    await page.locator("#content-dialog metro-button", { hasText: "OK" }).click();
+
+    await expect
+      .poll(() =>
+        page
+          .locator("#content-dialog")
+          .evaluate(
+            () =>
+              (window as Window & { dialogEvents?: string[] }).dialogEvents ??
+              [],
+          ),
+      )
+      .toEqual(["show", "close"]);
+  });
+
+  test("Escape does nothing in a non-closable dialog", async ({ page }) => {
+    await page
+      .locator("metro-button", { hasText: "Open Non-closable Dialog" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Sticky Dialog" });
+    await expect(dialog).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeVisible();
+
+    await page.locator("#sticky-dialog metro-button", { hasText: "Close" }).click();
+    await expect(dialog).toBeHidden();
+  });
+
+  test("user's page hears a flyout open and close", async ({ page }) => {
+    await page.locator("#demo-flyout").evaluate((el) => {
+      const win = window as Window & { flyoutEvents?: string[] };
+      win.flyoutEvents = [];
+      el.addEventListener("show", () => win.flyoutEvents?.push("show"));
+      el.addEventListener("close", () => win.flyoutEvents?.push("close"));
+    });
+
+    await page.locator("#flyout-bottom-btn").click();
+    const flyout = page.locator("#demo-flyout");
+    await expect(flyout.locator("h4")).toBeVisible();
+    // show() wires Escape only once the entrance transition settles; focus
+    // moving into the flyout is the last step, so polling it waits that out.
+    await expect.poll(() => isFocused(flyout)).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(flyout.locator("h4")).toBeHidden();
+
+    await expect
+      .poll(() =>
+        page
+          .locator("#demo-flyout")
+          .evaluate(
+            () =>
+              (window as Window & { flyoutEvents?: string[] }).flyoutEvents ??
+              [],
+          ),
+      )
+      .toEqual(["show", "close"]);
+  });
+
+  test("user light-dismisses a message dialog by clicking its backdrop", async ({
+    page,
+  }) => {
+    await page
+      .locator("metro-button", { hasText: "Show Message Dialog" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Information" });
+    await expect(dialog).toBeVisible();
+    await expect
+      .poll(() => isFocused(page.locator("#message-dialog")))
+      .toBe(true);
+
+    await page
+      .locator("#message-dialog .backdrop")
+      .click({ position: { x: 5, y: 5 } });
+    await expect(dialog).toBeHidden();
+  });
+
+  test("user opens a teaching tip and dismisses it with its action", async ({
+    page,
+  }) => {
+    const tip = page.locator("#demo-teaching-tip");
+    await tip.evaluate((el) => {
+      const win = window as Window & { tipEvents?: string[] };
+      win.tipEvents = [];
+      el.addEventListener("opened", () => win.tipEvents?.push("opened"));
+      el.addEventListener("closed", () => win.tipEvents?.push("closed"));
+    });
+
+    await page.locator("#teaching-tip-open").click();
+    await expect(tip.locator(".title")).toHaveText("Discover a feature");
+    await expect(tip.locator(".tip")).toHaveCSS("opacity", "1");
+
+    await page.locator("#demo-teaching-tip > metro-button").click();
+    await expect(tip).toBeHidden();
+    await expect
+      .poll(() =>
+        tip.evaluate(
+          () => (window as Window & { tipEvents?: string[] }).tipEvents ?? [],
+        ),
+      )
+      .toEqual(["opened", "closed"]);
+  });
+
+  test("user dismisses a teaching tip with Escape and focus returns to its opener", async ({
+    page,
+  }) => {
+    const opener = page.locator("#teaching-tip-open");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const tip = page.locator("#demo-teaching-tip");
+    await expect(tip.locator(".tip")).toHaveCSS("opacity", "1");
+    await expect.poll(() => isFocused(tip)).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(tip).toBeHidden();
+    await expect.poll(() => isFocused(opener)).toBe(true);
+  });
+
+  test("user light-dismisses a teaching tip by pressing outside it", async ({
+    page,
+  }) => {
+    await page.locator("#teaching-tip-open").click();
+    const tip = page.locator("#demo-teaching-tip");
+    await expect(tip.locator(".tip")).toHaveCSS("opacity", "1");
+
+    await page.locator("metrino-dialogs-page h1").click();
+    await expect(tip).toBeHidden();
   });
 
   test("user's page hears a toast arrive and leave", async ({ page }) => {
@@ -322,5 +510,37 @@ test.describe("dialogs page use cases", () => {
         timeout: 8_000,
       })
       .toBe(`toastshown:${shownId},toasthidden:${shownId}`);
+  });
+
+  test("user dismisses the menu flyout with Escape and focus returns to its opener", async ({
+    page,
+  }) => {
+    const opener = page.locator("#menu-flyout-btn");
+    await opener.locator("button").focus();
+    await page.keyboard.press("Enter");
+    const saveItem = page.locator("#demo-menu-flyout .menu-item", {
+      hasText: "Save",
+    });
+    await expect(saveItem).toBeVisible();
+    // Focus moves into the menu last in show(), so polling it waits out the
+    // entrance transition before Escape can be heard.
+    await expect.poll(() => isFocused(page.locator("#demo-menu-flyout"))).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(saveItem).toBeHidden();
+    await expect.poll(() => isFocused(opener)).toBe(true);
+  });
+
+  test("user clears a persistent toast with Clear All", async ({ page }) => {
+    await page
+      .locator("metro-button", { hasText: "Persistent (no auto-dismiss)" })
+      .click();
+    const message = page.locator("#page-toast .toast-message");
+    await expect(message).toHaveText(
+      "This toast will not auto-dismiss. Click X to close."
+    );
+
+    await page.locator("metro-button", { hasText: "Clear All" }).click();
+    await expect(message).toBeHidden();
   });
 });

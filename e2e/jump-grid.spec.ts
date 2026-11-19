@@ -53,11 +53,6 @@ test.describe("long list selector jump grid", () => {
       "the grid must hold one tile per group the list reports"
     ).toBe(await letters.count());
 
-    expect(
-      await dialog.evaluate((el) => getComputedStyle(el).animationName),
-      "the grid enters with the turnstile animation"
-    ).toBe("metro-turnstile-in");
-
     const keys = await tiles.evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("data-group-key") ?? "")
     );

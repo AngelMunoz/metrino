@@ -13,6 +13,11 @@ import { registerMetroRating } from "@src/components/input/rating.ts";
 import { registerMetroComboBox } from "@src/components/input/combo-box.ts";
 import { registerMetroAutoSuggestBox } from "@src/components/input/auto-suggest-box.ts";
 import { registerMetroRichEditBox } from "@src/components/input/rich-edit-box.ts";
+import { registerMetroDatePicker } from "@src/components/datetime/date-picker.ts";
+import { registerMetroTimePicker } from "@src/components/datetime/time-picker.ts";
+import { registerMetroCalendarDatePicker } from "@src/components/datetime/calendar-date-picker.ts";
+import { registerMetroDatePickerRoller } from "@src/components/datetime/date-picker-roller.ts";
+import { registerMetroTimePickerRoller } from "@src/components/datetime/time-picker-roller.ts";
 import { registerMetroGrid } from "@src/components/layout/grid.ts";
 
 registerMetroTextBox();
@@ -26,6 +31,11 @@ registerMetroRating();
 registerMetroComboBox();
 registerMetroAutoSuggestBox();
 registerMetroRichEditBox();
+registerMetroDatePicker();
+registerMetroTimePicker();
+registerMetroCalendarDatePicker();
+registerMetroDatePickerRoller();
+registerMetroTimePickerRoller();
 registerMetroGrid();
 
 export class MetrinoInputPage extends LitElement {
@@ -67,6 +77,48 @@ export class MetrinoInputPage extends LitElement {
       flex-direction: column;
       gap: var(--metro-spacing-sm, 8px);
     }
+    .validation-forms {
+      display: flex;
+      flex-direction: column;
+      gap: var(--metro-spacing-md, 12px);
+    }
+    .validation-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--metro-spacing-sm, 8px);
+      padding: var(--metro-spacing-sm, 8px);
+      border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
+    }
+    .form-title {
+      margin: 0;
+      font-size: var(--metro-font-size-small, 12px);
+      font-weight: 600;
+    }
+    .form-buttons {
+      display: flex;
+      gap: var(--metro-spacing-sm, 8px);
+    }
+    .form-buttons button {
+      font: inherit;
+      padding: 6px 18px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--metro-foreground, #ffffff);
+      border: 1px solid var(--metro-accent, #0078d4);
+    }
+    .form-buttons button[type="submit"] {
+      background: var(--metro-accent, #0078d4);
+      color: #ffffff;
+    }
+    .form-outcome {
+      font-size: var(--metro-font-size-small, 12px);
+      color: var(--metro-accent, #0078d4);
+    }
+    metro-date-picker,
+    metro-time-picker,
+    metro-calendar-date-picker {
+      max-width: 280px;
+    }
     `,
   ];
 
@@ -78,6 +130,7 @@ export class MetrinoInputPage extends LitElement {
     toggleOn: { state: true },
     sliderValue: { state: true },
     ratingValue: { state: true },
+    radioValue: { state: true },
     comboValue: { state: true },
     autoSuggestValue: { state: true },
     richEditValue: { state: true },
@@ -87,6 +140,7 @@ export class MetrinoInputPage extends LitElement {
   declare passwordValue: string;
   declare numberValue: number;
   declare checkBoxChecked: boolean;
+  declare radioValue: string;
   declare toggleOn: boolean;
   declare sliderValue: number;
   declare ratingValue: number;
@@ -96,6 +150,8 @@ export class MetrinoInputPage extends LitElement {
 
   #comboBox: any;
   #autoSuggestBox: any;
+  #formComboBox: any;
+  #formAutoSuggestBox: any;
 
   constructor() {
     super();
@@ -103,6 +159,7 @@ export class MetrinoInputPage extends LitElement {
     this.passwordValue = "";
     this.numberValue = 0;
     this.checkBoxChecked = false;
+    this.radioValue = "";
     this.toggleOn = false;
     this.sliderValue = 50;
     this.ratingValue = 3;
@@ -126,6 +183,28 @@ export class MetrinoInputPage extends LitElement {
     }
     if (this.#autoSuggestBox) {
       this.#autoSuggestBox.setSuggestions([]);
+    }
+
+    this.#formComboBox = this.shadowRoot?.querySelector("#form-combo");
+    this.#formAutoSuggestBox =
+      this.shadowRoot?.querySelector("#form-suggest");
+
+    if (this.#formComboBox) {
+      this.#formComboBox.setOptions(["Option 1", "Option 2", "Option 3"]);
+    }
+    if (this.#formAutoSuggestBox) {
+      this.#formAutoSuggestBox.setSuggestions([
+        "Apple",
+        "Banana",
+        "Cherry",
+        "Date",
+        "Elderberry",
+        "Fig",
+        "Grape",
+        "Honeydew",
+        "Kiwi",
+        "Lemon",
+      ]);
     }
   }
 
@@ -152,6 +231,51 @@ export class MetrinoInputPage extends LitElement {
 
     if (this.#autoSuggestBox) {
       this.#autoSuggestBox.setSuggestions(filtered);
+    }
+  }
+
+  #handleFormSuggestChange(e: CustomEvent): void {
+    const text = e.detail.text;
+
+    const allSuggestions = [
+      "Apple",
+      "Banana",
+      "Cherry",
+      "Date",
+      "Elderberry",
+      "Fig",
+      "Grape",
+      "Honeydew",
+      "Kiwi",
+      "Lemon",
+    ];
+
+    const filtered = allSuggestions.filter((s) =>
+      s.toLowerCase().includes(text.toLowerCase()),
+    );
+
+    if (this.#formAutoSuggestBox) {
+      this.#formAutoSuggestBox.setSuggestions(filtered);
+    }
+  }
+
+  #handleValidationSubmit(e: SubmitEvent): void {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const outcome = form.querySelector("[data-outcome]");
+    const entries = [...new FormData(form).entries()]
+      .map(([key, value]) => `${key}=${value}`)
+      .join(", ");
+    if (outcome) {
+      outcome.textContent = entries ? `Submitted: ${entries}` : "Submitted";
+    }
+  }
+
+  #handleValidationReset(e: Event): void {
+    const form = e.target as HTMLFormElement;
+    const outcome = form.querySelector("[data-outcome]");
+    if (outcome) {
+      outcome.textContent = "Not submitted";
     }
   }
 
@@ -322,15 +446,30 @@ export class MetrinoInputPage extends LitElement {
           </p>
           <div class="demo-area">
             <div class="radio-group">
-              <metro-radio-button name="demo-radio" value="option1"
+              <metro-radio-button
+                name="demo-radio"
+                value="option1"
+                @change=${(e: CustomEvent) =>
+                  (this.radioValue = e.detail.value)}
                 >Option 1</metro-radio-button
               >
-              <metro-radio-button name="demo-radio" value="option2"
+              <metro-radio-button
+                name="demo-radio"
+                value="option2"
+                @change=${(e: CustomEvent) =>
+                  (this.radioValue = e.detail.value)}
                 >Option 2</metro-radio-button
               >
-              <metro-radio-button name="demo-radio" value="option3"
+              <metro-radio-button
+                name="demo-radio"
+                value="option3"
+                @change=${(e: CustomEvent) =>
+                  (this.radioValue = e.detail.value)}
                 >Option 3</metro-radio-button
               >
+            </div>
+            <div class="value-display" id="radio-value">
+              Selected: ${this.radioValue || "None"}
             </div>
             <div class="demo-row" style="margin-top: 12px;">
               <metro-radio-button name="disabled-radio" disabled
@@ -555,6 +694,269 @@ export class MetrinoInputPage extends LitElement {
 &lt;/metro-rich-edit-box&gt;</pre
           >
           <api-docs component="MetroRichEditBox"></api-docs>
+        </div>
+
+        <div class="demo-card wide">
+          <h3 class="component-title">Form validation</h3>
+          <p class="component-desc">
+            Each mini-form below is a real form: submit goes through only when
+            every control is valid, and the outcome line echoes the submitted
+            values. A blocked submit fires invalid on the offending control
+            and leaves the outcome untouched.
+          </p>
+          <div class="demo-area validation-forms">
+            <form
+              id="form-text"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Required text and password</p>
+              <metro-text-box
+                name="username"
+                label="Login name"
+                placeholder="Required"
+                required
+              ></metro-text-box>
+              <metro-password-box
+                name="password"
+                label="Password"
+                placeholder="Required"
+                required
+              ></metro-password-box>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-number"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Number range, step, and required</p>
+              <metro-number-box
+                name="count"
+                label="Count (0-10)"
+                min="0"
+                max="10"
+                step="1"
+              ></metro-number-box>
+              <metro-number-box
+                name="needed"
+                label="Needed (required)"
+                required
+              ></metro-number-box>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-checkable"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Required checkables</p>
+              <metro-check-box name="agree" required
+                >Agree to the terms</metro-check-box
+              >
+              <metro-toggle-switch name="notify" required
+                >Get alerts</metro-toggle-switch
+              >
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-radio"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Required radio group</p>
+              <metro-radio-button name="plan" value="a" required
+                >Basic</metro-radio-button
+              >
+              <metro-radio-button name="plan" value="b"
+                >Pro</metro-radio-button
+              >
+              <metro-radio-button name="plan" value="c"
+                >Team</metro-radio-button
+              >
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-radio-other"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Second form, same radio name</p>
+              <metro-radio-button name="plan" value="x"
+                >Other A</metro-radio-button
+              >
+              <metro-radio-button name="plan" value="y"
+                >Other B</metro-radio-button
+              >
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-choice"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Slider and required rating</p>
+              <metro-slider
+                name="volume"
+                min="0"
+                max="100"
+                value="50"
+              ></metro-slider>
+              <metro-rating name="stars" max="5" required></metro-rating>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-pick"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Required combo and auto-suggest</p>
+              <metro-combo-box
+                id="form-combo"
+                name="choice"
+                placeholder="Choose an option..."
+                required
+              ></metro-combo-box>
+              <metro-auto-suggest-box
+                id="form-suggest"
+                name="fruit"
+                placeholder="Type a fruit..."
+                required
+                @textchanged=${this.#handleFormSuggestChange}
+              ></metro-auto-suggest-box>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-rich"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Required rich text</p>
+              <metro-rich-edit-box
+                name="bio"
+                label="Bio"
+                placeholder="Tell us about yourself..."
+                required
+              ></metro-rich-edit-box>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-datetime"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Required date and time</p>
+              <metro-date-picker
+                name="day"
+                label="Day"
+                required
+              ></metro-date-picker>
+              <metro-time-picker
+                name="alarm"
+                label="Alarm"
+                required
+              ></metro-time-picker>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-calendar"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Calendar date with min/max bounds</p>
+              <metro-calendar-date-picker
+                name="holiday"
+                placeholder="Pick a date..."
+                required
+                min-date="2020-01-01"
+                max-date="2030-12-31"
+              ></metro-calendar-date-picker>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+            <form
+              id="form-roller"
+              class="validation-form"
+              @submit=${this.#handleValidationSubmit}
+              @reset=${this.#handleValidationReset}
+            >
+              <p class="form-title">Required roller pickers</p>
+              <metro-date-picker-roller
+                name="rolled"
+                label="Rolled date"
+                required
+                min-year="2000"
+                max-year="2030"
+              ></metro-date-picker-roller>
+              <metro-time-picker-roller
+                name="shift"
+                label="Shift start"
+                hour-format="12"
+                required
+              ></metro-time-picker-roller>
+              <div class="form-buttons">
+                <button type="submit">Submit</button>
+                <button type="reset">Reset</button>
+              </div>
+              <div class="form-outcome" data-outcome>Not submitted</div>
+            </form>
+          </div>
+          <pre class="code-snippet">
+&lt;form id="form-text"&gt;
+  &lt;metro-text-box name="username" required&gt;
+  &lt;/metro-text-box&gt;
+  &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre
+          >
         </div>
       </metro-grid>
     `;

@@ -6,6 +6,7 @@ import { registerMetroGrid } from "@src/components/layout/grid.ts";
 import { registerMetroContentDialog } from "@src/components/dialogs/content-dialog.ts";
 import { registerMetroMessageDialog } from "@src/components/dialogs/message-dialog.ts";
 import { registerMetroFlyout } from "@src/components/dialogs/flyout.ts";
+import { registerMetroTeachingTip } from "@src/components/dialogs/teaching-tip.ts";
 import { registerMetroSettingsFlyout } from "@src/components/dialogs/settings-flyout.ts";
 import { registerMetroToast, ToastHost } from "@src/components/primitives/toast.ts";
 import { registerMetroMenuFlyout } from "@src/components/primitives/menu-flyout.ts";
@@ -16,6 +17,7 @@ import { registerMetroToggleSwitch } from "@src/components/input/toggle-switch.t
 registerMetroContentDialog();
 registerMetroMessageDialog();
 registerMetroFlyout();
+registerMetroTeachingTip();
 registerMetroSettingsFlyout();
 registerMetroToast();
 registerMetroMenuFlyout();
@@ -114,6 +116,9 @@ export class MetrinoDialogsPage extends LitElement {
           <metro-button id="content-dialog-open" @click=${this.#openContentDialog}
             >Open Content Dialog</metro-button
           >
+          <metro-button id="sticky-dialog-open" @click=${this.#openStickyDialog}
+            >Open Non-closable Dialog</metro-button
+          >
         </div>
         <metro-content-dialog id="content-dialog" title="Content Dialog">
           <div class="dialog-content">
@@ -129,6 +134,23 @@ export class MetrinoDialogsPage extends LitElement {
             >
             <metro-button accent @click=${this.#closeContentDialog}
               >OK</metro-button
+            >
+          </div>
+        </metro-content-dialog>
+        <metro-content-dialog
+          id="sticky-dialog"
+          title="Sticky Dialog"
+          .closable=${false}
+        >
+          <div class="dialog-content">
+            <p>
+              This dialog cannot be light-dismissed. Pressing Escape does
+              nothing here; use the button below to close it.
+            </p>
+          </div>
+          <div slot="buttons" class="dialog-buttons">
+            <metro-button accent @click=${this.#closeStickyDialog}
+              >Close</metro-button
             >
           </div>
         </metro-content-dialog>
@@ -310,6 +332,32 @@ export class MetrinoDialogsPage extends LitElement {
         </metro-menu-flyout>
         <api-docs component="MetroMenuFlyout"></api-docs>
       </div>
+
+      <div class="demo-card">
+        <h2 class="component-title">metro-teaching-tip</h2>
+        <p class="component-desc">
+          A contextual callout anchored to a target element. Opens with a
+          swivel/fade entrance, dismisses on outside press or Escape, and
+          returns focus to its target on close.
+        </p>
+        <div class="demo-row">
+          <metro-button id="teaching-tip-open" @click=${this.#openTeachingTip}
+            >Show Teaching Tip</metro-button
+          >
+        </div>
+        <metro-teaching-tip
+          id="demo-teaching-tip"
+          title="Discover a feature"
+          subtitle="Tips point at what is new"
+          target="teaching-tip-open"
+        >
+          <div>This tip is anchored to the button above.</div>
+          <metro-button slot="action" accent @click=${this.#hideTeachingTip}
+            >Got it</metro-button
+          >
+        </metro-teaching-tip>
+        <api-docs component="MetroTeachingTip"></api-docs>
+      </div>
       </metro-grid>
     `;
   }
@@ -326,6 +374,36 @@ export class MetrinoDialogsPage extends LitElement {
       "#content-dialog",
     ) as HTMLElement & { hide: () => void };
     dialog?.hide();
+  }
+
+  #openStickyDialog(): void {
+    const dialog = this.shadowRoot?.querySelector(
+      "#sticky-dialog",
+    ) as HTMLElement & { show: () => void };
+    dialog?.show();
+  }
+
+  #closeStickyDialog(): void {
+    const dialog = this.shadowRoot?.querySelector(
+      "#sticky-dialog",
+    ) as HTMLElement & { hide: () => void };
+    dialog?.hide();
+  }
+
+  #openTeachingTip(e: Event): void {
+    const tip = this.shadowRoot?.querySelector(
+      "#demo-teaching-tip",
+    ) as HTMLElement & {
+      show: (target: Element) => void;
+    };
+    tip?.show(e.target as Element);
+  }
+
+  #hideTeachingTip(): void {
+    const tip = this.shadowRoot?.querySelector(
+      "#demo-teaching-tip",
+    ) as HTMLElement & { hide: () => void };
+    tip?.hide();
   }
 
   #openMessageDialog(): void {

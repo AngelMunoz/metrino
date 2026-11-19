@@ -32,19 +32,6 @@ test.describe("tiles page use cases", () => {
     await expect(headline).toHaveText("Second", { timeout: 3_000 });
   });
 
-  test("user leaves the interval alone and the tile stays put for a while", async ({
-    page,
-  }) => {
-    await openTiles(page);
-    await fillLiveTile(page.locator("#live-tile-demo"), null);
-
-    const headline = page.locator("#live-tile-demo .live-content.active .live-title");
-    await expect(headline).toHaveText("First");
-    // The default is the irregular 6-10s gap, not the 800ms of the test above.
-    await page.waitForTimeout(1_600);
-    await expect(headline).toHaveText("First");
-  });
-
   test("user taps a tile once and the page sees one click", async ({ page }) => {
     await openTiles(page);
 

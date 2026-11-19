@@ -69,6 +69,20 @@ test.describe("primitives page use cases", () => {
       .toBeLessThanOrEqual(1);
   });
 
+  test("user opens the context menu from its button", async ({
+    page,
+  }) => {
+    await openPrimitives(page);
+
+    const item = page.locator('metro-context-menu [slot="item"]', {
+      hasText: "Edit",
+    });
+    await expect(item).toBeHidden();
+
+    await page.locator("#context-menu-btn").click();
+    await expect(item).toBeVisible();
+  });
+
   test("user sees the Metro accent in the native player controls", async ({
     page,
   }) => {

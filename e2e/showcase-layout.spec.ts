@@ -96,7 +96,15 @@ async function measure(page: Page, tag: string): Promise<ShowcaseReport> {
 async function openPage(page: Page, route: string): Promise<void> {
   await page.goto(`/#${route}`);
   await page.locator("metrino-app h1").first().waitFor();
-  await page.waitForTimeout(600);
+  // Layout is final once the route turnstile's view transition finishes.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => !document.documentElement.matches(":active-view-transition")
+      )
+    )
+    .toBe(true);
+  await page.evaluate(() => document.fonts.ready);
 }
 
 test.describe("showcase layout consistency", () => {

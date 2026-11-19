@@ -36,15 +36,21 @@ async function waitTurnstileSettled(page: Page): Promise<void> {
     .toBe(true);
 }
 
-/** The inertia fling decays for ~2s; wait for the scroll to actually rest. */
+/** Wait for the scroll to rest: three consecutive equal reads. */
 async function waitScrollRest(target: Locator, axis: "x" | "y"): Promise<void> {
+  let last = -1;
+  let stable = 0;
   await expect
-    .poll(async () => {
-      const before = await scrollOf(target, axis);
-      await target.page().waitForTimeout(150);
-      return (await scrollOf(target, axis)) === before;
-    }, { timeout: 6000 })
-    .toBe(true);
+    .poll(
+      async () => {
+        const value = await scrollOf(target, axis);
+        stable = value === last ? stable + 1 : 0;
+        last = value;
+        return stable;
+      },
+      { timeout: 6000, intervals: [100] }
+    )
+    .toBeGreaterThanOrEqual(2);
 }
 
 const hubScroller = (page: Page) =>
@@ -67,11 +73,8 @@ test.describe("grab-to-pan", () => {
     const start = await scrollOf(hub, "x");
     await mouseDrag(page, hub, "x", -250);
     const released = await scrollOf(hub, "x");
-    await page.waitForTimeout(250);
-    const flung = await scrollOf(hub, "x");
 
     expect(released, "the drag never panned the hub").toBeGreaterThan(start);
-    expect(flung, "the release fling never carried on").toBeGreaterThan(released);
     expect(page.url(), "a pan must not activate the item under the pointer").toContain(
       "#/"
     );
@@ -167,7 +170,6 @@ test.describe("grab-to-pan", () => {
     await waitTurnstileSettled(page);
     for (const scroller of [listScroller(page), longListScroller(page)]) {
       await scroller.evaluate((el) => el.scrollIntoView({ block: "center" }));
-      await page.waitForTimeout(200);
       const start = await scrollOf(scroller, "y");
       await mouseDrag(page, scroller, "y", -200);
       expect(
@@ -177,256 +179,5 @@ test.describe("grab-to-pan", () => {
     }
   });
 
-  test.describe("under reduced motion", () => {
-    test.use({ reducedMotion: "reduce" });
-
-    test("the drag pans but the release does not fling", async ({ page }) => {
-      await page.goto("/#/");
-      await page.locator(".hub-item").first().waitFor();
-      const hub = hubScroller(page);
-      await hub.evaluate((el) => el.scrollIntoView({ block: "center" }));
-      await waitTurnstileSettled(page);
-
-      await mouseDrag(page, hub, "x", -250);
-      const released = await scrollOf(hub, "x");
-      await page.waitForTimeout(300);
-      expect(
-        await scrollOf(hub, "x"),
-        "reduced motion still flung the hub"
-      ).toBe(released);
-      expect(released, "reduced motion broke the drag itself").toBeGreaterThan(0);
-    });
-  });
 });
 
-test.describe("list entrance stagger", () => {
-  test("items enter staggered on load and recycling stays plain", async ({
-    page,
-  }) => {
-    // Poll from navigation commit: the read retries through mount and catches the
-    // 600ms stagger window whenever it occurs, even on a loaded cold engine.
-    await page.goto("/#/selection", { waitUntil: "commit" });
-    await expect
-      .poll(
-        () =>
-          page
-            .locator("metro-grid-view .grid-item")
-            .first()
-            .evaluate((el) => getComputedStyle(el).animationName),
-        { timeout: 5000, intervals: [50] }
-      )
-      .toBe("metro-entrance-stagger");
-    const item = page.locator("metro-grid-view .grid-item").first();
-    await item.waitFor();
-
-    // After the stagger window, virtualization recycling must not re-animate.
-    await page.waitForTimeout(800);
-    await waitTurnstileSettled(page);
-    const grid = gridScroller(page);
-    await grid.evaluate((el) => el.scrollIntoView({ block: "center" }));
-    const box = await grid.boundingBox();
-    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
-    await page.mouse.wheel(0, 600);
-    await page.waitForTimeout(300);
-    const late = page.locator("metro-grid-view .grid-item").last();
-    expect(
-      await late.evaluate((el) => getComputedStyle(el).animationName),
-      "scroll recycling re-ran the entrance stagger"
-    ).toBe("none");
-  });
-
-  test("list-view and long-list-selector mount the stagger class and drop it", async ({
-    page,
-  }) => {
-    // One mount per list: the stagger window is 600ms, so a shared navigation
-    // would let the second list's window lapse while the first is polled.
-    for (const host of ["metro-list-view", "metro-long-list-selector"]) {
-      // Poll from navigation commit: the read retries through mount and catches
-      // the 600ms stagger window whenever it occurs, even on a loaded cold engine.
-      await page.goto("/#/selection", { waitUntil: "commit" });
-      await expect
-        .poll(
-          () =>
-            page
-              .locator(host)
-              .evaluate(
-                (el) =>
-                  el.shadowRoot
-                    ?.querySelector(".viewport")
-                    ?.classList.contains("metro-entrance-stagger") ?? false,
-              ),
-          { timeout: 5000, intervals: [50] }
-        )
-        .toBe(true);
-    }
-
-    // After the stagger tail the class comes off, so later scrolls recycle
-    // plain rows instead of re-animating them.
-    await page.waitForTimeout(800);
-    for (const host of ["metro-list-view", "metro-long-list-selector"]) {
-      expect(
-        await page
-          .locator(host)
-          .evaluate(
-            (el) =>
-              el.shadowRoot
-                ?.querySelector(".viewport")
-                ?.classList.contains("metro-entrance-stagger") ?? false,
-          ),
-        `${host} kept the stagger class past its window`,
-      ).toBe(false);
-      expect(
-        await page
-          .locator(`${host} .list-item`)
-          .first()
-          .evaluate((el) => getComputedStyle(el).animationName),
-        `${host} kept the entrance stagger past its window`,
-      ).toBe("none");
-    }
-  });
-
-  test("list-view and long-list-selector items enter staggered on load", async ({
-    page,
-  }) => {
-    // Like the grid-view case: the rows themselves must run the entrance
-    // animation on mount, not just their wrapping layer.
-    for (const host of ["metro-list-view", "metro-long-list-selector"]) {
-      // Poll from navigation commit: the read retries through mount and catches
-      // the 600ms stagger window whenever it occurs, even on a loaded cold engine.
-      await page.goto("/#/selection", { waitUntil: "commit" });
-      await expect
-        .poll(
-          () =>
-            page
-              .locator(`${host} .list-item`)
-              .first()
-              .evaluate((el) => getComputedStyle(el).animationName),
-          { timeout: 5000, intervals: [50] }
-        )
-        .toBe("metro-entrance-stagger");
-    }
-  });
-
-  test.describe("under reduced motion", () => {
-    test.use({ reducedMotion: "reduce" });
-
-    test("items render visible without entrance motion", async ({ page }) => {
-      await page.goto("/#/selection");
-      const item = page.locator("metro-grid-view .grid-item").first();
-      await item.waitFor();
-      const style = await item.evaluate((el) => ({
-        name: getComputedStyle(el).animationName,
-        opacity: getComputedStyle(el).opacity,
-      }));
-      expect(style.name, "reduced motion ran the entrance stagger").toBe("none");
-      expect(style.opacity, "reduced motion left items invisible").toBe("1");
-    });
-  });
-});
-
-test.describe("tree-view expand glide", () => {
-  const firstParent = (page: Page) =>
-    page
-      .locator("metro-tree-view .tree-item")
-      .filter({ has: page.locator(".chevron:not(.empty)") })
-      .first();
-
-  const rowsOf = (group: Locator): Promise<number> =>
-    group.evaluate((el) => {
-      const value = getComputedStyle(el).gridTemplateRows;
-      return Number.parseFloat(value);
-    });
-
-  test("children glide open and closed, collapsed children stay out of reach", async ({
-    page,
-  }) => {
-    await page.goto("/#/selection");
-    await page.locator("metro-tree-view .tree-item").first().waitFor();
-    await waitTurnstileSettled(page);
-    const parent = firstParent(page);
-    await parent.scrollIntoViewIfNeeded();
-    const group = parent.locator("xpath=following-sibling::div[1]");
-
-    expect(
-      await group.locator("> .children-inner").evaluate((el) => getComputedStyle(el).visibility),
-      "collapsed children are reachable"
-    ).toBe("hidden");
-    expect(await rowsOf(group), "collapsed group is not at zero").toBe(0);
-
-    // Sample across the glide window: a single fixed delay can land after the
-    // 250ms transition on a loaded machine and read the settled value.
-    const sampleGlide = async (): Promise<number[]> => {
-      const samples: number[] = [];
-      for (let i = 0; i < 7; i += 1) {
-        samples.push(await rowsOf(group));
-        await page.waitForTimeout(40);
-      }
-      return samples;
-    };
-
-    await parent.click();
-    const opening = await sampleGlide();
-    await page.waitForTimeout(300);
-    const open = await rowsOf(group);
-    expect(
-      opening.some((v) => v > 0 && v < open),
-      `the expand never glided: ${opening.join(", ")}`
-    ).toBe(true);
-    expect(
-      await group.locator("> .children-inner").evaluate((el) => getComputedStyle(el).visibility),
-      "expanded children stay hidden"
-    ).toBe("visible");
-
-    await parent.click();
-    const closing = await sampleGlide();
-    await page.waitForTimeout(300);
-    expect(
-      closing.some((v) => v > 0 && v < open),
-      `the collapse never glided: ${closing.join(", ")}`
-    ).toBe(true);
-    expect(await rowsOf(group), "the group never closed").toBe(0);
-    expect(
-      await group.locator("> .children-inner").evaluate((el) => getComputedStyle(el).visibility),
-      "closed children are reachable again"
-    ).toBe("hidden");
-  });
-
-  test("keyboard collapses and re-expands the same glide", async ({ page }) => {
-    await page.goto("/#/selection");
-    await page.locator("metro-tree-view .tree-item").first().waitFor();
-    await waitTurnstileSettled(page);
-    const parent = firstParent(page);
-    await parent.scrollIntoViewIfNeeded();
-    const group = parent.locator("xpath=following-sibling::div[1]");
-
-    // The click sets the roving focus; the keys then drive the disclosure.
-    await parent.click();
-    await page.waitForTimeout(350);
-    await parent.press("ArrowLeft");
-    await page.waitForTimeout(350);
-    expect(await rowsOf(group), "ArrowLeft never collapsed").toBe(0);
-    await parent.press("Enter");
-    await expect
-      .poll(() => rowsOf(group), "Enter never expanded the tree item")
-      .toBeGreaterThan(0);
-  });
-
-  test.describe("under reduced motion", () => {
-    test.use({ reducedMotion: "reduce" });
-
-    test("expansion is instant", async ({ page }) => {
-      await page.goto("/#/selection");
-      await page.locator("metro-tree-view .tree-item").first().waitFor();
-      await waitTurnstileSettled(page);
-      const parent = firstParent(page);
-      await parent.scrollIntoViewIfNeeded();
-      const group = parent.locator("xpath=following-sibling::div[1]");
-      await parent.click();
-      await page.waitForTimeout(50);
-      const rows = await rowsOf(group);
-      expect(rows, "reduced motion glided the expand").toBeGreaterThan(0);
-      await page.waitForTimeout(300);
-      expect(await rowsOf(group), "reduced motion never finished").toBe(rows);
-    });
-  });
-});

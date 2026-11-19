@@ -68,15 +68,27 @@ export class MetrinoButtonsPage extends LitElement {
   static properties = {
     repeatCount: { state: true },
     dropdownOpen: { state: true },
+    buttonClicks: { state: true },
+    hyperlinkClicks: { state: true },
+    dropdownPick: { state: true },
+    formOutcome: { state: true },
   };
 
   declare repeatCount: number;
   declare dropdownOpen: boolean;
+  declare buttonClicks: number;
+  declare hyperlinkClicks: number;
+  declare dropdownPick: string;
+  declare formOutcome: string;
 
   constructor() {
     super();
     this.repeatCount = 0;
     this.dropdownOpen = false;
+    this.buttonClicks = 0;
+    this.hyperlinkClicks = 0;
+    this.dropdownPick = "nothing picked";
+    this.formOutcome = "idle";
   }
 
   #handleRepeatClick(): void {
@@ -85,6 +97,25 @@ export class MetrinoButtonsPage extends LitElement {
 
   #handleRepeatReset(): void {
     this.repeatCount = 0;
+  }
+
+  #handleButtonClick(): void {
+    this.buttonClicks++;
+  }
+
+  #handleHyperlinkAction(): void {
+    this.hyperlinkClicks++;
+  }
+
+  #handleDropdownPick(e: Event): void {
+    this.dropdownPick = (e.target as HTMLElement).textContent?.trim() ?? "";
+  }
+
+  #handleFormSubmit(e: Event): void {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const data = new FormData(form);
+    this.formOutcome = `submitted:${data.get("field")}`;
   }
 
   render() {
@@ -111,6 +142,39 @@ export class MetrinoButtonsPage extends LitElement {
           <span class="demo-label">Disabled:</span>
           <metro-button disabled>Disabled</metro-button>
         </div>
+        <div class="demo-container">
+          <span class="demo-label">Clicks:</span>
+          <metro-button id="button-clicker" @click=${this.#handleButtonClick}
+            >Count me</metro-button
+          >
+          <metro-button
+            id="button-clicker-disabled"
+            disabled
+            @click=${this.#handleButtonClick}
+            >Disabled</metro-button
+          >
+          <span class="counter-display" id="button-click-count"
+            >${this.buttonClicks}</span
+          >
+        </div>
+        <form id="button-form" @submit=${this.#handleFormSubmit}>
+          <div class="demo-container">
+            <span class="demo-label">Form field:</span>
+            <input id="button-form-field" name="field" value="default" />
+            <metro-button id="button-form-submit">Submit</metro-button>
+            <metro-button id="button-form-nobutton" type="button"
+              >No submit</metro-button
+            >
+            <metro-button id="button-form-disabled" disabled
+              >Disabled</metro-button
+            >
+            <metro-button id="button-form-reset" type="reset"
+              >Reset</metro-button
+            >
+            <span class="demo-label">Outcome:</span>
+            <span id="button-form-outcome">${this.formOutcome}</span>
+          </div>
+        </form>
         <pre
           class="code-snippet"
         ><code>&lt;metro-button&gt;Button&lt;/metro-button&gt;
@@ -139,11 +203,20 @@ export class MetrinoButtonsPage extends LitElement {
             >Navigate</metro-hyperlink-button
           >
           <span class="demo-label">Button mode:</span>
-          <metro-hyperlink-button>Action</metro-hyperlink-button>
+          <metro-hyperlink-button
+            id="hyperlink-action"
+            @click=${this.#handleHyperlinkAction}
+            >Action</metro-hyperlink-button
+          >
           <span class="demo-label">Disabled:</span>
-          <metro-hyperlink-button disabled
+          <metro-hyperlink-button
+            id="hyperlink-disabled"
+            disabled
+            @click=${this.#handleHyperlinkAction}
             >Disabled Link</metro-hyperlink-button
           >
+          <span class="demo-label">Activations:</span>
+          <span id="hyperlink-outcome">${this.hyperlinkClicks}</span>
         </div>
         <pre
           class="code-snippet"
@@ -164,8 +237,12 @@ export class MetrinoButtonsPage extends LitElement {
           <metro-repeat-button @click=${this.#handleRepeatClick}
             >Click Me</metro-repeat-button
           >
-          <span class="counter-display">${this.repeatCount}</span>
-          <metro-button @click=${this.#handleRepeatReset}>Reset</metro-button>
+          <span class="counter-display" id="repeat-count"
+            >${this.repeatCount}</span
+          >
+          <metro-button id="repeat-reset" @click=${this.#handleRepeatReset}
+            >Reset</metro-button
+          >
         </div>
         <pre
           class="code-snippet"
@@ -189,13 +266,43 @@ function handleClick() {
         </p>
         <div class="demo-container">
           <span class="demo-label">Bottom placement:</span>
-          <metro-dropdown-button label="Options" placement="bottom">
-            <div class="menu-item" role="menuitem">Edit</div>
-            <div class="menu-item" role="menuitem">Copy</div>
-            <div class="menu-item" role="menuitem">Paste</div>
+          <metro-dropdown-button
+            id="dropdown-options"
+            label="Options"
+            placement="bottom"
+          >
+            <div
+              class="menu-item"
+              role="menuitem"
+              @click=${this.#handleDropdownPick}
+            >
+              Edit
+            </div>
+            <div
+              class="menu-item"
+              role="menuitem"
+              @click=${this.#handleDropdownPick}
+            >
+              Copy
+            </div>
+            <div
+              class="menu-item"
+              role="menuitem"
+              @click=${this.#handleDropdownPick}
+            >
+              Paste
+            </div>
             <div class="menu-divider"></div>
-            <div class="menu-item" role="menuitem">Delete</div>
+            <div
+              class="menu-item"
+              role="menuitem"
+              @click=${this.#handleDropdownPick}
+            >
+              Delete
+            </div>
           </metro-dropdown-button>
+          <span class="demo-label">Picked:</span>
+          <span id="dropdown-pick">${this.dropdownPick}</span>
           <span class="demo-label">Top placement:</span>
           <metro-dropdown-button label="Actions" placement="top">
             <div class="menu-item" role="menuitem">Undo</div>
@@ -204,7 +311,11 @@ function handleClick() {
             <div class="menu-item" role="menuitem">Clear All</div>
           </metro-dropdown-button>
           <span class="demo-label">Disabled:</span>
-          <metro-dropdown-button label="Disabled" disabled>
+          <metro-dropdown-button
+            id="dropdown-disabled"
+            label="Disabled"
+            disabled
+          >
             <div class="menu-item" role="menuitem">Item</div>
           </metro-dropdown-button>
         </div>
