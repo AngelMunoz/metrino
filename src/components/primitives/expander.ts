@@ -44,6 +44,9 @@ import { registerMetroIcon } from "./icon.ts";
  * @csspart expander-content - The collapsible content container
  * @csspart expander-inner - The inner content wrapper
  */
+/** Mints the per-instance content id; ids must not repeat across expanders. */
+let expanderSerial = 0;
+
 export class MetroExpander extends LitElement {
   static properties = {
     /**
@@ -62,6 +65,8 @@ export class MetroExpander extends LitElement {
 
   declare expanded: boolean;
   declare title: string;
+
+  #contentId = `metro-expander-content-${(expanderSerial += 1)}`;
 
   static styles = [
     baseTypography,
@@ -133,7 +138,7 @@ export class MetroExpander extends LitElement {
         role="button"
         tabindex="0"
         aria-expanded=${this.expanded}
-        aria-controls="expander-content"
+        aria-controls=${this.#contentId}
         @click=${this.#toggle}
         @keydown=${this.#handleKeydown}
       >
@@ -147,7 +152,7 @@ export class MetroExpander extends LitElement {
           size="small"
         ></metro-icon>
       </div>
-      <div class="expander-content" part="expander-content" id="expander-content">
+      <div class="expander-content" part="expander-content" id=${this.#contentId}>
         <div class="expander-inner" part="expander-inner">
           <div class="expander-pad" part="expander-pad">
             <slot></slot>
