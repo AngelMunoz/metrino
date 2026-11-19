@@ -286,12 +286,20 @@ export class MetrinoAnimationsPage extends LitElement {
       animation: metro-turnstile-out var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
     }
 
+    /* The continuum previews with the shared keyframes rather than a local copy, so it is
+       the same translate the class and the flight run. The keyframes read the flight
+       offsets off the element, so the preview supplies the item offsets of the source
+       storyboard (TranslateX 130 / TranslateY -70 in, 225 / 73 out) to show a travel. */
     .animation-target.animate-continuum-enter {
-      animation: continuumEnter var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
+      --metro-continuum-dx: 130px;
+      --metro-continuum-dy: -70px;
+      animation: metro-continuum-enter var(--duration, 150ms) var(--easing, cubic-bezier(0.19, 1, 0.22, 1)) forwards;
     }
 
     .animation-target.animate-continuum-exit {
-      animation: continuumExit var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
+      --metro-continuum-dx: 225px;
+      --metro-continuum-dy: 73px;
+      animation: metro-continuum-exit var(--duration, 150ms) var(--easing, cubic-bezier(0.19, 1, 0.22, 1)) forwards;
     }
 
     .animation-target.animate-turnstile-feather {
@@ -330,16 +338,6 @@ export class MetrinoAnimationsPage extends LitElement {
     @keyframes slideRight {
       from { transform: translateX(-100px); opacity: 0; }
       to { translateX(0); opacity: 1; }
-    }
-
-    @keyframes continuumEnter {
-      from { transform: scale(0.8) rotateY(-15deg); opacity: 0; }
-      to { transform: scale(1) rotateY(0deg); opacity: 1; }
-    }
-
-    @keyframes continuumExit {
-      from { transform: scale(1) rotateY(0deg); opacity: 1; }
-      to { transform: scale(0.8) rotateY(15deg); opacity: 0; }
     }
 
     @keyframes turnstileFeather {
@@ -590,7 +588,7 @@ export class MetrinoAnimationsPage extends LitElement {
           <div class="slider-container">
             <input
               type="range"
-              min="167"
+              min="150"
               max="1000"
               .value=${String(this.duration)}
               @input=${this.#handleDurationChange}

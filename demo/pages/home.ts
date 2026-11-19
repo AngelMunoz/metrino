@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { animationStyles } from "@src/utils/animations.ts";
+import { beginContinuum, type ContinuumFlight } from "@src/utils/continuum.ts";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import { navigateToComponent } from "../router/index.ts";
 import "../components/api-docs.ts";
@@ -129,6 +130,81 @@ const ALL_COMPONENTS: Record<string, Array<{ name: string; desc: string }>> = {
     { name: "metro-continuum", desc: "Navigation transition" },
   ],
 };
+
+/**
+ * How long the flight waits for the destination page to render before it gives up. The
+ * route module is imported asynchronously, so the target is not there on the click frame.
+ */
+const FLIGHT_TARGET_TIMEOUT_MS = 2000;
+
+/**
+ * The demo renders a route inside the app's own shadow root, and the route renders its
+ * sections inside its own, so neither a page tag nor a section id is reachable from
+ * `document` with one `querySelector`. This walks the open shadow trees and returns the
+ * first element that matches.
+ */
+function queryDeep(scope: Element | Document | ShadowRoot, selector: string): Element | undefined {
+  const direct = scope.querySelector(selector);
+  if (direct) return direct;
+
+  const shadows: ShadowRoot[] = [];
+  if (scope instanceof Element) {
+    if (scope.shadowRoot) shadows.push(scope.shadowRoot);
+  } else {
+    for (const host of Array.from(scope.querySelectorAll("*"))) {
+      if (host.shadowRoot) shadows.push(host.shadowRoot);
+    }
+  }
+
+  for (const shadow of shadows) {
+    const found = queryDeep(shadow, selector);
+    if (found) return found;
+  }
+
+  return undefined;
+}
+
+/**
+ * Where a tapped tile flies to: the section that carries the component's own id, or the
+ * page title on the pages that give their sections none.
+ */
+function findFlightTarget(pageTag: string, componentId: string): Element | undefined {
+  const page = queryDeep(document, pageTag);
+  if (!page) return undefined;
+  return (
+    queryDeep(page, `#${CSS.escape(componentId)}`) ??
+    queryDeep(page, "h1") ??
+    page
+  );
+}
+
+/**
+ * Holds a copy of the tapped tile, waits for the destination page to render, and flies
+ * the copy into it. Past the timeout the copy is withdrawn rather than left hanging over
+ * the new page.
+ */
+async function flyIntoPage(
+  flight: ContinuumFlight,
+  pageTag: string,
+  componentId: string
+): Promise<void> {
+  const deadline = Date.now() + FLIGHT_TARGET_TIMEOUT_MS;
+
+  for (;;) {
+    const target = findFlightTarget(pageTag, componentId);
+    if (target) {
+      await flight.flyTo(target);
+      return;
+    }
+    if (Date.now() >= deadline) {
+      flight.cancel();
+      return;
+    }
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+  }
+}
 
 export class MetrinoHome extends LitElement {
   static styles = [
@@ -263,12 +339,27 @@ export class MetrinoHome extends LitElement {
     `,
   ];
 
-  #navigate(path: string, componentId?: string) {
-    if (componentId) {
-      navigateToComponent(path, componentId);
-    } else {
+  #flight?: ContinuumFlight;
+
+  #navigate(path: string, componentId?: string, origin?: EventTarget | null) {
+    if (!componentId) {
       window.location.hash = `/${path}`;
+      return;
     }
+
+    // The continuum reads as the tapped item travelling into its own page, so the copy is
+    // taken while the tile is still on the page — and it lands only once the new page has
+    // actually rendered, which the route module decides when it resolves.
+    if (origin instanceof Element) {
+      this.#flight?.cancel();
+      const flight = beginContinuum(origin);
+      this.#flight = flight;
+      void flyIntoPage(flight, `metrino-${path}-page`, componentId).finally(() => {
+        if (this.#flight === flight) this.#flight = undefined;
+      });
+    }
+
+    navigateToComponent(path, componentId);
   }
 
   render() {
@@ -296,7 +387,8 @@ export class MetrinoHome extends LitElement {
                       (comp) => html`
                         <div
                           class="hub-item"
-                          @click=${() => this.#navigate(cat.id, comp.name)}
+                          @click=${(event: MouseEvent) =>
+                            this.#navigate(cat.id, comp.name, event.currentTarget)}
                         >
                           <p class="hub-item-name">${comp.name}</p>
                           <p class="hub-item-desc">${comp.desc}</p>
