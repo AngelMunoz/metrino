@@ -19,8 +19,18 @@
 - **grid-view**, **list-view**, **long-list-selector**: Metro entrance stagger on first mount; recycled virtualization items no longer pop in plain.
 - **tree-view**: expanding and collapsing children glide instead of toggling display; collapsed children stay out of the tab order.
 - **continuum**: `beginContinuum` accepts the page transition it rides over (`pageTransitionMs`, `pageTransitionEasing`); defaults match the library turnstile.
+- **breadcrumb-bar**: new `metro-breadcrumb-bar` / `metro-breadcrumb-item` (WinUI BreadcrumbBar behavior, Metro styling); overflow collapses behind an ellipsis menu, `itemclicked` on activation.
+- **teaching-tip**: new `metro-teaching-tip` (WinUI TeachingTip behavior, Metro styling); anchored, light-dismiss with document-level Escape, focus returns to the target.
+- **tab-view**: new `metro-tab-view` / `metro-tab-view-item` (WinUI TabView behavior distinct from pivot, Metro styling); closable tabs, add button, clamped arrow navigation.
 
 ### Fixed
+
+- **continuum**: storyboard offsets (ForwardIn 130/-70, ForwardOut 225/73) now ship as library keyframe defaults instead of demo-only variables; scripted continuum uses the expo easing of the flight.
+- **flyout**: Escape did nothing unless focus was inside the flyout; it now closes at document level and focus returns to the opener.
+- **settings-flyout**, **long-list-selector**: Tab escaped the open settings flyout and jump grid; both now trap Tab while open.
+- **panorama**: wrap seam copies kept descendant ids and tab stops inside `aria-hidden` copies; copies are now inert and id-free.
+- **expander**: every instance shared the `expander-content` id; content ids are now per-instance.
+- **list-view**, **long-list-selector**: entrance stagger never reached virtualized items below the wrapper; items now stagger on first mount.
 
 - **hub**: horizontal scrollbar was always hidden; now auto-hides like scroll-viewer (shows on pan, point, focus).
 - **hub**: clicking a section header now scrolls it into place and focuses it.

@@ -276,16 +276,16 @@ publishes the package only. Work items:
 
 ## 9. Missing components (future work, unchanged)
 
+Landed since: `metro-breadcrumb-bar`, `metro-teaching-tip`, `metro-tab-view` (Win10-era
+behavior, Metro styling) — see the component registry. The table below is what remains.
+
 | Component | Description | Effort |
 |---|---|---|
 | Command Bar | Win8.1 app bar with primary/secondary commands | M |
 | Charms Bar | Edge swipe panels | L |
 | Status Bar | System status | S |
 | Lock Screen | Showcase time/date | M |
-| Breadcrumb Bar | Navigation trail | S |
-| Tab View | Tab strip distinct from Pivot | M |
 | Color Picker | Color selection | M |
-| Teaching Tip | Contextual tutorial popup | M |
 | Ink Canvas | Drawing surface | L |
 
 ---
