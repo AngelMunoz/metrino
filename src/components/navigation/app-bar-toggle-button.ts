@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
-import type { PropertyValues } from "lit";
 import { baseTypography, disabledState, hoverHighlight, applyTiltEffect } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
+import { watchAppBarExpanded } from "../../utils/app-bar-expanded.ts";
 
 /**
  * Metro App Bar Toggle Button Component
@@ -182,7 +182,7 @@ export class MetroAppBarToggleButton extends LitElement {
     `,
   ];
 
-  #observer: MutationObserver | null = null;
+  #cleanupExpanded?: () => void;
   #cleanupTilt?: () => void;
 
   constructor() {
@@ -248,70 +248,22 @@ export class MetroAppBarToggleButton extends LitElement {
   }
 
   /**
-   * Sets up the mutation observer to watch for parent app bar expanded state.
+   * Mirrors the parent app bar's expanded state onto `data-expanded`.
    * @returns void
    */
   connectedCallback(): void {
     super.connectedCallback();
-    this.#setupObserver();
+    this.#cleanupExpanded = watchAppBarExpanded(this);
   }
 
   /**
-   * Cleans up the mutation observer when disconnected.
+   * Cleans up the observer and tilt effect when disconnected.
    * @returns void
    */
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#cleanupTilt?.();
-    if (this.#observer) {
-      this.#observer.disconnect();
-      this.#observer = null;
-    }
-  }
-
-  /**
-   * Sets up a mutation observer to watch the parent app bar's expanded attribute.
-   * @returns void
-   */
-  #setupObserver(): void {
-    const appBar = this.closest("metro-app-bar");
-    if (!appBar) return;
-
-    this.#observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === "attributes" && mutation.attributeName === "expanded") {
-          this.#updateExpandedState(appBar);
-        }
-      }
-    });
-
-    this.#observer.observe(appBar, { attributes: true, attributeFilter: ["expanded"] });
-    this.#updateExpandedState(appBar);
-  }
-
-  /**
-   * Updates the data-expanded attribute based on parent app bar state.
-   * @param appBar - The parent metro-app-bar element
-   * @returns void
-   */
-  #updateExpandedState(appBar: Element): void {
-    const isExpanded = appBar.hasAttribute("expanded");
-    this.toggleAttribute("data-expanded", isExpanded);
-  }
-
-  /**
-   * Re-sets up observer when icon or label changes (in case parent changed).
-   * @param changedProperties - Map of changed properties
-   * @returns void
-   */
-  protected updated(changedProperties: PropertyValues<this>): void {
-    super.updated(changedProperties);
-    if (changedProperties.has("icon") || changedProperties.has("label")) {
-      const appBar = this.closest("metro-app-bar");
-      if (appBar) {
-        this.#updateExpandedState(appBar);
-      }
-    }
+    this.#cleanupExpanded?.();
   }
 }
 

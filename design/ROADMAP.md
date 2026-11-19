@@ -29,6 +29,8 @@ this roadmap. See the component audit summary at the bottom for the hand-off fac
 | Panorama: snap suppressed during scripted inertia/spring, lands on nearest item boundary; parallax without transition lag | `panorama.ts` `#suppressSnap`/`#releaseSnap`; `e2e/panorama.spec.ts` |
 | Semantic zoom: inner touch panning (`touch-action: pan-x pan-y`), animated non-VT fallback, `transition-duration` honored | `semantic-zoom.ts`; `e2e/semantic-zoom.spec.ts` |
 | Frame-rate-independent inertia/spring; velocities in px/ms | `touch-physics.ts` `stepInertia(state, dtMs)`, `stepSpring(state, dtMs)`, `frameDeltaMs`; independence tests in `touch-physics.test.ts` |
+| Hub auto-hide horizontal scrollbar (pan/point/focus reveal, 1.5 s idle) | `hub.ts` `#showScrollbar`, pointer enter/leave; `e2e/hub-zoom.spec.ts` |
+| Hub section-header click scrolls the section to the gutter and focuses it | `hub.ts` `#handleContainerClick`; `e2e/hub-zoom.spec.ts` |
 | Settings flyout widths 346 px (narrow) / 646 px (wide) | `src/components/dialogs/settings-flyout.ts:108,122` |
 | ARIA roles: list-view `listbox`, grid-view `grid`, panorama `region` | `list-view.ts:101`, `grid-view.ts:132`, `panorama.ts` |
 | App bar Escape + `aria-controls` | `src/components/navigation/app-bar.ts:167,190` |
@@ -90,30 +92,21 @@ page transitions was therefore overstated. The real defects were: closed instanc
 reserving names on always-rendered elements (the spec requires uniqueness document-wide),
 and same-scope duplicates rejecting the transition. Scoping removes both risks.
 
-### P1 — Motion correctness (shipped defects)
+### P1 — Motion correctness (landed: PR3 + PR4)
 
-| Item | File(s) |
-|---|---|
-| Indeterminate progress dots animate `left` (layout), not transform | `progress-bar.ts` |
-| Three progress-ring geometries disagree (component 3 s orbit; CSS class 1.5 s linear spin; demo 167 ms border spinner). Canonical = component orbit | `progress-ring.ts`, `animations.css`, demo |
-| Flip axis disagrees: component rotateY vs global keyframe rotateX. Default: component wins | `flip-tile.ts`, `animations.css` |
-| Animation sources duplicated: 14 keyframes in both `animations.css` and `utils/animations.ts` (bodies currently identical). `playAnimation` resolves on setTimeout, not animationend | both files |
+All four items landed: transform-only indeterminate dots, one ring orbit geometry,
+rotateY flip axis, and a single animation source with `animationend` completion
+(`e2e/progress.spec.ts`, `e2e/animations-source.spec.ts`).
 
-### P2 — Metro interaction completeness
+### P2 — Metro interaction completeness (landed: PR5–PR8)
 
-| Item | Old ref |
-|---|---|
-| Pivot: swipe gesture + keyboard navigation + circular loop. The doc already claims keyboard support that does not exist | P2 |
-| Continuum to the **Metro design language** behavior (tapped item flies from its origin into the page), not a WinJS-specific implementation. Bounded research first; see §7 | — |
-| Semantic zoom scroll synchronization (`scrollToGroup`, group tracking, zoom-out tap re-enters at group) | P3 |
-| Panorama circular wrap | P4 |
-| Long-list-selector jump grid with turnstile transition | P6 |
-| Hub + semantic zoom integration | P5 |
-| Reduced-motion policy across all keyframe and JS motion (only hub honors it today) | — |
+All seven items landed: pivot swipe/keyboard/loop and the reduced-motion policy (PR5),
+semantic-zoom group sync and the jump grid (PR6), panorama wrap and the zoomable hub
+(PR7), continuum from the verified WP toolkit source (PR8).
 
-### P3 — Component bugs
+### P3 — Component bugs (landed: PR9)
 
-See §4.
+See the §4.B disposition.
 
 ### P4 — Packaging and tokens
 
@@ -133,28 +126,28 @@ See §6.
 
 ### A. Motion / interaction
 
-| Bug | File |
-|---|---|
-| Progress dots animate `left` | `progress-bar.ts` |
-| Three ring geometries; flip axis mismatch | `progress-ring.ts`, `flip-tile.ts`, `animations.css` |
-| Duplicated keyframes; setTimeout-based animation completion | `utils/animations.ts`, `animations.css` |
+All inventory items landed in PR2–PR4 (scoped transition names, root turnstile, swivel,
+panorama snap/parallax, semantic-zoom touch/fallback, dt physics, dots transform, ring
+orbit, flip axis, single animation source). Evidence: §1 and the e2e specs named there.
 
 ### B. Components
 
-| Bug | File |
+Disposition of the verified inventory (all landed):
+
+| Bug | Landed in |
 |---|---|
-| Image placeholder never hides: `#handleLoad` sets a private field without `requestUpdate` (error path re-renders, load path does not) | `image.ts` |
-| Live tile `interval` property ignored; timer hardcodes 6–10 s | `live-tile.ts` |
-| Cycle tile and iconic tile dispatch a synthetic non-composed `click` that doubles the native click | `cycle-tile.ts`, `iconic-tile.ts` |
-| Expander: no `aria-expanded`, no tabindex, no key handler; doc claims ARIA support; 500 px max-height clips tall content | `expander.ts` |
-| Content dialog focus trap queries shadow DOM only; slotted buttons escape | `content-dialog.ts` |
-| Dialog Escape/focus defects (e2e-verified 2026-11-17): content-dialog `#saveFocus` rAF runs before the View Transition applies `open`, so focus stays on the opener and Escape never reaches the dialog handler; message-dialog never moves focus and has no document-level Escape listener; settings-flyout did not restore focus to the opener on close (observed in probe) | `content-dialog.ts`, `message-dialog.ts`, `settings-flyout.ts` |
-| Wrap panel `orientation="vertical"` has no CSS effect | `wrap-panel.ts` |
-| Separator doc says hidden preserves layout space; CSS `display:none` removes it | `app-bar-separator.ts` |
-| App bar button label uses `:host-context()` (1 usage); Firefox does not support it | `app-bar-button.ts:118` |
-| Media control styling targets `::-webkit-media-controls` only | `media-element.ts` |
-| Pivot doc claims keyboard support; none exists | `pivot.ts` |
-| Toast documents `@fires toastshown` / `@fires toashidden` (typo) but dispatches no events | `toast.ts:52–53` |
+| Image placeholder never hides (`#handleLoad` without `requestUpdate`) | PR9 |
+| Live tile `interval` ignored | PR9 |
+| Cycle/iconic tile synthetic non-composed `click` doubles the native click | PR9 |
+| Expander: no ARIA/keyboard, 500 px clip | PR9 |
+| Content dialog focus trap misses slotted nodes | PR9 |
+| Dialog Escape/focus defects (focus race, no document Escape, restore during exit) | PR9 |
+| Wrap panel `orientation="vertical"` inert | PR9 |
+| Separator hidden removed layout space | PR9 |
+| App bar button label via `:host-context()` (Firefox) | PR9 |
+| Media controls styled via webkit pseudos only | PR9 |
+| Pivot doc claimed keyboard support that did not exist | PR5 (2.1) |
+| Toast phantom `@fires` names, no events | PR9 |
 
 ### C. Demo / docs
 

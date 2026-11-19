@@ -49,6 +49,12 @@ const VALID_SEVERITIES = new Set(Object.keys(severityIcons));
  * The component is typically managed by the exported ToastHost class for
  * simple global toast notifications, or instantiated directly for more control.
  *
+ * @fires toastshown - Fired when a toast is added (bubbles: true, composed: true)
+ *   Detail: { id: string, severity: string, message: string }
+ * @fires toasthidden - Fired when a toast is dismissed, by duration or by the
+ *   close button (bubbles: true, composed: true)
+ *   Detail: { id: string }
+ *
  * @cssprop --metro-background - Toast background color (default: #1f1f1f)
  * @cssprop --metro-accent - Default border and icon color (default: #0078d4)
  * @cssprop --metro-foreground - Title text color (default: #ffffff)
@@ -231,6 +237,14 @@ export class MetroToast extends LitElement {
     this.shadowRoot?.appendChild(toast);
     this.#toasts.set(id, toast);
 
+    this.dispatchEvent(
+      new CustomEvent("toastshown", {
+        detail: { id, severity, message: options.message },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+
     const duration = options.duration ?? 3000;
     if (duration > 0) {
       setTimeout(() => this.hide(id), duration);
@@ -240,7 +254,7 @@ export class MetroToast extends LitElement {
   }
 
   /**
-   * Hides a specific toast by ID with exit animation.
+   * Hides a specific toast by ID and fires `toasthidden`.
    * @param id - The toast ID to hide
    * @returns void
    */
@@ -251,6 +265,13 @@ export class MetroToast extends LitElement {
     toast.classList.add("exiting");
     toast.remove();
     this.#toasts.delete(id);
+    this.dispatchEvent(
+      new CustomEvent("toasthidden", {
+        detail: { id },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   /**

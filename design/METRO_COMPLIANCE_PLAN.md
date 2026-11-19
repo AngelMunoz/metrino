@@ -39,7 +39,8 @@ chromium + firefox.
 - Never push without explicit permission. Never force push.
 - Changelog (KeepAChangelog): released behavior → `Fixed` / `Changed` (mark breakage with
   **Breaking:**); new capability → `Added`. Bold-prefix the affected surface; group by
-  user-facing concern.
+  user-facing concern. One or two sentences per entry: name the issue or capability,
+  not the implementation story.
 - Style per `AGENTS.md`: 2 spaces, double quotes, no trailing commas, named exports,
   `import type`, logical properties where touched.
 - Comments belong in doc/signature positions; keep implementation quirks noted inline only
@@ -119,41 +120,43 @@ Changelog: none (docs only), unless a behavior changes.
 
 ## Phase 2 — Metro interaction completeness
 
-- [ ] **2.1 Pivot swipe + keyboard + circular loop.** Pointer-driven paging; Arrow/Home/End
+- [x] **2.1 Pivot swipe + keyboard + circular loop.** Pointer-driven paging; Arrow/Home/End
       on the tablist; wrap last↔first. Restores the keyboard claim. Category: **Added**
-      (swipe, loop) + **Fixed** (keyboard).
-- [ ] **2.2 Continuum to MDL behavior.** Research first (roadmap §7): archived WP design
+      (swipe, loop) + **Fixed** (keyboard). (PR5; `e2e/pivot.spec.ts`.)
+- [x] **2.2 Continuum to MDL behavior.** Research first (roadmap §7): archived WP design
       guidance / located spec; fallback = WP7 toolkit reproduction (150 ms, translate,
       ExponentialEase, item origin). Implement the tapped-item-flies-into-page transition.
-      Cite the source used. Category: **Changed**.
-- [ ] **2.3 Semantic zoom scroll sync.** `scrollToGroup(key)`, track current group, zoom-out
-      tap re-enters at that group. Category: **Added**.
-- [ ] **2.4 Panorama circular wrap.** Clone endpoints, seamless jump, parallax across the
-      boundary. Category: **Added**.
-- [ ] **2.5 Long-list-selector jump grid.** Full-screen header grid with turnstile in/out;
-      keep the sidebar strip as a compact option. Category: **Added**.
-- [ ] **2.6 Hub + semantic zoom integration.** `zoomable` hub, generated zoomed-out view,
-      coordinated scroll. Category: **Added**.
-- [ ] **2.7 Reduced-motion policy.** Honor `prefers-reduced-motion` across keyframe and JS
-      motion (hub already does). Category: **Added**.
+      Cite the source used. Category: **Changed**. (PR8; primary source located and
+      verified: ContinuumTransition.cs, gist bjcull/1345156; `src/utils/continuum.ts`.)
+- [x] **2.3 Semantic zoom scroll sync.** `scrollToGroup(key)`, track current group, zoom-out
+      tap re-enters at that group. Category: **Added**. (PR6; axis-aware read added in PR7.)
+- [x] **2.4 Panorama circular wrap.** Clone endpoints, seamless jump, parallax across the
+      boundary. Category: **Added**. (PR7; scrollport-sized seam copies.)
+- [x] **2.5 Long-list-selector jump grid.** Full-screen header grid with turnstile in/out;
+      keep the sidebar strip as a compact option. Category: **Added**. (PR6.)
+- [x] **2.6 Hub + semantic zoom integration.** `zoomable` hub, generated zoomed-out view,
+      coordinated scroll. Category: **Added**. (PR7.)
+- [x] **2.7 Reduced-motion policy.** Honor `prefers-reduced-motion` across keyframe and JS
+      motion (hub already does). Category: **Added**. (PR5; blanket reaches every shadow.)
 
 ---
 
 ## Phase 3 — Component bugs
 
-- [ ] **3.1** `image.ts` — `requestUpdate()` in `#handleLoad` so the placeholder hides. **Fixed**.
-- [ ] **3.2** `live-tile.ts` — honor the `interval` property (keep 6–10 s as the default). **Fixed**.
-- [ ] **3.3** `cycle-tile.ts`, `iconic-tile.ts` — remove the synthetic non-composed `click`. **Fixed**.
-- [ ] **3.4** `expander.ts` — `aria-expanded`, tabindex, Enter/Space; replace the 500 px
-      max-height clip (grid-rows 0fr→1fr or `interpolate-size`). **Fixed**.
-- [ ] **3.5** `content-dialog.ts` — focus trap includes slotted assigned nodes. **Fixed**.
-- [ ] **3.6** `wrap-panel.ts` — implement the vertical wrap rule. **Fixed**.
-- [ ] **3.7** `app-bar-separator.ts` — hidden preserves space (`visibility:hidden`). **Fixed**.
-- [ ] **3.8** `app-bar-button.ts` — replace `:host-context()` with a Firefox-safe mechanism
-      (parent-driven attribute/part or `:has()`). **Fixed**.
-- [ ] **3.9** `media-element.ts` — standard `accent-color`/`color-scheme` beyond webkit pseudos. **Fixed**.
-- [ ] **3.10** `toast.ts` — implement `toastshown`/`toasthidden` (composed; fix the typo). **Added**.
-- [ ] **3.11** Dialog focus + Escape (e2e-verified defect): focus the dialog only after
+- [x] **3.1** `image.ts` — `requestUpdate()` in `#handleLoad` so the placeholder hides. **Fixed**. (PR9)
+- [x] **3.2** `live-tile.ts` — honor the `interval` property (keep 6–10 s as the default). **Fixed**. (PR9)
+- [x] **3.3** `cycle-tile.ts`, `iconic-tile.ts` — remove the synthetic non-composed `click`. **Fixed**. (PR9)
+- [x] **3.4** `expander.ts` — `aria-expanded`, tabindex, Enter/Space; replace the 500 px
+      max-height clip (grid-rows 0fr→1fr or `interpolate-size`). **Fixed**. (PR9; grid-rows)
+- [x] **3.5** `content-dialog.ts` — focus trap includes slotted assigned nodes. **Fixed**. (PR9; `utils/dialog-focus.ts`)
+- [x] **3.6** `wrap-panel.ts` — implement the vertical wrap rule. **Fixed**. (PR9)
+- [x] **3.7** `app-bar-separator.ts` — hidden preserves space (`visibility:hidden`). **Fixed**. (PR9)
+- [x] **3.8** `app-bar-button.ts` — replace `:host-context()` with a Firefox-safe mechanism
+      (parent-driven attribute/part or `:has()`). **Fixed**. (PR9; `data-expanded` mirror,
+      shared with app-bar-toggle-button)
+- [x] **3.9** `media-element.ts` — standard `accent-color`/`color-scheme` beyond webkit pseudos. **Fixed**. (PR9)
+- [x] **3.10** `toast.ts` — implement `toastshown`/`toasthidden` (composed; fix the typo). **Added**. (PR9)
+- [x] **3.11** Dialog focus + Escape (e2e-verified defect): focus the dialog only after
       `open` is applied (after the View Transition update, not a pre-transition rAF);
       document-level Escape while open for content-dialog and message-dialog; restore
       focus to the opener on close (settings-flyout restore observed broken); include

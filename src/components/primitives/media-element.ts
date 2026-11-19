@@ -7,6 +7,10 @@ import { baseTypography } from "../../styles/shared.ts";
  * Audio/video player. `src` and `poster` are rendered in `<audio>`/`<video>`
  * elements, where executable schemes such as `javascript:` are inert; http(s),
  * relative, `blob:` and `data:` URLs are the meaningful values.
+ *
+ * @cssprop --metro-accent - Accent color of the native control bar (default: #0078d4)
+ * @cssprop --metro-background - Player background color (default: #1f1f1f)
+ * @cssprop --metro-foreground - Time display color (default: #ffffff)
  */
 export class MetroMediaElement extends LitElement {
   static properties = {
@@ -44,6 +48,10 @@ export class MetroMediaElement extends LitElement {
       audio {
         max-width: 100%;
         display: block;
+        /* The standard levers for the UA control bar, so engines without the
+           webkit pseudo-elements below still pick up the Metro accent. */
+        accent-color: var(--metro-accent, #0078d4);
+        color-scheme: dark;
       }
       video {
         width: 100%;

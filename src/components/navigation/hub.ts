@@ -1,7 +1,8 @@
 import { LitElement, html, css, nothing } from "lit";
-import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
+import { baseTypography } from "../../styles/shared.ts";
 import { METRO_EASING_VALUES } from "../../utils/animations.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { focusFirstInside } from "../../utils/dialog-focus.ts";
 import { registerMetroSemanticZoom } from "../selection/semantic-zoom.ts";
 import type { MetroHubSection } from "./hub-section.ts";
 
@@ -194,12 +195,13 @@ export class MetroHub extends LitElement {
   /* Inline scroll-snap-type saved while a glide suppresses mandatory snap. */
   #restoreSnap: string | null = null;
   #lastReportedIndex = -1;
+  /* Idle timer that hides the auto-hide scrollbar after the pan settles. */
+  #scrollbarTimer = 0;
   /* Group keys this hub wrote on a section, so only those may be removed. */
   #mirroredKeys = new WeakMap<MetroHubSection, string>();
 
   static styles = [
     baseTypography,
-    scrollbarHiddenClass,
     css`
       :host {
         display: block;
@@ -231,6 +233,28 @@ export class MetroHub extends LitElement {
            single-axis and lets the zoom align a group on that axis. */
         overflow-y: hidden;
         overscroll-behavior-x: contain;
+        /* Metro auto-hide scrollbar, the policy metro-scroll-viewer uses: gone at
+           rest, present while panning or pointed at, so the pan is discoverable. */
+        scrollbar-width: none;
+      }
+      .hub-container::-webkit-scrollbar {
+        height: 4px;
+      }
+      .hub-container::-webkit-scrollbar-thumb {
+        background: transparent;
+        border-radius: 2px;
+      }
+      .hub-container.scrolling,
+      .hub-container.pointed,
+      .hub-container:hover,
+      .hub-container:focus-within {
+        scrollbar-width: thin;
+      }
+      .hub-container.scrolling::-webkit-scrollbar-thumb,
+      .hub-container.pointed::-webkit-scrollbar-thumb,
+      .hub-container:hover::-webkit-scrollbar-thumb,
+      .hub-container:focus-within::-webkit-scrollbar-thumb {
+        background: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
       }
       .hub-container:focus-visible {
         outline: 2px solid var(--metro-accent, #0078d4);
@@ -313,7 +337,7 @@ export class MetroHub extends LitElement {
       : nothing;
     const container = html`
       <div
-        class="hub-container scrollbar-hidden"
+        class="hub-container"
         part="hub-container"
         role="region"
         tabindex="0"
@@ -321,6 +345,9 @@ export class MetroHub extends LitElement {
         aria-label=${this.ariaLabel ?? this.title ?? "hub"}
         @scroll=${this.#handleScroll}
         @scrollend=${this.#handleScrollEnd}
+        @click=${this.#handleContainerClick}
+        @pointerenter=${this.#handlePointerEnter}
+        @pointerleave=${this.#handlePointerLeave}
         @keydown=${this.#handleKeyDown}
         @pointerdown=${this.#cancelSmoothScroll}
         @wheel=${this.#cancelSmoothScroll}
@@ -441,6 +468,7 @@ export class MetroHub extends LitElement {
     super.disconnectedCallback();
     this.#cancelSmoothScroll();
     clearTimeout(this.#debounceTimer);
+    clearTimeout(this.#scrollbarTimer);
   }
 
   /**
@@ -562,6 +590,7 @@ export class MetroHub extends LitElement {
   }
 
   #handleScroll(): void {
+    this.#showScrollbar();
     if (this.#supportsScrollEnd) {
       return;
     }
@@ -572,6 +601,60 @@ export class MetroHub extends LitElement {
   #handleScrollEnd(): void {
     this.#settle();
   }
+
+  /**
+   * Reveals the auto-hide scrollbar for the pan and hides it 1.5 s after the
+   * last scroll event, the idle window metro-scroll-viewer uses.
+   * @returns void
+   */
+  #showScrollbar(): void {
+    const container = this.#container();
+    if (container === null) return;
+    container.classList.add("scrolling");
+    clearTimeout(this.#scrollbarTimer);
+    this.#scrollbarTimer = window.setTimeout(() => {
+      container.classList.remove("scrolling");
+    }, 1500);
+  }
+
+  /* Firefox does not propagate :hover from slotted content into the shadow
+     container, so pointing is tracked with enter/leave instead of CSS alone. */
+  #handlePointerEnter = (): void => {
+    this.#container()?.classList.add("pointed");
+  };
+
+  #handlePointerLeave = (): void => {
+    this.#container()?.classList.remove("pointed");
+  };
+
+  /**
+   * A click on a section header brings that section to the gutter and moves
+   * focus into it, the Windows 8.1 hub's clickable-header behaviour. The header
+   * lives in the section's shadow root, so the path — not the retargeted
+   * target — names it.
+   * @param event - The click inside the section container
+   * @returns void
+   */
+  #handleContainerClick = (event: MouseEvent): void => {
+    const header = event
+      .composedPath()
+      .find(
+        (node): node is HTMLElement =>
+          node instanceof HTMLElement && node.classList.contains("section-header")
+      );
+    if (!header) return;
+    const root = header.getRootNode();
+    const section = root instanceof ShadowRoot ? root.host : null;
+    if (!(section instanceof HTMLElement)) return;
+    const index = this.sections.indexOf(section as MetroHubSection);
+    if (index < 0) return;
+
+    this.scrollToSection(index);
+    if (!focusFirstInside(section)) {
+      if (!section.hasAttribute("tabindex")) section.setAttribute("tabindex", "-1");
+      section.focus({ preventScroll: true });
+    }
+  };
 
   #handleKeyDown(event: KeyboardEvent): void {
     const container = this.#container();

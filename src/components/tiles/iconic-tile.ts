@@ -80,7 +80,7 @@ export class MetroIconicTile extends LitElement {
   render() {
     const iconSize = this.size === "small" ? "medium" : this.size === "large" ? "xlarge" : "large";
     return html`
-      <div class="tile-container" @click=${this.#handleClick}>
+      <div class="tile-container">
         ${this.badge ? html`<div class="tile-badge">${this.badge}</div>` : ""}
         ${this.icon
           ? html`<div class="tile-icon">
@@ -92,10 +92,6 @@ export class MetroIconicTile extends LitElement {
         <slot></slot>
       </div>
     `;
-  }
-
-  #handleClick(): void {
-    this.dispatchEvent(new CustomEvent("click", { bubbles: true }));
   }
 }
 

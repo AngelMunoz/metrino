@@ -4,6 +4,7 @@ import type { PropertyValueMap } from "lit";
 import { registerMetroIcon } from "../primitives/icon.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
+import { focusFirstInside, rememberedFocus } from "../../utils/dialog-focus.ts";
 
 /**
  * The ::view-transition rules of one settings flyout instance, keyed to its
@@ -45,7 +46,7 @@ type SettingsFlyoutWidth = "narrow" | "wide";
  * - Two width options: narrow (346px) and wide (646px)
  * - Backdrop overlay with click-to-close
  * - Title header with close button
- * - Focus management (traps focus, restores on close)
+ * - Focus moves into the panel on open and back to the opener on close
  * - Keyboard support (Escape key closes)
  *
  * Use for application settings, preferences, or any side panel that
@@ -181,7 +182,8 @@ export class MetroSettingsFlyout extends LitElement {
     `,
   ];
 
-  #previousFocus: Element | null = null;
+  #previousFocus: HTMLElement | null = null;
+  #closing = false;
   #transition = createTransitionScope("settings-flyout", ["panel", "backdrop"]);
   #transitionRules = settingsFlyoutTransitionRules(this.#transition.names);
 
@@ -223,17 +225,13 @@ export class MetroSettingsFlyout extends LitElement {
   }
 
   #onOpen(): void {
-    this.#previousFocus = document.activeElement as Element;
+    this.#previousFocus = rememberedFocus();
     this.dispatchEvent(
       new CustomEvent("open", {
         bubbles: true,
         composed: true,
       }),
     );
-    requestAnimationFrame(() => {
-      const closeBtn = this.shadowRoot?.querySelector(".close-btn") as HTMLElement;
-      closeBtn?.focus();
-    });
     document.addEventListener("keydown", this.#handleEscapeKey);
   }
 
@@ -245,9 +243,19 @@ export class MetroSettingsFlyout extends LitElement {
         composed: true,
       }),
     );
-    if (this.#previousFocus && "focus" in this.#previousFocus) {
-      (this.#previousFocus as HTMLElement).focus();
-    }
+  }
+
+  /**
+   * Returns focus to the element that opened the flyout. Restoring happens once
+   * the exit transition is over: while it runs the page is a frozen snapshot and
+   * the focus change does not stick. A custom-element host is not focusable
+   * itself, so the first tab stop inside it takes focus.
+   * @returns void
+   */
+  #restoreFocus(): void {
+    const target = this.#previousFocus;
+    this.#previousFocus = null;
+    if (target) focusFirstInside(target);
   }
 
   #handleBackdropClick(): void {
@@ -313,6 +321,8 @@ export class MetroSettingsFlyout extends LitElement {
 
   /**
    * Opens the flyout with slide-in animation via View Transitions.
+   * Focus moves in only after `open` is applied; before that the panel sits
+   * outside the viewport and cannot take focus.
    * @returns Promise that resolves when the flyout is fully open.
    */
   async show(): Promise<void> {
@@ -320,6 +330,8 @@ export class MetroSettingsFlyout extends LitElement {
     await this.updateComplete;
     this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
+    const panel = this.shadowRoot?.querySelector<HTMLElement>(".flyout-panel");
+    if (panel) focusFirstInside(panel);
   }
 
   /**
@@ -327,10 +339,13 @@ export class MetroSettingsFlyout extends LitElement {
    * @returns Promise that resolves when the flyout is fully closed.
    */
   async hide(): Promise<void> {
-    if (!this.open) return;
+    if (!this.open || this.#closing) return;
+    this.#closing = true;
     // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
     this.#transition.detach(this.#transitionTargets());
+    this.#restoreFocus();
+    this.#closing = false;
   }
 }
 

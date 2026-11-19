@@ -71,7 +71,7 @@ export class MetroCycleTile extends LitElement {
 
   render() {
     return html`
-      <div class="tile-container" @click=${this.#handleClick}>
+      <div class="tile-container">
         <slot name="front"></slot>
         <slot name="cycle"></slot>
       </div>
@@ -117,10 +117,6 @@ export class MetroCycleTile extends LitElement {
     
     this.#currentIndex = (this.#currentIndex + 1) % this.#items.length;
     this.#items[this.#currentIndex].classList.add("active");
-  }
-
-  #handleClick(): void {
-    this.dispatchEvent(new CustomEvent("click", { bubbles: true }));
   }
 }
 

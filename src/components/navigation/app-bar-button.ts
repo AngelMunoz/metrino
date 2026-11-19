@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, applyTiltEffect } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
+import { watchAppBarExpanded } from "../../utils/app-bar-expanded.ts";
 
 /**
  * Metro App Bar Button Component
@@ -115,7 +116,10 @@ export class MetroAppBarButton extends LitElement {
           opacity var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
           margin-top var(--metro-transition-fast, 167ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
-      :host-context(metro-app-bar[expanded]) .label {
+      /* Set by the ancestor metro-app-bar while it is expanded; see
+         watchAppBarExpanded. :host-context() expressed this in CSS, but Firefox
+         does not implement it. */
+      :host([data-expanded]) .label {
         max-height: 20px;
         opacity: 1;
         margin-top: var(--metro-spacing-xs, 4px);
@@ -147,11 +151,17 @@ export class MetroAppBarButton extends LitElement {
   ];
 
   #cleanupTilt?: () => void;
+  #cleanupExpanded?: () => void;
 
   constructor() {
     super();
     this.icon = "";
     this.label = "";
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.#cleanupExpanded = watchAppBarExpanded(this);
   }
 
   firstUpdated(): void {
@@ -161,6 +171,7 @@ export class MetroAppBarButton extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#cleanupTilt?.();
+    this.#cleanupExpanded?.();
   }
 
   render() {

@@ -143,7 +143,7 @@ export class MetrinoDialogsPage extends LitElement {
           open/close with turnstile effect.
         </p>
         <div class="demo-row">
-          <metro-button @click=${this.#openContentDialog}
+          <metro-button id="content-dialog-open" @click=${this.#openContentDialog}
             >Open Content Dialog</metro-button
           >
         </div>
@@ -174,7 +174,7 @@ export class MetrinoDialogsPage extends LitElement {
           outside to dismiss.
         </p>
         <div class="demo-row">
-          <metro-button @click=${this.#openMessageDialog}
+          <metro-button id="message-dialog-open" @click=${this.#openMessageDialog}
             >Show Message Dialog</metro-button
           >
         </div>
@@ -238,7 +238,7 @@ export class MetrinoDialogsPage extends LitElement {
           forms, or detailed content.
         </p>
         <div class="demo-row">
-          <metro-button @click=${this.#openSettingsFlyout}
+          <metro-button id="settings-flyout-open" @click=${this.#openSettingsFlyout}
             >Open Settings</metro-button
           >
           <metro-button @click=${this.#openWideSettingsFlyout}

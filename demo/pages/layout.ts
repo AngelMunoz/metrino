@@ -191,6 +191,25 @@ export class MetrinoLayoutPage extends LitElement {
       </div>
 
       <div class="demo-section">
+        <h2>metro-wrap-panel (vertical)</h2>
+        <metro-wrap-panel
+          id="vertical-wrap-panel"
+          orientation="vertical"
+          style="height: 200px; max-width: 400px;"
+        >
+          ${[1, 2, 3, 4, 5, 6].map(
+            (i) =>
+              html`<div
+                class="demo-box"
+                style="width: 80px; height: 60px;"
+              >
+                Item ${i}
+              </div>`,
+          )}
+        </metro-wrap-panel>
+      </div>
+
+      <div class="demo-section">
         <h2>metro-scroll-viewer (with touch physics)</h2>
         <p>
           Scrollable content with inertia scrolling. Use mouse wheel or touch

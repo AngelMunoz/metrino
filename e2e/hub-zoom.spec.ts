@@ -170,6 +170,81 @@ test.describe("zoomable hub use cases", () => {
     );
   });
 
+  test("clicking a section header brings it to the gutter and focuses it", async ({
+    page,
+  }) => {
+    const hub = page.locator("#metro-hub metro-hub");
+    await gotoReadyRoute(page, "/#/navigation", hub);
+    await hub.scrollIntoViewIfNeeded();
+
+    await hub
+      .locator('metro-hub-section[header="Section 3"] .section-header')
+      .click();
+
+    await expect
+      .poll(async () => Math.abs((await hubState(hub, 2)).gap), {
+        message: "the header click never brought Section 3 to the gutter line",
+        timeout: 10_000,
+      })
+      .toBeLessThanOrEqual(2);
+
+    const focusInside = await hub.evaluate((host) => {
+      const section = host.querySelectorAll("metro-hub-section")[2];
+      if (!section) return false;
+      let active: Element | null = document.activeElement;
+      while (active?.shadowRoot?.activeElement) {
+        active = active.shadowRoot.activeElement;
+      }
+      return active === section || section.contains(active);
+    });
+    expect(focusInside, "focus must land inside the clicked section").toBe(true);
+  });
+
+  test("the hub scrollbar appears while panning and hides at idle", async ({
+    page,
+    browserName,
+  }) => {
+    const hub = page.locator("#metro-hub metro-hub");
+    await gotoReadyRoute(page, "/#/navigation", hub);
+    await hub.scrollIntoViewIfNeeded();
+    const container = hub.locator(".hub-container");
+
+    // The reveal state is the cross-engine observable: headless Firefox reports
+    // scrollbar-width "none" even for a revealed horizontal-only scroller, and
+    // headless scrollbars are overlay, so neither computed width nor geometry
+    // can gate this in both engines.
+    const revealed = () =>
+      container.evaluate(
+        (el) =>
+          el.classList.contains("pointed") || el.classList.contains("scrolling")
+      );
+
+    expect(await revealed(), "at rest the scrollbar is hidden").toBe(false);
+
+    await container.hover();
+    await expect
+      .poll(revealed, { message: "pointing at the hub reveals the scrollbar", timeout: 3_000 })
+      .toBe(true);
+    if (browserName === "chromium") {
+      expect(
+        await container.evaluate((el) => getComputedStyle(el).scrollbarWidth),
+        "the revealed scrollbar is the thin Metro one"
+      ).toBe("thin");
+    }
+
+    await page.mouse.move(10, 10);
+    await expect.poll(revealed, { timeout: 3_000 }).toBe(false);
+
+    await container.hover();
+    await page.mouse.wheel(240, 0);
+    expect(await revealed(), "panning reveals the scrollbar").toBe(true);
+
+    await page.mouse.move(10, 10);
+    await expect
+      .poll(revealed, { message: "the scrollbar never hid after the pan", timeout: 4_000 })
+      .toBe(false);
+  });
+
   test("zoomable off renders no wrapper", async ({ page }) => {
     const hub = page.locator("#metro-hub metro-hub");
     await gotoReadyRoute(page, "/#/navigation", hub);
