@@ -13,19 +13,25 @@ export interface GestureResult {
   type: GestureType;
   dx: number;
   dy: number;
+  /** Pointer velocity along the x axis at release, in px/ms. */
   velocityX: number;
+  /** Pointer velocity along the y axis at release, in px/ms. */
   velocityY: number;
   duration: number;
 }
 
 export interface InertiaState {
+  /** px/ms */
   velocity: number;
+  /** px travelled */
   position: number;
   moving: boolean;
 }
 
 export interface SpringState {
+  /** Overscroll in px from the resting position (0) */
   position: number;
+  /** px/ms */
   velocity: number;
   settled: boolean;
 }
@@ -54,11 +60,32 @@ export interface PointerInfo {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Friction coefficient per frame (~60fps). Spec: k ≈ 0.97 */
+/**
+ * Duration (ms) of the reference frame the per-frame physics constants are
+ * tuned for (~60fps). All velocities in this module are px/ms, so every step
+ * converts elapsed milliseconds into reference frames with this divisor.
+ */
+const REFERENCE_FRAME_MS = 16.67;
+
+/**
+ * Upper bound (ms) accepted for one animation step. A longer gap means the tab
+ * was throttled or a frame was dropped; integrating it whole would teleport the
+ * content, so the step is clamped instead.
+ */
+const MAX_FRAME_DELTA_MS = 64;
+
+/**
+ * Integration interval (ms) of the boundary spring. Explicit Euler needs a
+ * constant small interval to stay stable and give the same path per elapsed
+ * millisecond, so a long `dtMs` is run as several sub-steps.
+ */
+const SPRING_SUB_STEP_MS = REFERENCE_FRAME_MS / 4;
+
+/** Friction coefficient per reference frame (~60fps). Spec: k ≈ 0.97 */
 export const INERTIA_FRICTION = 0.97;
 
-/** Minimum velocity (px/frame) below which inertia stops */
-export const INERTIA_MIN_VELOCITY = 0.5;
+/** Minimum velocity (px/ms) below which inertia stops */
+export const INERTIA_MIN_VELOCITY = 0.5 / REFERENCE_FRAME_MS;
 
 /** Tap/drag disambiguation threshold in pixels */
 export const GESTURE_THRESHOLD = 10;
@@ -66,11 +93,17 @@ export const GESTURE_THRESHOLD = 10;
 /** Cross-slide detection threshold in perpendicular pixels */
 export const CROSS_SLIDE_THRESHOLD = 10;
 
-/** Boundary spring stiffness */
+/** Boundary spring stiffness (per reference frame) */
 export const SPRING_STIFFNESS = 0.1;
 
-/** Boundary spring damping (critically damped) */
+/** Boundary spring damping (per reference frame, critically damped) */
 export const SPRING_DAMPING = 0.7;
+
+/** Distance (px) below which the boundary spring counts as settled */
+export const SPRING_SETTLE_DISTANCE = 0.5;
+
+/** Velocity (px/ms) below which the boundary spring counts as settled */
+export const SPRING_SETTLE_VELOCITY = 0.5 / REFERENCE_FRAME_MS;
 
 /** Boundary drag resistance factor (0-1, lower = more resistance) */
 export const BOUNDARY_RESISTANCE = 0.4;
@@ -85,6 +118,8 @@ export const MAX_VELOCITY_SAMPLES = 5;
 
 /**
  * Create initial inertia state.
+ * @param velocity - Starting velocity in px/ms
+ * @param position - travelled distance in px
  */
 export function createInertiaState(
   velocity: number = 0,
@@ -98,38 +133,60 @@ export function createInertiaState(
 }
 
 /**
- * Advance inertia by one frame. Returns new state (immutable).
- * Applies exponential decay: v(t) = v₀ × friction^frames
+ * Elapsed milliseconds for one animation step, from requestAnimationFrame
+ * timestamps. The first step of an animation has no previous timestamp and
+ * runs at the reference frame rate; longer gaps are clamped to
+ * {@link MAX_FRAME_DELTA_MS}.
+ *
+ * @param lastTimestamp - Timestamp of the previous frame, or null on the first
+ * @param timestamp - Timestamp of the current frame
+ * @returns elapsed time in ms
+ */
+export function frameDeltaMs(
+  lastTimestamp: number | null,
+  timestamp: number
+): number {
+  if (lastTimestamp === null) return REFERENCE_FRAME_MS;
+  return Math.min(Math.max(timestamp - lastTimestamp, 0), MAX_FRAME_DELTA_MS);
+}
+
+/**
+ * Advance inertia by `dtMs`. Returns new state (immutable).
+ * Applies exponential decay: v(t) = v₀ × friction^(t / reference frame).
+ * The step moves by the mean velocity over the interval, so the travelled
+ * distance does not depend on how the interval was split into frames.
  */
 export function stepInertia(
   state: InertiaState,
+  dtMs: number,
   friction: number = INERTIA_FRICTION
 ): InertiaState {
   if (!state.moving) return state;
 
-  const velocity = state.velocity * friction;
-  const position = state.position + velocity;
+  const velocity = state.velocity * friction ** (dtMs / REFERENCE_FRAME_MS);
+  const position = state.position + ((state.velocity + velocity) / 2) * dtMs;
   const moving = Math.abs(velocity) > INERTIA_MIN_VELOCITY;
 
   return { velocity: moving ? velocity : 0, position, moving };
 }
 
 /**
- * Calculate the total distance inertia will travel before stopping.
+ * Calculate the total distance (px) inertia will travel before stopping.
  * Useful for predicting snap targets.
  *
- * Sum of geometric series: d = v₀ × friction / (1 - friction)
+ * Sum of the geometric series over reference frames:
+ * d = v₀ × frame × friction / (1 - friction), with `velocity` in px/ms.
  */
 export function predictInertiaDistance(
   velocity: number,
   friction: number = INERTIA_FRICTION
 ): number {
   if (Math.abs(velocity) < INERTIA_MIN_VELOCITY) return 0;
-  return (velocity * friction) / (1 - friction);
+  return (velocity * REFERENCE_FRAME_MS * friction) / (1 - friction);
 }
 
 /**
- * Calculate velocity from a sequence of pointer samples.
+ * Calculate velocity (px/ms) from a sequence of pointer samples.
  * Uses the last few samples for a smoothed velocity estimate.
  */
 export function calculateVelocity(
@@ -146,8 +203,7 @@ export function calculateVelocity(
   if (dt <= 0) return 0;
 
   const dp = axis === "x" ? last.x - first.x : last.y - first.y;
-  // Convert from px/ms to px/frame (assuming 60fps ≈ 16.67ms/frame)
-  return (dp / dt) * 16.67;
+  return dp / dt;
 }
 
 // ─── Boundary Spring Functions ───────────────────────────────────────────────
@@ -165,6 +221,7 @@ export function compressBoundary(
 
 /**
  * Create initial spring state for boundary release animation.
+ * `position` is the overscroll in px, `velocity` in px/ms.
  */
 export function createSpringState(
   position: number,
@@ -173,26 +230,48 @@ export function createSpringState(
   return {
     position,
     velocity,
-    settled: Math.abs(position) < 0.5 && Math.abs(velocity) < 0.5,
+    settled:
+      Math.abs(position) < SPRING_SETTLE_DISTANCE &&
+      Math.abs(velocity) < SPRING_SETTLE_VELOCITY,
   };
 }
 
 /**
- * Advance spring simulation by one frame.
- * Critically damped spring returning to position = 0.
+ * Advance the spring simulation by `dtMs`, returning to position = 0.
+ * Critically damped spring: a = -kx - bv, integrated in reference-frame units.
+ *
+ * The step is split into fixed sub-steps because explicit Euler is only stable
+ * and frame-rate independent at a small, constant integration interval: one
+ * 100 ms step overshoots where six 16.67 ms steps converge.
  */
 export function stepSpring(
   state: SpringState,
+  dtMs: number,
   stiffness: number = SPRING_STIFFNESS,
   damping: number = SPRING_DAMPING
 ): SpringState {
   if (state.settled) return state;
 
-  // Hooke's law + damping: a = -kx - bv
-  const acceleration = -stiffness * state.position - damping * state.velocity;
-  const velocity = state.velocity + acceleration;
-  const position = state.position + velocity;
-  const settled = Math.abs(position) < 0.5 && Math.abs(velocity) < 0.5;
+  // The constants are per reference frame; convert them to per-millisecond so
+  // the same ODE is solved whatever dtMs the display asked for.
+  const stiffnessPerMs = stiffness / (REFERENCE_FRAME_MS * REFERENCE_FRAME_MS);
+  const dampingPerMs = damping / REFERENCE_FRAME_MS;
+  const steps = Math.max(1, Math.round(dtMs / SPRING_SUB_STEP_MS));
+  const subStep = dtMs / steps;
+
+  let position = state.position;
+  let velocity = state.velocity;
+
+  for (let step = 0; step < steps; step++) {
+    // Hooke's law + damping: a = -kx - bv
+    const acceleration = -stiffnessPerMs * position - dampingPerMs * velocity;
+    velocity += acceleration * subStep;
+    position += velocity * subStep;
+  }
+
+  const settled =
+    Math.abs(position) < SPRING_SETTLE_DISTANCE &&
+    Math.abs(velocity) < SPRING_SETTLE_VELOCITY;
 
   return {
     velocity: settled ? 0 : velocity,

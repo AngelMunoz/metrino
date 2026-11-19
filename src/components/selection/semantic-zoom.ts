@@ -9,17 +9,22 @@ export type ZoomState = "in" | "out";
  * scoped part names. Both layers are always rendered, so a static name would
  * stay reserved while the component is idle and repeated by a second instance
  * on the same page.
+ *
+ * Built per transition, because `transitionDuration` can change at any time.
  */
-function semanticZoomTransitionRules(names: Record<string, string>): string {
+function semanticZoomTransitionRules(
+  names: Record<string, string>,
+  duration: number
+): string {
   return `
 html:active-view-transition-type(semantic-zoom)::view-transition-old(${names.out}) {
   animation-name: metro-semantic-zoom-out;
-  animation-duration: 400ms;
+  animation-duration: ${duration}ms;
   animation-timing-function: var(--metro-easing);
 }
 html:active-view-transition-type(semantic-zoom)::view-transition-new(${names.in}) {
   animation-name: metro-semantic-zoom-in;
-  animation-duration: 400ms;
+  animation-duration: ${duration}ms;
   animation-timing-function: var(--metro-easing);
 }
 `;
@@ -41,7 +46,7 @@ export class MetroSemanticZoom extends LitElement {
         display: block;
         position: relative;
         overflow: hidden;
-        touch-action: none;
+        touch-action: pan-x pan-y;
         min-height: 200px;
         height: 100%;
         background: var(--metro-background, transparent);
@@ -58,6 +63,14 @@ export class MetroSemanticZoom extends LitElement {
         inset: 0;
         background: var(--metro-background, transparent);
         overflow: auto;
+        /* Fallback for engines without View Transitions: the state change is a
+           CSS transition of the same three properties the snapshots animate.
+           --sz-dur is 0ms wherever startViewTransition exists, so a View
+           Transition never stacks its own animation on top of this one. */
+        transition:
+          transform var(--sz-dur, 0ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          opacity var(--sz-dur, 0ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
+          filter var(--sz-dur, 0ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
       }
       .zoomed-in {
         transform: scale(1);
@@ -104,12 +117,17 @@ export class MetroSemanticZoom extends LitElement {
   #isPinching = false;
   #isTransitioning = false;
   #transition = createTransitionScope("semantic-zoom", ["in", "out"]);
-  #transitionRules = semanticZoomTransitionRules(this.#transition.names);
 
   constructor() {
     super();
     this.zoomed = "in";
     this.transitionDuration = 400;
+  }
+
+  protected updated(): void {
+    const duration =
+      "startViewTransition" in document ? 0 : this.transitionDuration;
+    this.style.setProperty("--sz-dur", `${duration}ms`);
   }
 
   setZoomedState(state: ZoomState): Promise<void> {
@@ -138,7 +156,13 @@ export class MetroSemanticZoom extends LitElement {
 
     if ("startViewTransition" in document) {
       let applied = false;
-      this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
+      this.#transition.attach(
+        this.#transitionTargets(),
+        semanticZoomTransitionRules(
+          this.#transition.names,
+          this.transitionDuration
+        )
+      );
       const transition = document.startViewTransition({
         update: () => {
           applyChange();
@@ -223,13 +247,13 @@ export class MetroSemanticZoom extends LitElement {
       this.zoomed === "in" &&
       currentDistance < this.#pinchStartDistance - threshold
     ) {
-      this.setZoomedState("out");
+      void this.setZoomedState("out");
       this.#isPinching = false;
     } else if (
       this.zoomed === "out" &&
       currentDistance > this.#pinchStartDistance + threshold
     ) {
-      this.setZoomedState("in");
+      void this.setZoomedState("in");
       this.#isPinching = false;
     }
   }
@@ -244,9 +268,9 @@ export class MetroSemanticZoom extends LitElement {
     e.preventDefault();
 
     if (e.deltaY > 0 && this.zoomed === "in") {
-      this.setZoomedState("out");
+      void this.setZoomedState("out");
     } else if (e.deltaY < 0 && this.zoomed === "out") {
-      this.setZoomedState("in");
+      void this.setZoomedState("in");
     }
   }
 

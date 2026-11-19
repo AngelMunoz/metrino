@@ -30,3 +30,6 @@ dist-ssr
 # Playwright
 test-results/
 playwright-report/
+
+# Agent session scratch
+.qwen/

@@ -2,6 +2,7 @@ import { assert } from "chai";
 import {
   createInertiaState,
   stepInertia,
+  frameDeltaMs,
   predictInertiaDistance,
   calculateVelocity,
   compressBoundary,
@@ -20,12 +21,40 @@ import {
   BOUNDARY_RESISTANCE,
 } from "./touch-physics.ts";
 
+/** Duration (ms) of one frame at 60fps, the rate the physics are tuned for. */
+const FRAME_MS = 1000 / 60;
+
+/** A fling of about 600 px/s, expressed in px/ms. */
+const FLING_VELOCITY = 0.6;
+
+/**
+ * Run the inertia integrator over `deltas` and return the travelled distance.
+ */
+function inertiaDistance(v0: number, deltas: readonly number[]): number {
+  let state = createInertiaState(v0, 0);
+  for (const dt of deltas) state = stepInertia(state, dt);
+  return state.position;
+}
+
+/**
+ * Run the spring integrator over `deltas` and return the position.
+ */
+function springPosition(x0: number, deltas: readonly number[]): number {
+  let state = createSpringState(x0);
+  for (const dt of deltas) state = stepSpring(state, dt);
+  return state.position;
+}
+
+function repeat(dt: number, times: number): number[] {
+  return Array.from({ length: times }, () => dt);
+}
+
 // ─── Inertia ─────────────────────────────────────────────────────────────────
 
 suite("touch-physics: inertia", () => {
   test("createInertiaState sets initial values", () => {
-    const state = createInertiaState(10, 50);
-    assert.equal(state.velocity, 10);
+    const state = createInertiaState(FLING_VELOCITY, 50);
+    assert.equal(state.velocity, FLING_VELOCITY);
     assert.equal(state.position, 50);
     assert.isTrue(state.moving);
   });
@@ -41,56 +70,70 @@ suite("touch-physics: inertia", () => {
   });
 
   test("stepInertia decays velocity", () => {
-    const s0 = createInertiaState(10, 0);
-    const s1 = stepInertia(s0);
+    const s0 = createInertiaState(FLING_VELOCITY, 0);
+    const s1 = stepInertia(s0, FRAME_MS);
     assert.isBelow(Math.abs(s1.velocity), Math.abs(s0.velocity));
-    assert.approximately(s1.velocity, 10 * INERTIA_FRICTION, 0.001);
+    assert.approximately(s1.velocity, FLING_VELOCITY * INERTIA_FRICTION, 0.0001);
   });
 
-  test("stepInertia updates position", () => {
-    const s0 = createInertiaState(10, 0);
-    const s1 = stepInertia(s0);
-    assert.isAbove(s1.position, 0);
+  test("stepInertia moves the position by the elapsed time", () => {
+    const s0 = createInertiaState(FLING_VELOCITY, 0);
+    const s1 = stepInertia(s0, FRAME_MS);
+    assert.approximately(s1.position, FLING_VELOCITY * FRAME_MS, 0.5);
   });
 
   test("stepInertia eventually stops", () => {
-    let state = createInertiaState(10, 0);
+    let state = createInertiaState(FLING_VELOCITY, 0);
     let frames = 0;
     while (state.moving && frames < 1000) {
-      state = stepInertia(state);
+      state = stepInertia(state, FRAME_MS);
       frames++;
     }
     assert.isFalse(state.moving);
+    assert.equal(state.velocity, 0, "stopped velocity is zeroed");
     assert.isBelow(frames, 500, "should settle within 500 frames");
   });
 
   test("stepInertia on stopped state is no-op", () => {
     const state = createInertiaState(0, 100);
-    const next = stepInertia(state);
+    const next = stepInertia(state, FRAME_MS);
     assert.equal(next.position, 100);
     assert.equal(next.velocity, 0);
   });
 
   test("stepInertia with negative velocity works", () => {
-    const s0 = createInertiaState(-10, 0);
-    const s1 = stepInertia(s0);
-    assert.isAbove(s1.velocity, -10);
+    const s0 = createInertiaState(-FLING_VELOCITY, 0);
+    const s1 = stepInertia(s0, FRAME_MS);
+    assert.isAbove(s1.velocity, -FLING_VELOCITY);
     assert.isBelow(s1.position, 0);
   });
 
-  test("predictInertiaDistance approximates total travel", () => {
-    const dist = predictInertiaDistance(10);
+  test("predictInertiaDistance sums the decay", () => {
+    const dist = predictInertiaDistance(FLING_VELOCITY);
     assert.isAbove(dist, 0);
 
-    // Verify by actually stepping
-    let state = createInertiaState(10, 0);
+    // Cross-check the closed form against the geometric series it summarises.
+    let series = 0;
+    let decay = 1;
+    for (let frame = 0; frame < 5000; frame++) {
+      decay *= INERTIA_FRICTION;
+      series += FLING_VELOCITY * FRAME_MS * decay;
+    }
+    assert.approximately(dist, series, 0.5);
+
+    // Verify against stepping. The formula runs the decay to zero, the
+    // integrator stops at INERTIA_MIN_VELOCITY, so the two differ by the
+    // distance that leftover velocity would still have carried.
+    let state = createInertiaState(FLING_VELOCITY, 0);
     let frames = 0;
-    while (state.moving && frames < 1000) {
-      state = stepInertia(state);
+    while (state.moving && frames < 5000) {
+      state = stepInertia(state, FRAME_MS);
       frames++;
     }
-    // The formula is an upper bound (doesn't account for min-velocity cutoff)
-    assert.approximately(dist, state.position, 20);
+    const leftover =
+      (INERTIA_MIN_VELOCITY * FRAME_MS * INERTIA_FRICTION) /
+      (1 - INERTIA_FRICTION);
+    assert.closeTo(dist, state.position, leftover);
   });
 
   test("predictInertiaDistance returns 0 for sub-threshold velocity", () => {
@@ -98,14 +141,13 @@ suite("touch-physics: inertia", () => {
     assert.equal(predictInertiaDistance(INERTIA_MIN_VELOCITY * 0.1), 0);
   });
 
-  test("calculateVelocity from samples", () => {
+  test("calculateVelocity returns px per millisecond", () => {
     const samples = [
       { x: 0, y: 0, time: 0 },
       { x: 100, y: 0, time: 100 },
     ];
-    const vx = calculateVelocity(samples, "x");
-    // 100px / 100ms * 16.67ms/frame ≈ 16.67 px/frame
-    assert.approximately(vx, 16.67, 0.1);
+    // 100px over 100ms is 1px/ms
+    assert.approximately(calculateVelocity(samples, "x"), 1, 0.0001);
   });
 
   test("calculateVelocity returns 0 for single sample", () => {
@@ -117,8 +159,49 @@ suite("touch-physics: inertia", () => {
       { x: 0, y: 0, time: 0 },
       { x: 0, y: 50, time: 100 },
     ];
-    const vy = calculateVelocity(samples, "y");
-    assert.approximately(vy, 8.335, 0.1);
+    assert.approximately(calculateVelocity(samples, "y"), 0.5, 0.0001);
+  });
+});
+
+// ─── Frame-rate independence ─────────────────────────────────────────────────
+
+suite("touch-physics: frame-rate independence", () => {
+  // The same wall-clock time split into 60fps frames (6 × 16.67 ms), 30fps
+  // frames (3 × 33.33 ms) or one dropped frame (1 × 100 ms) has to move the
+  // content the same distance, or a fling lands somewhere else on a slow
+  // device than on a fast one.
+  const frameSplits: number[][] = [repeat(16.67, 6), repeat(33.33, 3), [100]];
+
+  test("inertia displacement is the same whatever the frame rate", () => {
+    const distances = frameSplits.map((deltas) =>
+      inertiaDistance(FLING_VELOCITY, deltas)
+    );
+    const spread = Math.max(...distances) - Math.min(...distances);
+    assert.isBelow(
+      spread,
+      Math.max(...distances) * 0.02,
+      `distances differed by more than 2%: ${distances.join(", ")}`
+    );
+  });
+
+  test("spring position is the same whatever the frame rate", () => {
+    const positions = frameSplits.map((deltas) => springPosition(100, deltas));
+    const spread = Math.max(...positions) - Math.min(...positions);
+    assert.isBelow(
+      spread,
+      Math.max(...positions) * 0.02,
+      `positions differed by more than 2%: ${positions.join(", ")}`
+    );
+  });
+
+  test("frameDeltaMs uses the reference frame for the first step", () => {
+    assert.approximately(frameDeltaMs(null, 1234), FRAME_MS, 0.01);
+  });
+
+  test("frameDeltaMs clamps a dropped frame", () => {
+    assert.equal(frameDeltaMs(0, 500), 64);
+    assert.equal(frameDeltaMs(100, 40), 0);
+    assert.equal(frameDeltaMs(0, 33.33), 33.33);
   });
 });
 
@@ -148,25 +231,31 @@ suite("touch-physics: boundary spring", () => {
   });
 
   test("createSpringState near zero is settled", () => {
-    const state = createSpringState(0.1, 0.1);
+    const state = createSpringState(0.1, 0.01);
     assert.isTrue(state.settled);
+  });
+
+  test("createSpringState is not settled while the release is still fast", () => {
+    // 0.4 px/ms is 6.7 px per frame, above the settle threshold.
+    assert.isFalse(createSpringState(0.1, 0.4).settled);
   });
 
   test("stepSpring converges to 0", () => {
     let state = createSpringState(100);
     let frames = 0;
     while (!state.settled && frames < 500) {
-      state = stepSpring(state);
+      state = stepSpring(state, FRAME_MS);
       frames++;
     }
     assert.isTrue(state.settled);
     assert.equal(state.position, 0);
+    assert.equal(state.velocity, 0, "settled velocity is zeroed");
     assert.isBelow(frames, 300, "spring should settle within 300 frames");
   });
 
   test("stepSpring on settled state is no-op", () => {
     const state = createSpringState(0, 0);
-    const next = stepSpring(state);
+    const next = stepSpring(state, FRAME_MS);
     assert.equal(next.position, 0);
     assert.isTrue(next.settled);
   });
@@ -175,7 +264,7 @@ suite("touch-physics: boundary spring", () => {
     let state = createSpringState(-80);
     let frames = 0;
     while (!state.settled && frames < 500) {
-      state = stepSpring(state);
+      state = stepSpring(state, FRAME_MS);
       frames++;
     }
     assert.isTrue(state.settled);

@@ -9,6 +9,7 @@ import {
   compressBoundary,
   createSpringState,
   stepSpring,
+  frameDeltaMs,
   normalizePointerEvent,
   type GestureState,
 } from "../../utils/touch-physics.ts";
@@ -106,14 +107,12 @@ export class MetroPanorama extends LitElement {
         opacity: 0.15;
         pointer-events: none;
         will-change: transform;
-        transition: transform 0.1s linear;
       }
       .panorama-container {
         display: flex;
         overflow-x: auto;
         overflow-y: hidden;
         scroll-snap-type: x mandatory;
-        scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
         padding: var(--metro-spacing-lg, 16px) 0;
         position: relative;
@@ -139,6 +138,11 @@ export class MetroPanorama extends LitElement {
   #scrollContainer: HTMLElement | null = null;
   #gestureState: GestureState | null = null;
   #animFrameId: number | null = null;
+  /**
+   * Holds the inline `scroll-snap-type` saved while a scripted animation owns
+   * the scroll position, or null while the browser owns it.
+   */
+  #savedSnapType: string | null = null;
 
   render() {
     return html`
@@ -251,10 +255,14 @@ export class MetroPanorama extends LitElement {
 
     const container = this.#scrollContainer;
     const maxScroll = container.scrollWidth - container.clientWidth;
+    this.#suppressSnap();
+    let lastFrame: number | null = null;
 
-    const tick = () => {
-      inertia = stepInertia(inertia);
-      container.scrollLeft += inertia.velocity;
+    const tick = (timestamp: number) => {
+      const dt = frameDeltaMs(lastFrame, timestamp);
+      lastFrame = timestamp;
+      inertia = stepInertia(inertia, dt);
+      container.scrollLeft += inertia.velocity * dt;
 
       // Boundary bounce
       if (container.scrollLeft <= 0 || container.scrollLeft >= maxScroll) {
@@ -263,12 +271,16 @@ export class MetroPanorama extends LitElement {
           : container.scrollLeft - maxScroll;
         if (Math.abs(overscroll) > 1) {
           this.#runSpringBack(container, overscroll);
+        } else {
+          this.#releaseSnap();
         }
         return; // Stop inertia at boundary
       }
 
       if (inertia.moving && this.isConnected) {
         this.#animFrameId = requestAnimationFrame(tick);
+      } else {
+        this.#releaseSnap();
       }
     };
 
@@ -284,17 +296,84 @@ export class MetroPanorama extends LitElement {
    */
   #runSpringBack(container: HTMLElement, overscroll: number): void {
     let spring = createSpringState(overscroll);
+    this.#suppressSnap();
+    let lastFrame: number | null = null;
 
-    const tick = () => {
+    const tick = (timestamp: number) => {
       if (!this.isConnected) return;
-      spring = stepSpring(spring);
-      container.scrollLeft -= spring.velocity;
+      const dt = frameDeltaMs(lastFrame, timestamp);
+      lastFrame = timestamp;
+      spring = stepSpring(spring, dt);
+      container.scrollLeft -= spring.velocity * dt;
       if (!spring.settled && this.isConnected) {
         this.#animFrameId = requestAnimationFrame(tick);
+      } else {
+        this.#releaseSnap();
       }
     };
 
     this.#animFrameId = requestAnimationFrame(tick);
+  }
+
+  /**
+   * Takes the snap points away from the browser for the length of a scripted
+   * animation. Mandatory snap re-snaps every `scrollLeft` the script writes,
+   * which drags each frame back to the nearest boundary and turns the glide
+   * into a stutter. Native scrolling keeps its snap points.
+   * @returns void
+   */
+  #suppressSnap(): void {
+    const container = this.#scrollContainer;
+    if (!container || this.#savedSnapType !== null) return;
+    this.#savedSnapType = container.style.scrollSnapType;
+    container.style.scrollSnapType = "none";
+  }
+
+  /**
+   * Hands the snap points back to the browser. A scripted glide stops wherever
+   * its velocity ran out, so land on the nearest item start first: restoring
+   * `x mandatory` on an off-boundary position would jump the content again.
+   * @returns void
+   */
+  #releaseSnap(): void {
+    const container = this.#scrollContainer;
+    if (container && this.#savedSnapType !== null) {
+      container.scrollLeft = this.#nearestSnapPoint(container);
+      container.style.scrollSnapType = this.#savedSnapType;
+    }
+    this.#savedSnapType = null;
+  }
+
+  /**
+   * The scroll position that puts each item's start edge on the scrollport,
+   * pulled into the range the container can actually scroll to.
+   * @param container - The scroll container element
+   * @returns number[]
+   */
+  #snapPoints(container: HTMLElement): number[] {
+    const padding = parseFloat(getComputedStyle(container).paddingLeft) || 0;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    return Array.from(
+      this.querySelectorAll<HTMLElement>("metro-panorama-item")
+    ).map((item) =>
+      Math.min(Math.max(item.offsetLeft - padding, 0), maxScroll)
+    );
+  }
+
+  /**
+   * @param container - The scroll container element
+   * @returns the snap point nearest the current scroll position
+   */
+  #nearestSnapPoint(container: HTMLElement): number {
+    const points = this.#snapPoints(container);
+    if (points.length === 0) return container.scrollLeft;
+
+    const scrollLeft = container.scrollLeft;
+    return points.reduce((nearest, point) =>
+      Math.abs(point - scrollLeft) < Math.abs(nearest - scrollLeft)
+        ? point
+        : nearest
+    );
   }
 
   /**
@@ -306,6 +385,7 @@ export class MetroPanorama extends LitElement {
       cancelAnimationFrame(this.#animFrameId);
       this.#animFrameId = null;
     }
+    this.#releaseSnap();
   }
 
   /**

@@ -26,6 +26,9 @@ this roadmap. See the component audit summary at the bottom for the hand-off fac
 | Per-instance view-transition-name scoping (5 components; names held only while active) | `src/utils/view-transition.ts` `createTransitionScope`; `e2e/view-transitions.spec.ts` |
 | Root turnstile wired for demo route changes | `animations.css` `::view-transition-old/new(root)` under type `turnstile`; `demo/main.ts` passes `types` |
 | Content dialog swivel entrance (rotateX 90°, matches message dialog) | `animations.css` `metro-dialog-enter/exit`; e2e CSSOM gate |
+| Panorama: snap suppressed during scripted inertia/spring, lands on nearest item boundary; parallax without transition lag | `panorama.ts` `#suppressSnap`/`#releaseSnap`; `e2e/panorama.spec.ts` |
+| Semantic zoom: inner touch panning (`touch-action: pan-x pan-y`), animated non-VT fallback, `transition-duration` honored | `semantic-zoom.ts`; `e2e/semantic-zoom.spec.ts` |
+| Frame-rate-independent inertia/spring; velocities in px/ms | `touch-physics.ts` `stepInertia(state, dtMs)`, `stepSpring(state, dtMs)`, `frameDeltaMs`; independence tests in `touch-physics.test.ts` |
 | Settings flyout widths 346 px (narrow) / 646 px (wide) | `src/components/dialogs/settings-flyout.ts:108,122` |
 | ARIA roles: list-view `listbox`, grid-view `grid`, panorama `region` | `list-view.ts:101`, `grid-view.ts:132`, `panorama.ts` |
 | App bar Escape + `aria-controls` | `src/components/navigation/app-bar.ts:167,190` |
@@ -91,14 +94,10 @@ and same-scope duplicates rejecting the transition. Scoping removes both risks.
 
 | Item | File(s) |
 |---|---|
-| Panorama: mandatory scroll-snap re-snaps scripted inertia; reuse the hub snap-suppression pattern. Remove the 0.1 s parallax transition lag | `panorama.ts` |
-| Semantic zoom: host `touch-action: none` blocks inner touch scrolling | `semantic-zoom.ts` |
-| Integrator is frame-rate dependent: `stepInertia`/`stepSpring` take no deltaTime; `calculateVelocity` hardcodes `* 16.67` | `touch-physics.ts`, `scroll-viewer.ts`, `panorama.ts` |
 | Indeterminate progress dots animate `left` (layout), not transform | `progress-bar.ts` |
 | Three progress-ring geometries disagree (component 3 s orbit; CSS class 1.5 s linear spin; demo 167 ms border spinner). Canonical = component orbit | `progress-ring.ts`, `animations.css`, demo |
 | Flip axis disagrees: component rotateY vs global keyframe rotateX. Default: component wins | `flip-tile.ts`, `animations.css` |
 | Animation sources duplicated: 14 keyframes in both `animations.css` and `utils/animations.ts` (bodies currently identical). `playAnimation` resolves on setTimeout, not animationend | both files |
-| Semantic zoom: `transition-duration` property declared but never read; no animated fallback without View Transitions (hard cut on older browsers) | `semantic-zoom.ts` |
 
 ### P2 — Metro interaction completeness
 
@@ -136,9 +135,6 @@ See §6.
 
 | Bug | File |
 |---|---|
-| Panorama snap vs inertia conflict; parallax lag | `panorama.ts` |
-| Semantic zoom blocks inner touch scroll; unused `transition-duration`; no non-VT fallback | `semantic-zoom.ts` |
-| Frame-rate-dependent inertia/spring | `touch-physics.ts` |
 | Progress dots animate `left` | `progress-bar.ts` |
 | Three ring geometries; flip axis mismatch | `progress-ring.ts`, `flip-tile.ts`, `animations.css` |
 | Duplicated keyframes; setTimeout-based animation completion | `utils/animations.ts`, `animations.css` |

@@ -87,14 +87,17 @@ Changelog: none (docs only), unless a behavior changes.
 
 ### P1 defects
 
-- [ ] **1.4 Panorama snap ownership.** Suppress `scroll-snap-type` during scripted inertia
+- [x] **1.4 Panorama snap ownership.** Suppress `scroll-snap-type` during scripted inertia
       (reuse the `hub.ts` glide pattern) or switch to proximity snap. Remove the 0.1 s
-      parallax `transition`. Category: **Fixed**.
-- [ ] **1.5 Semantic zoom touch scroll.** Remove host `touch-action: none`; let inner overflow
-      pan while pinch/ctrl+wheel still zooms. Category: **Fixed**.
-- [ ] **1.6 DeltaTime integrator.** `stepInertia`/`stepSpring` accept dt; friction scaled by
+      parallax `transition`. Category: **Fixed**. (PR3; lands on nearest item boundary
+      before restoring snap; `e2e/panorama.spec.ts`.)
+- [x] **1.5 Semantic zoom touch scroll.** Remove host `touch-action: none`; let inner overflow
+      pan while pinch/ctrl+wheel still zooms. Category: **Fixed**. (PR3; `pan-x pan-y`;
+      trusted-touch e2e on Chromium.)
+- [x] **1.6 DeltaTime integrator.** `stepInertia`/`stepSpring` accept dt; friction scaled by
       `dt/16.67`; `calculateVelocity` returns a time-based unit. Update `scroll-viewer.ts`
       and `panorama.ts` call sites; update `touch-physics.test.ts`. Category: **Fixed**.
+      (PR3; px/ms contract, spring sub-steps, frame-rate independence tests.)
 - [ ] **1.7 Progress dots transform.** Animate `transform: translateX(...)` instead of `left`.
       Category: **Fixed**.
 - [ ] **1.8 Unify ring geometry.** Canonical = 5-dot orbit component. Align the
@@ -104,8 +107,9 @@ Changelog: none (docs only), unless a behavior changes.
 - [ ] **1.10 Single animation source.** Make `animations.css` canonical;
       `utils/animations.ts` consumes it; `playAnimation` resolves on `animationend`.
       Category: **Changed**.
-- [ ] **1.11 Semantic zoom fallback + dead property.** Wire `transition-duration` or remove
-      it; add a CSS transition fallback for non-VT browsers. Category: **Fixed**.
+- [x] **1.11 Semantic zoom fallback + dead property.** Wire `transition-duration` or remove
+      it; add a CSS transition fallback for non-VT browsers. Category: **Fixed**. (PR3;
+      `--sz-dur` fallback, per-transition rule duration; e2e no-VT cases.)
 
 ---
 
