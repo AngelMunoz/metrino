@@ -27,7 +27,7 @@ this roadmap. See the component audit summary at the bottom for the hand-off fac
 | ARIA roles: list-view `listbox`, grid-view `grid`, panorama `region` | `list-view.ts:101`, `grid-view.ts:132`, `panorama.ts` |
 | App bar Escape + `aria-controls` | `src/components/navigation/app-bar.ts:167,190` |
 | Keyboard activation: toggle-switch, check-box, radio-button | tabindex + Enter/Space handlers |
-| Dialog focus trap + Escape (with a known gap, see §4) | `content-dialog.ts`, `message-dialog.ts`, `flyout.ts` |
+| Dialog focus trap + Escape: settings-flyout works (document-level listener); content-dialog and message-dialog Escape is dead in real flows (focus gap, see §4) | `content-dialog.ts`, `message-dialog.ts`, `flyout.ts` |
 | Panorama parallax ratio 0.2, opacity 0.15 | `panorama.ts` |
 | Live tile pseudo-random cycle 6–10 s (property bug, see §4) | `live-tile.ts` |
 | Border default thickness 2 px | `border.ts` |
@@ -146,6 +146,7 @@ See §6.
 | Cycle tile and iconic tile dispatch a synthetic non-composed `click` that doubles the native click | `cycle-tile.ts`, `iconic-tile.ts` |
 | Expander: no `aria-expanded`, no tabindex, no key handler; doc claims ARIA support; 500 px max-height clips tall content | `expander.ts` |
 | Content dialog focus trap queries shadow DOM only; slotted buttons escape | `content-dialog.ts` |
+| Dialog Escape/focus defects (e2e-verified 2026-11-17): content-dialog `#saveFocus` rAF runs before the View Transition applies `open`, so focus stays on the opener and Escape never reaches the dialog handler; message-dialog never moves focus and has no document-level Escape listener; settings-flyout did not restore focus to the opener on close (observed in probe) | `content-dialog.ts`, `message-dialog.ts`, `settings-flyout.ts` |
 | Wrap panel `orientation="vertical"` has no CSS effect | `wrap-panel.ts` |
 | Separator doc says hidden preserves layout space; CSS `display:none` removes it | `app-bar-separator.ts` |
 | App bar button label uses `:host-context()` (1 usage); Firefox does not support it | `app-bar-button.ts:118` |

@@ -14,16 +14,23 @@ The previous phase plan (Phases 1–13) is retired. Its disposition is at the bo
 
 Per task:
 
-1. Implement the change.
-2. Type check: `pnpx tsc --noEmit`.
-3. Run existing logic tests where they cover the change:
-   `pnpx web-test-runner src/components/<file>.test.ts --node-resolve`.
-4. Visual check in the demo (`pnpm dev`) for motion/spacing tasks.
+1. Write the e2e use-case test first (`e2e/*.spec.ts`, Playwright against the demo
+   app). It must fail before the fix and pass after. Test real input and observable
+   outcomes: visible text, focus, page-level events, computed styles, geometry,
+   `animationend`. Screenshots and traces are review artifacts, not pixel-diff gates.
+2. Implement the change.
+3. Type check: `pnpx tsc --noEmit`.
+4. Run the e2e suite: `pnpm test:e2e` (Chromium + Firefox). Pure non-DOM logic
+   changes also run their logic tests:
+   `pnpx web-test-runner src/utils/<file>.test.ts --node-resolve`.
+5. Capture visual artifacts for motion/spacing tasks into `artifacts/<phase>/`
+   (before/after screenshots, frame sequences) and commit them with the phase.
 
-Constraint: `web-test-runner.config.mjs` sets `loaders: { ".css": "empty" }`, so the suite
-cannot see styles. Motion and spacing are verified manually, not by the suite. The config
-runs chromium + firefox only. Do **not** gate work on installing browsers or establishing a
-full test baseline (owner decision).
+Owner decision (2026-11-17): e2e use-case tests are mandatory for all component,
+flow, and demo-page work. This supersedes the previous "verify motion manually"
+method. The web-test-runner suite loads `.css` as empty and remains only for
+non-DOM utils (`touch-physics`, `sanitize`, `virtualization`). Both suites run
+chromium + firefox.
 
 ## Execution rules
 
@@ -52,7 +59,7 @@ full test baseline (owner decision).
 - [ ] `README.md` — accent count 21 → 20 named blocks + implicit blue default.
 - [ ] Locate the "spec" the old roadmap cited (Sections 5.2 / 7.2). No such file exists in
       the repo. Find it or mark those citations ungrounded in the roadmap.
-- [ ] `AGENTS.md` — reconcile the "all three browser engines" claim with the chromium+firefox config.
+- [x] `AGENTS.md` — reconcile the "all three browser engines" claim with the chromium+firefox config (done in the e2e foundation PR: Testing section rewritten).
 
 Changelog: none (docs only), unless a behavior changes.
 
@@ -135,6 +142,12 @@ Changelog: none (docs only), unless a behavior changes.
       (parent-driven attribute/part or `:has()`). **Fixed**.
 - [ ] **3.9** `media-element.ts` — standard `accent-color`/`color-scheme` beyond webkit pseudos. **Fixed**.
 - [ ] **3.10** `toast.ts` — implement `toastshown`/`toasthidden` (composed; fix the typo). **Added**.
+- [ ] **3.11** Dialog focus + Escape (e2e-verified defect): focus the dialog only after
+      `open` is applied (after the View Transition update, not a pre-transition rAF);
+      document-level Escape while open for content-dialog and message-dialog; restore
+      focus to the opener on close (settings-flyout restore observed broken); include
+      slotted nodes in the trap (with 3.5). Un-fixme the two Escape tests in
+      `e2e/dialogs.spec.ts`. **Fixed**.
 
 ---
 
