@@ -89,6 +89,26 @@ function zoomedInGroup(zoom: Locator, key: string): Promise<{
   }, key);
 }
 
+/**
+ * Moves the zoomed-in scroller by `delta` pixels without going through the
+ * component API, so the move can stay inside one group.
+ */
+function nudgeZoomedIn(zoom: Locator, delta: number): Promise<void> {
+  return zoom.evaluate((host, dy) => {
+    const outer = host.querySelector<HTMLElement>('[slot="zoomed-in"]');
+    const roots = outer
+      ? [outer, ...Array.from(outer.querySelectorAll<HTMLElement>("*"))]
+      : [];
+    const scroller = roots.find(
+      (element) =>
+        element.scrollHeight > element.clientHeight + 1 &&
+        /^(auto|scroll)$/.test(getComputedStyle(element).overflowY)
+    );
+    if (!scroller) throw new Error("the zoomed-in view has no scroller");
+    scroller.scrollTop += dy;
+  }, delta);
+}
+
 /** The `data-group-key` of every tile or header, in document order. */
 function groupKeys(scope: Locator): Promise<string[]> {
   return scope.evaluateAll((elements) =>
@@ -187,6 +207,65 @@ test.describe("semantic zoom group contract", () => {
         zoom.evaluate((el) => (el as unknown as SemanticZoomHost).currentGroup)
       )
       .toBe(target);
+  });
+
+  test("groupchanged fires once per crossed group, never inside one", async ({
+    page,
+  }) => {
+    const zoom = page.locator("metro-semantic-zoom");
+    await gotoReadyRoute(page, "/#/selection", zoom);
+    await zoom.scrollIntoViewIfNeeded();
+
+    await page.evaluate(() => {
+      window.__groupChanges = [];
+      document.addEventListener("groupchanged", (event) => {
+        window.__groupChanges?.push(
+          (event as CustomEvent<{ key: string | null }>).detail?.key ?? null
+        );
+      });
+    });
+
+    const headers = zoom.locator(`${ZOOM_IN_SELECTOR} [data-group-key]`);
+    const keys = await groupKeys(headers);
+    const first = keys[0];
+    const second = keys[1];
+    if (!first || !second) throw new Error("the list has no two groups");
+
+    // Park exactly on the first group, then forget the entry event: what
+    // follows must come from these scrolls alone.
+    await scrollZoomedIn(zoom, first);
+    await expect
+      .poll(() =>
+        zoom.evaluate((el) => (el as unknown as SemanticZoomHost).currentGroup)
+      )
+      .toBe(first);
+    await page.evaluate(() => {
+      window.__groupChanges = [];
+    });
+
+    // A nudge that stays inside the first group must report nothing: the
+    // read is throttled to one pass per frame, so waiting out several
+    // frames proves no event is coming rather than racing it.
+    await nudgeZoomedIn(zoom, 10);
+    await page.waitForTimeout(600);
+    expect(
+      await page.evaluate(() => window.__groupChanges ?? []),
+      "a scroll inside one group reported a group change",
+    ).toEqual([]);
+
+    // Crossing into the next group reports exactly that group, once.
+    await scrollZoomedIn(zoom, second);
+    await expect
+      .poll(() => page.evaluate(() => window.__groupChanges ?? []), {
+        message: `the page never saw groupchanged for "${second}"`,
+        timeout: 10_000,
+      })
+      .toContain(second);
+    await page.waitForTimeout(600);
+    expect(
+      await page.evaluate(() => window.__groupChanges ?? []),
+      "crossing one group boundary must fire exactly one groupchanged",
+    ).toEqual([second]);
   });
 
   test("scrollToGroup realigns the list while already zoomed in", async ({

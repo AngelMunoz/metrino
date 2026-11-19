@@ -7,6 +7,12 @@ declare global {
     __vtReady: string[];
     /** Computed `animation-name` of `::view-transition-old(root)` per transition. */
     __rootAnim: string[];
+    /**
+     * `animation-name` of the open dialog's `::view-transition-new` snapshot,
+     * sampled at each transition's ready and mid-flight. A closed dialog holds
+     * no part name and records nothing.
+     */
+    __dialogEnter: string[];
   }
 }
 
@@ -33,6 +39,62 @@ async function instrumentViewTransitions(page: Page): Promise<void> {
         (error: Error) => {
           window.__vtReady.push(`rejected: ${error.message}`);
         },
+      );
+      return transition;
+    };
+  });
+}
+
+/**
+ * Records the open dialog snapshot's own `animation-name`, sampled when each
+ * transition's `ready` resolves and again mid-flight: the pseudo tree exists
+ * at ready, and the entrance runs 280ms, so a later sample still carries the
+ * swivel while a finished transition would read "". Must run before goto so
+ * the init script wraps `startViewTransition` before the demo module loads.
+ * No-ops where the browser has no View Transitions; the goto helper below
+ * skips those.
+ */
+async function instrumentDialogEnter(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.__dialogEnter = [];
+    if (!("startViewTransition" in document)) return;
+    const original = document.startViewTransition.bind(document);
+    document.startViewTransition = (...args) => {
+      const transition = original(...args);
+      transition.ready.then(
+        () => {
+          // The demo nests the dialog inside the app and page shadow roots.
+          const roots: ShadowRoot[] = [];
+          const app = document.querySelector("metrino-app");
+          if (app?.shadowRoot) roots.push(app.shadowRoot);
+          for (const root of [...roots]) {
+            const sheet = root.querySelector("metrino-dialogs-page");
+            if (sheet?.shadowRoot) roots.push(sheet.shadowRoot);
+          }
+          let part = "";
+          for (const root of roots) {
+            const content = root
+              .querySelector("metro-content-dialog")
+              ?.shadowRoot?.querySelector<HTMLElement>(".dialog");
+            if (content) {
+              part = getComputedStyle(content).viewTransitionName;
+              if (part && part !== "none") break;
+            }
+          }
+          // A closed dialog holds no part name and records nothing.
+          if (!part || part === "none") return;
+          const sample = (): void => {
+            const style = getComputedStyle(
+              document.documentElement,
+              `::view-transition-new(${part})`,
+            );
+            window.__dialogEnter?.push(style.animationName);
+          };
+          sample();
+          requestAnimationFrame(sample);
+          setTimeout(sample, 100);
+        },
+        () => {},
       );
       return transition;
     };
@@ -238,6 +300,7 @@ test.describe("view transitions", () => {
   });
 
   test("content dialog entrance is a swivel", async ({ page }) => {
+    await instrumentDialogEnter(page);
     await gotoWithViewTransitions(page, "/#/dialogs");
 
     const enterCss = await page.evaluate(() => {
@@ -263,5 +326,54 @@ test.describe("view transitions", () => {
     ).toBeTruthy();
     expect(enterCss).toContain("rotateX(90deg)");
     expect(enterCss).not.toContain("scale(0.85)");
+
+    // Running behavior: opening the dialog must actually play
+    // metro-dialog-enter, not merely ship its keyframes. The previous route
+    // transition may still own the document, so wait it out first.
+    await page.locator("metrino-dialogs-page h1").waitFor();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              !document.documentElement.matches(":active-view-transition"),
+          ),
+        { message: "the route transition never settled", timeout: 10_000 },
+      )
+      .toBe(true);
+
+    await page
+      .locator("metro-button", { hasText: "Open Content Dialog" })
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Content Dialog" });
+    await expect(dialog).toBeVisible();
+
+    // The open snapshot must carry the swivel at ready and still mid-flight
+    // (the entrance runs 280ms): a finished transition would read "".
+    await expect
+      .poll(
+        () => page.evaluate(() => window.__dialogEnter ?? []),
+        {
+          message: "opening the dialog never ran the swivel on its snapshot",
+          timeout: 10_000,
+        },
+      )
+      .toContain("metro-dialog-enter");
+    await expect
+      .poll(() => page.evaluate(() => window.__dialogEnter?.length ?? 0), {
+        message: "the swivel never persisted into mid-flight samples",
+        timeout: 10_000,
+      })
+      .toBeGreaterThanOrEqual(3);
+    const snapshots = await page.evaluate(() => window.__dialogEnter ?? []);
+    expect(
+      snapshots.every((entry) => entry === "metro-dialog-enter"),
+      `every snapshot sample must carry the swivel: ${JSON.stringify(snapshots)}`,
+    ).toBe(true);
+
+    await page
+      .locator("#content-dialog metro-button", { hasText: "OK" })
+      .click();
+    await expect(dialog).toBeHidden();
   });
 });
