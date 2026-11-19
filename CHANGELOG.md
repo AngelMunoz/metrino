@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-18
+
 ### Added
 
 - **toast**: `toastshown` / `toasthidden` events (composed); the documented names previously fired nothing.
