@@ -143,6 +143,8 @@ export class ApiDocs extends LitElement {
     .api-section {
       padding: var(--metro-spacing-md, 12px) var(--metro-spacing-lg, 16px);
       border-bottom: 1px solid var(--metro-border, rgba(255, 255, 255, 0.1));
+      /* Narrow viewports scroll the table inside its section, never the page. */
+      overflow-x: auto;
     }
 
     .api-section:last-child {
@@ -167,6 +169,7 @@ export class ApiDocs extends LitElement {
 
     table {
       width: 100%;
+      min-width: 560px;
       border-collapse: collapse;
       font-size: var(--metro-font-size-small, 12px);
     }

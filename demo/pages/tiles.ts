@@ -1,6 +1,8 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 import { registerMetroFlipTile } from "@src/components/tiles/flip-tile.ts";
 import { registerMetroCycleTile } from "@src/components/tiles/cycle-tile.ts";
 import { registerMetroIconicTile } from "@src/components/tiles/iconic-tile.ts";
@@ -16,53 +18,13 @@ registerMetroLiveTile();
 registerMetroTileGrid();
 registerMetroSlider();
 registerMetroButton();
+registerMetroGrid();
 
 export class MetrinoTilesPage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      padding: var(--metro-spacing-xl, 24px);
-      font-family: var(
-        --metro-font-family,
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif
-      );
-      color: var(--metro-foreground, #ffffff);
-      background: var(--metro-background, #1f1f1f);
-      min-height: 100vh;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      font-size: var(--metro-font-size-xxlarge, 42px);
-      font-weight: 200;
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
-
-    h2 {
-      font-size: 24px;
-      font-weight: 200;
-      margin-top: var(--metro-spacing-xl, 24px);
-      margin-bottom: var(--metro-spacing-md, 12px);
-      color: var(--metro-accent, #0078d4);
-    }
-
-    h3 {
-      font-size: var(--metro-font-size-medium, 16px);
-      font-weight: 400;
-      margin-top: var(--metro-spacing-lg, 16px);
-      margin-bottom: var(--metro-spacing-sm, 8px);
-    }
-
-    .section {
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
-
     .tile-row {
       display: flex;
       gap: var(--metro-spacing-sm, 8px);
@@ -83,17 +45,6 @@ export class MetrinoTilesPage extends LitElement {
       font-size: var(--metro-font-size-small, 12px);
       color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
       margin-bottom: var(--metro-spacing-xs, 4px);
-    }
-
-    .code-example {
-      background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
-      padding: var(--metro-spacing-md, 12px);
-      margin-top: var(--metro-spacing-md, 12px);
-      font-family: "Courier New", monospace;
-      font-size: var(--metro-font-size-small, 12px);
-      overflow-x: auto;
-      border-left: 3px solid var(--metro-accent, #0078d4);
-      white-space: pre;
     }
 
     .slider-container {
@@ -216,10 +167,11 @@ export class MetrinoTilesPage extends LitElement {
 
   render() {
     return html`
-      <h1>Tile Components</h1>
+      <h1 class="page-title">Tile Components</h1>
 
-      <div class="section">
-        <h2>Flip Tile - All Sizes</h2>
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card">
+        <h2 class="component-title">Flip Tile - All Sizes</h2>
         <p class="label">
           Click tiles to flip them (3D rotation with perspective: 1000px)
         </p>
@@ -252,7 +204,7 @@ export class MetrinoTilesPage extends LitElement {
           </metro-button>
         </div>
 
-        <div class="code-example">
+        <div class="code-snippet">
           &lt;metro-flip-tile size="medium" ?flipped=${this.flipTileFlipped}&gt;
           &lt;div slot="front"&gt;Front Content&lt;/div&gt; &lt;div
           slot="back"&gt;Back Content&lt;/div&gt; &lt;/metro-flip-tile&gt;
@@ -262,8 +214,8 @@ export class MetrinoTilesPage extends LitElement {
         <api-docs component="MetroFlipTile"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>Cycle Tile - Auto-Cycling Content</h2>
+      <div class="demo-card">
+        <h2 class="component-title">Cycle Tile - Auto-Cycling Content</h2>
         <div class="tile-row">
           <metro-cycle-tile
             id="cycle-tile-demo"
@@ -310,7 +262,7 @@ export class MetrinoTilesPage extends LitElement {
           </div>
         </div>
 
-        <div class="code-example">
+        <div class="code-snippet">
           &lt;metro-cycle-tile size="medium"
           interval="${this.cycleInterval}"&gt; &lt;div slot="front"&gt;Base
           Content&lt;/div&gt; &lt;div slot="cycle"&gt;Item 1&lt;/div&gt; &lt;div
@@ -321,8 +273,8 @@ export class MetrinoTilesPage extends LitElement {
         <api-docs component="MetroCycleTile"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>Iconic Tile - Icon, Title, Count, Badge</h2>
+      <div class="demo-card">
+        <h2 class="component-title">Iconic Tile - Icon, Title, Count, Badge</h2>
         <div class="tile-row">
           <metro-iconic-tile
             size="small"
@@ -347,7 +299,7 @@ export class MetrinoTilesPage extends LitElement {
           ></metro-iconic-tile>
         </div>
 
-        <div class="code-example">
+        <div class="code-snippet">
           &lt;metro-iconic-tile size="medium" icon="calendar" title="Calendar"
           count="12" badge="New" &gt;&lt;/metro-iconic-tile&gt; Properties: -
           size: "small" | "medium" | "large" - icon: string - title: string -
@@ -356,8 +308,8 @@ export class MetrinoTilesPage extends LitElement {
         <api-docs component="MetroIconicTile"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>Live Tile - Imperative API</h2>
+      <div class="demo-card">
+        <h2 class="component-title">Live Tile - Imperative API</h2>
         <div class="tile-row">
           <metro-live-tile
             id="live-tile-demo"
@@ -373,7 +325,7 @@ export class MetrinoTilesPage extends LitElement {
           <metro-button @click=${this.#resetLiveTile}> Reset </metro-button>
         </div>
 
-        <div class="code-example">
+        <div class="code-snippet">
           const tile = document.querySelector('#live-tile'); tile.setItems([ {
           title: "New Message", message: "Hello!" }, { title: "Update", message:
           "Version 2.0" }, ]); Methods: - setItems(items: LiveTileItem[]): void
@@ -383,8 +335,8 @@ export class MetrinoTilesPage extends LitElement {
         <api-docs component="MetroLiveTile"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>Tile Grid - 4-Column Layout</h2>
+      <div class="demo-card">
+        <h2 class="component-title">Tile Grid - 4-Column Layout</h2>
         <metro-tile-grid columns="4">
           <metro-flip-tile size="small">
             <div slot="front">1</div>
@@ -441,7 +393,7 @@ export class MetrinoTilesPage extends LitElement {
           </metro-flip-tile>
         </metro-tile-grid>
 
-        <div class="code-example">
+        <div class="code-snippet">
           &lt;metro-tile-grid columns="4"&gt; &lt;!-- Tiles auto-layout based on
           size --&gt; &lt;metro-flip-tile
           size="small"&gt;...&lt;/metro-flip-tile&gt; &lt;metro-flip-tile
@@ -455,6 +407,7 @@ export class MetrinoTilesPage extends LitElement {
         </div>
         <api-docs component="MetroTileGrid"></api-docs>
       </div>
+      </metro-grid>
     `;
   }
 }

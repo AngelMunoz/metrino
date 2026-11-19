@@ -1,6 +1,8 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 import { registerMetroContentDialog } from "@src/components/dialogs/content-dialog.ts";
 import { registerMetroMessageDialog } from "@src/components/dialogs/message-dialog.ts";
 import { registerMetroFlyout } from "@src/components/dialogs/flyout.ts";
@@ -20,48 +22,13 @@ registerMetroMenuFlyout();
 registerMetroButton();
 registerMetroIcon();
 registerMetroToggleSwitch();
+registerMetroGrid();
 
 export class MetrinoDialogsPage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      padding: var(--metro-spacing-xl, 24px);
-      background: var(--metro-background, #1f1f1f);
-      min-height: 100vh;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    h1 {
-      font-size: var(--metro-font-size-xxlarge, 42px);
-      font-weight: 200;
-      color: var(--metro-foreground, #ffffff);
-      margin: 0 0 var(--metro-spacing-xl, 24px);
-    }
-    h2 {
-      font-size: 24px;
-      font-weight: 200;
-      color: var(--metro-foreground, #ffffff);
-      margin: var(--metro-spacing-xl, 24px) 0 var(--metro-spacing-md, 12px);
-      border-bottom: 2px solid var(--metro-accent, #0078d4);
-      padding-bottom: var(--metro-spacing-sm, 8px);
-    }
-    .section {
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
-    .demo-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--metro-spacing-md, 12px);
-      align-items: center;
-      margin-bottom: var(--metro-spacing-md, 12px);
-    }
-    .description {
-      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
-      margin-bottom: var(--metro-spacing-md, 12px);
-      font-size: var(--metro-font-size-normal, 14px);
-    }
     .flyout-content {
       padding: var(--metro-spacing-lg, 16px);
       min-width: 200px;
@@ -133,11 +100,12 @@ export class MetrinoDialogsPage extends LitElement {
 
   render() {
     return html`
-      <h1>Dialogs</h1>
+      <h1 class="page-title">Dialogs</h1>
 
-      <section class="section">
-        <h2>metro-content-dialog</h2>
-        <p class="description">
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card">
+        <h2 class="component-title">metro-content-dialog</h2>
+        <p class="component-desc">
           A modal dialog with customizable content area and button slot.
           Supports light dismiss (click outside to close) and animated
           open/close with turnstile effect.
@@ -165,11 +133,11 @@ export class MetrinoDialogsPage extends LitElement {
           </div>
         </metro-content-dialog>
         <api-docs component="MetroContentDialog"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-message-dialog</h2>
-        <p class="description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-message-dialog</h2>
+        <p class="component-desc">
           A simple alert dialog for displaying messages to the user. Click
           outside to dismiss.
         </p>
@@ -190,11 +158,11 @@ export class MetrinoDialogsPage extends LitElement {
           </div>
         </metro-message-dialog>
         <api-docs component="MetroMessageDialog"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-flyout</h2>
-        <p class="description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-flyout</h2>
+        <p class="component-desc">
           A contextual popup positioned relative to a target element. Supports
           different placements (top, bottom, left, right) and light dismiss.
         </p>
@@ -229,11 +197,11 @@ export class MetrinoDialogsPage extends LitElement {
           </div>
         </metro-flyout>
         <api-docs component="MetroFlyout"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-settings-flyout</h2>
-        <p class="description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-settings-flyout</h2>
+        <p class="component-desc">
           A side panel that slides in from the right. Useful for settings,
           forms, or detailed content.
         </p>
@@ -262,11 +230,11 @@ export class MetrinoDialogsPage extends LitElement {
           </div>
         </metro-settings-flyout>
         <api-docs component="MetroSettingsFlyout"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-toast</h2>
-        <p class="description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-toast</h2>
+        <p class="component-desc">
           Non-intrusive notifications that appear at the top of the screen.
           Supports different severities and auto-dismiss with configurable
           duration. Use the declarative element for scoped instances, or the
@@ -309,11 +277,11 @@ export class MetrinoDialogsPage extends LitElement {
         </div>
         <metro-toast id="page-toast"></metro-toast>
         <api-docs component="MetroToast"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-menu-flyout</h2>
-        <p class="description">
+      <div class="demo-card">
+        <h2 class="component-title">metro-menu-flyout</h2>
+        <p class="component-desc">
           A dropdown menu that appears below a button. Useful for context menus
           and action lists.
         </p>
@@ -341,7 +309,8 @@ export class MetrinoDialogsPage extends LitElement {
           </div>
         </metro-menu-flyout>
         <api-docs component="MetroMenuFlyout"></api-docs>
-      </section>
+      </div>
+      </metro-grid>
     `;
   }
 

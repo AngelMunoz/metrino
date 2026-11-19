@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
 import { registerMetroTextBox } from "@src/components/input/text-box.ts";
 import { registerMetroPasswordBox } from "@src/components/input/password-box.ts";
@@ -12,6 +13,7 @@ import { registerMetroRating } from "@src/components/input/rating.ts";
 import { registerMetroComboBox } from "@src/components/input/combo-box.ts";
 import { registerMetroAutoSuggestBox } from "@src/components/input/auto-suggest-box.ts";
 import { registerMetroRichEditBox } from "@src/components/input/rich-edit-box.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 
 registerMetroTextBox();
 registerMetroPasswordBox();
@@ -24,64 +26,15 @@ registerMetroRating();
 registerMetroComboBox();
 registerMetroAutoSuggestBox();
 registerMetroRichEditBox();
+registerMetroGrid();
 
 export class MetrinoInputPage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      font-family: var(
-        --metro-font-family,
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif
-      );
-      color: var(--metro-foreground, #ffffff);
-      background: var(--metro-background, #1f1f1f);
-      padding: var(--metro-spacing-xl, 24px);
-      min-height: 100vh;
-    }
-    .page-title {
-      font-size: 42px;
-      font-weight: 200;
-      margin-bottom: var(--metro-spacing-xl, 24px);
-      color: var(--metro-foreground, #ffffff);
-    }
-    .demo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: var(--metro-spacing-xl, 32px);
-    }
-    .demo-card {
-      background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
-      padding: var(--metro-spacing-lg, 24px);
-      border: 2px solid transparent;
-    }
-    .demo-card:hover {
-      border-color: var(--metro-border, rgba(255, 255, 255, 0.2));
-    }
-    .component-title {
-      font-size: 24px;
-      font-weight: 200;
-      margin-bottom: var(--metro-spacing-md, 12px);
-      color: var(--metro-foreground, #ffffff);
-    }
-    .component-desc {
-      font-size: var(--metro-font-size-small, 12px);
-      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
-      margin-bottom: var(--metro-spacing-md, 12px);
-    }
     .demo-area {
       margin-bottom: var(--metro-spacing-md, 12px);
-    }
-    .demo-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--metro-spacing-md, 12px);
-      align-items: center;
-      margin-bottom: var(--metro-spacing-sm, 8px);
     }
     .demo-item {
       flex: 1;
@@ -97,15 +50,6 @@ export class MetrinoInputPage extends LitElement {
       font-size: var(--metro-font-size-small, 12px);
       color: var(--metro-accent, #0078d4);
       margin-top: var(--metro-spacing-xs, 4px);
-    }
-    .code-snippet {
-      background: var(--metro-background, #1f1f1f);
-      padding: var(--metro-spacing-sm, 8px) var(--metro-spacing-md, 12px);
-      font-family: "Consolas", "Monaco", monospace;
-      font-size: var(--metro-font-size-small, 12px);
-      color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.8));
-      overflow-x: auto;
-      border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.1));
     }
     metro-text-box,
     metro-password-box,
@@ -214,7 +158,7 @@ export class MetrinoInputPage extends LitElement {
   render() {
     return html`
       <h1 class="page-title">Input Components</h1>
-      <div class="demo-grid">
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
         <div class="demo-card">
           <h3 class="component-title">metro-text-box</h3>
           <p class="component-desc">
@@ -612,7 +556,7 @@ export class MetrinoInputPage extends LitElement {
           >
           <api-docs component="MetroRichEditBox"></api-docs>
         </div>
-      </div>
+      </metro-grid>
     `;
   }
 }

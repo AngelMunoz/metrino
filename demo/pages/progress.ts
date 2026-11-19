@@ -1,6 +1,8 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 import { registerMetroProgressBar } from "@src/components/progress/progress-bar.ts";
 import { registerMetroProgressRing } from "@src/components/progress/progress-ring.ts";
 import { registerMetroSlider } from "@src/components/input/slider.ts";
@@ -10,58 +12,13 @@ registerMetroProgressBar();
 registerMetroProgressRing();
 registerMetroSlider();
 registerMetroButton();
+registerMetroGrid();
 
 export class MetrinoProgressPage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      padding: var(--metro-spacing-xl, 24px);
-      font-family: var(
-        --metro-font-family,
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        sans-serif
-      );
-      color: var(--metro-foreground, #ffffff);
-      background: var(--metro-background, #1f1f1f);
-      min-height: 100vh;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      font-size: var(--metro-font-size-xxlarge, 42px);
-      font-weight: 200;
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
-
-    h2 {
-      font-size: 24px;
-      font-weight: 200;
-      margin-top: var(--metro-spacing-xl, 24px);
-      margin-bottom: var(--metro-spacing-md, 12px);
-      color: var(--metro-accent, #0078d4);
-    }
-
-    .section {
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
-
-    .demo-row {
-      display: flex;
-      gap: var(--metro-spacing-lg, 16px);
-      margin-bottom: var(--metro-spacing-md, 12px);
-      flex-wrap: wrap;
-    }
-
-    .demo-item {
-      flex: 1;
-      min-width: 200px;
-    }
-
     .controls {
       display: flex;
       gap: var(--metro-spacing-sm, 8px);
@@ -93,16 +50,6 @@ export class MetrinoProgressPage extends LitElement {
       flex-direction: column;
       align-items: center;
       gap: var(--metro-spacing-sm, 8px);
-    }
-
-    .code-example {
-      background: var(--metro-highlight, rgba(255, 255, 255, 0.05));
-      padding: var(--metro-spacing-md, 12px);
-      margin-top: var(--metro-spacing-md, 12px);
-      font-family: "Courier New", monospace;
-      font-size: var(--metro-font-size-small, 12px);
-      overflow-x: auto;
-      border-left: 3px solid var(--metro-accent, #0078d4);
     }
 
     .progress-value {
@@ -161,10 +108,11 @@ export class MetrinoProgressPage extends LitElement {
 
   render() {
     return html`
-      <h1>Progress Components</h1>
+      <h1 class="page-title">Progress Components</h1>
 
-      <div class="section">
-        <h2>Progress Bar - Determinate</h2>
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card">
+        <h2 class="component-title">Progress Bar - Determinate</h2>
         <div class="progress-value">${this.progressValue}%</div>
         <metro-progress-bar
           .value=${this.progressValue}
@@ -198,24 +146,19 @@ export class MetrinoProgressPage extends LitElement {
           <metro-button @click=${this.#resetProgress}> Reset </metro-button>
         </div>
 
-        <div class="code-example">
-          &lt;metro-progress-bar value="${this.progressValue}"
-          showLabel&gt;&lt;/metro-progress-bar&gt;
-        </div>
+        <pre class="code-snippet">&lt;metro-progress-bar value="${this.progressValue}" showLabel&gt;&lt;/metro-progress-bar&gt;</pre>
         <api-docs component="MetroProgressBar"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>Progress Bar - Indeterminate</h2>
+      <div class="demo-card">
+        <h2 class="component-title">Progress Bar - Indeterminate</h2>
         <metro-progress-bar indeterminate></metro-progress-bar>
 
-        <div class="code-example">
-          &lt;metro-progress-bar indeterminate&gt;&lt;/metro-progress-bar&gt;
-        </div>
+        <pre class="code-snippet">&lt;metro-progress-bar indeterminate&gt;&lt;/metro-progress-bar&gt;</pre>
       </div>
 
-      <div class="section">
-        <h2>Progress Ring - All Sizes</h2>
+      <div class="demo-card">
+        <h2 class="component-title">Progress Ring - All Sizes</h2>
         <div class="ring-row">
           <div class="ring-item">
             <metro-progress-ring size="small"></metro-progress-ring>
@@ -231,30 +174,26 @@ export class MetrinoProgressPage extends LitElement {
           </div>
         </div>
 
-        <div class="code-example">
-          &lt;metro-progress-ring
-          size="small"&gt;&lt;/metro-progress-ring&gt;<br />
-          &lt;metro-progress-ring
-          size="normal"&gt;&lt;/metro-progress-ring&gt;<br />
-          &lt;metro-progress-ring size="large"&gt;&lt;/metro-progress-ring&gt;
-        </div>
+        <pre class="code-snippet">&lt;metro-progress-ring size="small"&gt;&lt;/metro-progress-ring&gt;
+&lt;metro-progress-ring size="normal"&gt;&lt;/metro-progress-ring&gt;
+&lt;metro-progress-ring size="large"&gt;&lt;/metro-progress-ring&gt;</pre>
         <api-docs component="MetroProgressRing"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>API Reference</h2>
-        <div class="code-example">
-          <strong>MetroProgressBar</strong><br />
-          Properties:<br />
-          - value: number (0-100, default: 0)<br />
-          - maximum: number (default: 100)<br />
-          - indeterminate: boolean (default: false)<br />
-          - showLabel: boolean (default: false)<br /><br />
-          <strong>MetroProgressRing</strong><br />
-          Properties:<br />
-          - size: "small" | "normal" | "large" (default: "normal")
-        </div>
+      <div class="demo-card">
+        <h2 class="component-title">API Reference</h2>
+        <pre class="code-snippet"><strong>MetroProgressBar</strong>
+Properties:
+- value: number (0-100, default: 0)
+- maximum: number (default: 100)
+- indeterminate: boolean (default: false)
+- showLabel: boolean (default: false)
+
+<strong>MetroProgressRing</strong>
+Properties:
+- size: "small" | "normal" | "large" (default: "normal")</pre>
       </div>
+      </metro-grid>
     `;
   }
 }

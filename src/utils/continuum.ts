@@ -40,7 +40,7 @@ const SETTLE_GUARD_MS = 250;
  */
 const FLIGHT_EASING = "cubic-bezier(0.19, 1, 0.22, 1)";
 
-/** Above every layer the demo owns, below the browser's own transition snapshots. */
+/** Above app content layers, below the browser's own transition snapshots. */
 const FLIGHT_Z_INDEX = "1200";
 
 /** Marks the clone so a caller can tell a flight from the page's own content. */
@@ -100,6 +100,19 @@ const CLONE_PAINT_PROPERTIES: string[] = [
 ];
 
 /**
+ * How the flight rides over the app's page transition. The defaults match the library
+ * root turnstile in `styles/animations.css` (500ms in, ease-out page curve); an app that
+ * overrides its page transition passes its own values so the clone lands with the page
+ * instead of against a hardcoded assumption.
+ */
+export interface ContinuumOptions {
+  /** Duration of the page transition the flight rides over, in ms. */
+  pageTransitionMs?: number;
+  /** Easing of the page transition the flight rides over. */
+  pageTransitionEasing?: string;
+}
+
+/**
  * Holds a copy of `origin` where the origin is drawn, ready to fly to wherever the tap
  * leads. Nothing moves until {@link ContinuumFlight.flyTo} is called, so the caller owns
  * the moment the destination is known — which for a navigation is only after the new
@@ -110,9 +123,13 @@ const CLONE_PAINT_PROPERTIES: string[] = [
  * faster.
  *
  * @param origin - The element the user tapped; its box is the start of the flight
+ * @param options - Page transition the flight rides over; library turnstile by default
  * @returns the flight
  */
-export function beginContinuum(origin: Element): ContinuumFlight {
+export function beginContinuum(
+  origin: Element,
+  options: ContinuumOptions = {}
+): ContinuumFlight {
   if (prefersReducedMotion()) {
     return {
       flyTo: () => Promise.resolve(),
@@ -130,11 +147,14 @@ export function beginContinuum(origin: Element): ContinuumFlight {
   // clone from the tap point to the destination across the page swivel. The fade
   // keyframe gives the group the turnstile's duration and dissolves the clone into
   // the arriving page; at full opacity it reads as a box pasted over the transition.
+  const pageMs = options.pageTransitionMs ?? 500;
+  const pageEasing =
+    options.pageTransitionEasing ?? "cubic-bezier(0.25, 0.46, 0.45, 0.94)";
   const freeze = document.createElement("style");
   freeze.textContent =
     `::view-transition-old(${name}) { animation: none; opacity: 0; }` +
-    `::view-transition-new(${name}) { animation: metro-continuum-flight-fade 500ms linear both; }` +
-    `::view-transition-group(${name}) { animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); }`;
+    `::view-transition-new(${name}) { animation: metro-continuum-flight-fade ${pageMs}ms linear both; }` +
+    `::view-transition-group(${name}) { animation-timing-function: ${pageEasing}; }`;
   document.head.append(freeze);
   document.body.append(clone);
   activeFlights += 1;

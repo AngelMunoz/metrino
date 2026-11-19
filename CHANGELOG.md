@@ -13,6 +13,12 @@
 - **hub**: opt-in `zoomable` section overview; tapping a tile re-enters at that section.
 - **continuum**: `beginContinuum(origin)` flies the tapped item into its destination — translate-only, 150ms, per the WP toolkit source.
 - **demo**: selection page dogfoods zoom groups and the jump grid; home tiles fly via continuum.
+- **demo**: showcase columns squeezed API reference tables until cells clipped; showcases now use `metro-grid` with content-wide columns and tables scroll inside their section on narrow viewports.
+- **demo**: documentation pages mixed centered, full-width and two-column layouts; every showcase now shares one page chrome and column rule, with wide interactive stages spanning the same grid.
+- **hub**, **grid-view**, **list-view**, **long-list-selector**: mouse grab-to-pan with inertia fling, without selecting page text; these scrollers previously answered only wheel and touch.
+- **grid-view**, **list-view**, **long-list-selector**: Metro entrance stagger on first mount; recycled virtualization items no longer pop in plain.
+- **tree-view**: expanding and collapsing children glide instead of toggling display; collapsed children stay out of the tab order.
+- **continuum**: `beginContinuum` accepts the page transition it rides over (`pageTransitionMs`, `pageTransitionEasing`); defaults match the library turnstile.
 
 ### Fixed
 
@@ -47,6 +53,7 @@
 - **animations**: continuum keyframes are translate-only at 150ms (were scale + translate at 333ms).
 - **animations**: the page turnstile read as an accelerated snap; retuned to 400/500ms on a gentler ease-out curve (`--metro-easing-page`).
 - **continuum**: the flight clone rode over the page turnstile at full opacity; it now fades into the arriving page as it travels.
+- **animations**: `animationEntrance` publishes the entrance-stagger rules from `animations.css`, outside the `.metro-animate-*` API surface.
 
 ## [0.5.2] - 2026-09-20
 

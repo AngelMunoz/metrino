@@ -1,6 +1,8 @@
 import { LitElement, html, css } from "lit";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 import { registerMetroTextBlock } from "@src/components/primitives/text-block.ts";
 import { registerMetroIcon } from "@src/components/primitives/icon.ts";
 import { registerMetroExpander } from "@src/components/primitives/expander.ts";
@@ -26,6 +28,7 @@ registerMetroRichTextBlock();
 registerMetroMediaElement();
 registerMetroContextMenu();
 registerMetroButton();
+registerMetroGrid();
 
 const ICON_SAMPLES = [
   "home",
@@ -64,38 +67,13 @@ const ICON_SAMPLES = [
 export class MetrinoPrimitivesPage extends LitElement {
   static styles = [
     reducedMotionBlanket,
+    pageStyles,
     css`
-    :host {
-      display: block;
-      padding: var(--metro-spacing-xl, 24px);
-      max-width: 1200px;
-      margin: 0 auto;
-      background: var(--metro-background, #1f1f1f);
-      min-height: 100vh;
-    }
-    h1 {
-      font-size: var(--metro-font-size-xxlarge, 42px);
-      font-weight: 200;
-      color: var(--metro-foreground, #ffffff);
-      margin: 0 0 var(--metro-spacing-xl, 24px);
-    }
-    h2 {
-      font-size: 24px;
-      font-weight: 200;
-      color: var(--metro-foreground, #ffffff);
-      margin: var(--metro-spacing-xl, 24px) 0 var(--metro-spacing-md, 12px);
-      border-bottom: 2px solid var(--metro-accent, #0078d4);
-      padding-bottom: var(--metro-spacing-sm, 8px);
-    }
-    .section {
-      margin-bottom: var(--metro-spacing-xl, 24px);
-    }
-    .demo-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--metro-spacing-md, 12px);
-      align-items: center;
-      margin-bottom: var(--metro-spacing-md, 12px);
+    h3 {
+      font-size: var(--metro-font-size-medium, 16px);
+      font-weight: 600;
+      color: var(--metro-accent, #0078d4);
+      margin: var(--metro-spacing-lg, 16px) 0 var(--metro-spacing-sm, 8px);
     }
     .demo-box {
       padding: var(--metro-spacing-md, 12px);
@@ -121,6 +99,7 @@ export class MetrinoPrimitivesPage extends LitElement {
     }
     .tooltip-demo {
       display: flex;
+      flex-wrap: wrap;
       gap: var(--metro-spacing-lg, 16px);
       margin-bottom: var(--metro-spacing-md, 12px);
     }
@@ -182,10 +161,11 @@ export class MetrinoPrimitivesPage extends LitElement {
 
   render() {
     return html`
-      <h1>Primitives</h1>
+      <h1 class="page-title">Primitives</h1>
 
-      <section class="section">
-        <h2>metro-text-block</h2>
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card">
+        <h2 class="component-title">metro-text-block</h2>
         <div class="demo-row">
           <metro-text-block>Default Text</metro-text-block>
           <metro-text-block bold>Bold Text</metro-text-block>
@@ -199,10 +179,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           >
         </div>
         <api-docs component="MetroTextBlock"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-icon</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-icon</h2>
         <h3>Sizes</h3>
         <div class="demo-row">
           <metro-icon icon="home" size="small"></metro-icon>
@@ -223,10 +203,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           )}
         </div>
         <api-docs component="MetroIcon"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-expander</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-expander</h2>
         <metro-expander title="Click to expand">
           <metro-text-block
             >This content was hidden. The expander component allows you to show
@@ -243,10 +223,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           <div style="height: 800px; width: 100%;"></div>
         </metro-expander>
         <api-docs component="MetroExpander"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-info-bar</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-info-bar</h2>
         <div
           class="demo-row"
           style="flex-direction: column; align-items: stretch;"
@@ -265,10 +245,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           </metro-info-bar>
         </div>
         <api-docs component="MetroInfoBar"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-person-picture</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-person-picture</h2>
         <h3>Sizes</h3>
         <div class="person-grid">
           <div class="person-item">
@@ -348,10 +328,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           ></metro-person-picture>
         </div>
         <api-docs component="MetroPersonPicture"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-tooltip</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-tooltip</h2>
         <div class="tooltip-demo">
           <metro-button
             id="tooltip-top"
@@ -383,10 +363,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           text="This is a tooltip"
         ></metro-tooltip>
         <api-docs component="MetroTooltip"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-border</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-border</h2>
         <div class="demo-row">
           <metro-border
             border-thickness="2"
@@ -432,10 +412,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           </metro-border>
         </div>
         <api-docs component="MetroBorder"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-image</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-image</h2>
         <div class="image-demos">
           <div class="image-demo-item">
             <h4>Stretch: uniform (default)</h4>
@@ -488,10 +468,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           </div>
         </div>
         <api-docs component="MetroImage"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-rich-text-block</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-rich-text-block</h2>
         <div class="demo-box">
           <h4>HTML Content</h4>
           <metro-rich-text-block
@@ -515,10 +495,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           </metro-rich-text-block>
         </div>
         <api-docs component="MetroRichTextBlock"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-media-element</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-media-element</h2>
         <h3>Video Player</h3>
         <div class="media-demo">
           <metro-media-element
@@ -536,10 +516,10 @@ export class MetrinoPrimitivesPage extends LitElement {
           ></metro-media-element>
         </div>
         <api-docs component="MetroMediaElement"></api-docs>
-      </section>
+      </div>
 
-      <section class="section">
-        <h2>metro-context-menu</h2>
+      <div class="demo-card">
+        <h2 class="component-title">metro-context-menu</h2>
         <p
           style="color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6)); margin-bottom: 12px;"
         >
@@ -565,7 +545,8 @@ export class MetrinoPrimitivesPage extends LitElement {
           </div>
         </metro-context-menu>
         <api-docs component="MetroContextMenu"></api-docs>
-      </section>
+      </div>
+      </metro-grid>
     `;
   }
 

@@ -3,6 +3,10 @@ import type { CSSResultGroup, HTMLTemplateResult } from "lit";
 import "../components/api-docs.ts";
 import { animationKeyframes } from "@src/utils/animations.ts";
 import { reducedMotionBlanket } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
+
+registerMetroGrid();
 
 type AnimationType =
   | "metro-animate-fade-in"
@@ -55,24 +59,7 @@ const EASING_OPTIONS: { value: EasingType; label: string }[] = [
 ];
 
 export class MetrinoAnimationsPage extends LitElement {
-  static styles: CSSResultGroup = [reducedMotionBlanket, animationKeyframes, css`
-    :host {
-      display: block;
-      font-family: var(--metro-font-family, system-ui, -apple-system, "Segoe UI", sans-serif);
-      background: var(--metro-background, #1f1f1f);
-      color: var(--metro-foreground, #ffffff);
-      padding: var(--metro-spacing-xl, 24px);
-      min-height: 100vh;
-    }
-
-    .page-title {
-      font-size: 42px;
-      font-weight: 200;
-      margin: 0 0 var(--metro-spacing-xl, 24px) 0;
-      letter-spacing: -0.5px;
-      color: var(--metro-foreground, #ffffff);
-    }
-
+  static styles: CSSResultGroup = [reducedMotionBlanket, animationKeyframes, pageStyles, css`
     .content-grid {
       display: grid;
       grid-template-columns: 320px 1fr;
@@ -403,18 +390,6 @@ export class MetrinoAnimationsPage extends LitElement {
       }
     }
 
-    .category-section {
-      margin-bottom: 32px;
-    }
-
-    .category-title {
-      font-size: 24px;
-      font-weight: 200;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--metro-accent, #0078d4);
-    }
-
     .animation-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -634,32 +609,29 @@ export class MetrinoAnimationsPage extends LitElement {
     const categories = [...new Set(ANIMATION_OPTIONS.map((opt) => opt.category))];
 
     return html`
-      <div class="gallery-section" style="margin-top: 40px;">
-        <h2 style="font-size: 24px; font-weight: 200; margin-bottom: 24px;">Animation Gallery</h2>
-        ${categories.map(
-          (category) => html`
-            <div class="category-section">
-              <h3 class="category-title">${category}</h3>
-              <div class="animation-grid">
-                ${ANIMATION_OPTIONS.filter((opt) => opt.category === category).map(
-                  (animation) => html`
-                    <div
-                      class="animation-card"
-                      @click=${() => {
-                        this.selectedAnimation = animation.value;
-                        this.isPlaying = false;
-                      }}
-                    >
-                      <div class="animation-card-name">${animation.label}</div>
-                      <div class="animation-card-code">${animation.value}</div>
-                    </div>
-                  `,
-                )}
-              </div>
+      ${categories.map(
+        (category) => html`
+          <div class="demo-card">
+            <h2 class="component-title">${category}</h2>
+            <div class="animation-grid">
+              ${ANIMATION_OPTIONS.filter((opt) => opt.category === category).map(
+                (animation) => html`
+                  <div
+                    class="animation-card"
+                    @click=${() => {
+                      this.selectedAnimation = animation.value;
+                      this.isPlaying = false;
+                    }}
+                  >
+                    <div class="animation-card-name">${animation.label}</div>
+                    <div class="animation-card-code">${animation.value}</div>
+                  </div>
+                `,
+              )}
             </div>
-          `,
-        )}
-      </div>
+          </div>
+        `,
+      )}
     `;
   }
 
@@ -667,19 +639,24 @@ export class MetrinoAnimationsPage extends LitElement {
     return html`
       <h1 class="page-title">Animations</h1>
 
-      <div class="content-grid">
-        ${this.#renderControls()}
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card wide">
+        <h2 class="component-title">Animation Playground</h2>
+        <div class="content-grid">
+          ${this.#renderControls()}
 
-        <div class="preview-area">
-          <div class="preview-header">
-            Preview:
-            ${ANIMATION_OPTIONS.find((opt) => opt.value === this.selectedAnimation)?.label || ""}
+          <div class="preview-area">
+            <div class="preview-header">
+              Preview:
+              ${ANIMATION_OPTIONS.find((opt) => opt.value === this.selectedAnimation)?.label || ""}
+            </div>
+            <div class="preview-content">${this.#renderPreviewContent()}</div>
           </div>
-          <div class="preview-content">${this.#renderPreviewContent()}</div>
         </div>
       </div>
 
       ${this.#renderAnimationGallery()}
+      </metro-grid>
     `;
   }
 }

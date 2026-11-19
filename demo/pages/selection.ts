@@ -4,6 +4,7 @@ import {
   scrollbarVisible,
   groupHeader,
 } from "@src/styles/shared.ts";
+import { pageStyles, SHOWCASE_COLUMNS } from "../styles/page.ts";
 import "../components/api-docs.ts";
 import { registerMetroListBox } from "@src/components/selection/list-box.ts";
 import { registerMetroListView } from "@src/components/selection/list-view.ts";
@@ -15,6 +16,7 @@ import { registerMetroSemanticZoom } from "@src/components/selection/semantic-zo
 import { registerMetroListPicker } from "@src/components/selection/list-picker.ts";
 import { registerMetroButton } from "@src/components/buttons/button.ts";
 import { registerMetroIcon } from "@src/components/primitives/icon.ts";
+import { registerMetroGrid } from "@src/components/layout/grid.ts";
 
 registerMetroListBox();
 registerMetroListView();
@@ -26,6 +28,7 @@ registerMetroSemanticZoom();
 registerMetroListPicker();
 registerMetroButton();
 registerMetroIcon();
+registerMetroGrid();
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -220,30 +223,8 @@ export class MetrinoSelectionPage extends LitElement {
     baseTypography,
     scrollbarVisible,
     groupHeader,
+    pageStyles,
     css`
-      :host {
-        display: block;
-        padding: var(--metro-spacing-xl, 24px);
-        background: var(--metro-background, #1f1f1f);
-        min-height: 100vh;
-      }
-
-      h1 {
-        font-size: var(--metro-font-size-xxlarge, 42px);
-        font-weight: 200;
-        color: var(--metro-foreground, #ffffff);
-        margin: 0 0 var(--metro-spacing-xl, 24px) 0;
-      }
-
-      h2 {
-        font-size: 24px;
-        font-weight: 200;
-        color: var(--metro-foreground, #ffffff);
-        margin: var(--metro-spacing-xl, 24px) 0 var(--metro-spacing-md, 12px) 0;
-        border-bottom: 2px solid var(--metro-accent, #0078d4);
-        padding-bottom: var(--metro-spacing-sm, 8px);
-      }
-
       h3 {
         font-size: var(--metro-font-size-medium, 16px);
         font-weight: 600;
@@ -257,20 +238,8 @@ export class MetrinoSelectionPage extends LitElement {
         margin: 0 0 var(--metro-spacing-md, 12px) 0;
       }
 
-      .section {
-        margin-bottom: var(--metro-spacing-xl, 24px);
-      }
-
-      .demo-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: var(--metro-spacing-lg, 16px);
-      }
-
-      .demo-card {
-        background: var(--metro-surface, rgba(255, 255, 255, 0.05));
-        border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
-        padding: var(--metro-spacing-lg, 16px);
+      .demo-features {
+        margin-top: var(--metro-spacing-md, 12px);
       }
 
       .controls {
@@ -532,16 +501,17 @@ export class MetrinoSelectionPage extends LitElement {
 
   render() {
     return html`
-      <h1>Selection Components</h1>
-      <p>
+      <h1 class="page-title">Selection Components</h1>
+      <p class="page-description">
         Metro-style selection components with virtualization, cross-slide
         gestures, semantic zoom, and jump list navigation. All virtualized
         components render only visible items for optimal performance.
       </p>
 
-      <div class="section">
-        <h2>metro-list-box</h2>
-        <p>
+      <metro-grid class="demo-grid" columns=${SHOWCASE_COLUMNS}>
+      <div class="demo-card">
+        <h2 class="component-title">metro-list-box</h2>
+        <p class="component-desc">
           Classic list box with single, multiple, and extended selection modes.
           Use Ctrl+Click for extended mode.
         </p>
@@ -570,8 +540,7 @@ export class MetrinoSelectionPage extends LitElement {
           </metro-button>
         </div>
 
-        <div class="demo-grid">
-          <div class="demo-card">
+        <div>
             <h3>
               Selection Mode: ${this.listBoxMode}<span class="badge"
                 >${this.listBoxMode}</span
@@ -604,7 +573,7 @@ export class MetrinoSelectionPage extends LitElement {
             <div class="selection-info">Selected: ${this.listBoxSelection}</div>
           </div>
 
-          <div class="demo-card">
+          <div class="demo-features">
             <h3>Features</h3>
             <ul
               style="color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.7)); margin: 0; padding-left: 20px; line-height: 1.8;"
@@ -616,13 +585,12 @@ export class MetrinoSelectionPage extends LitElement {
               <li>Form-associated for integration</li>
             </ul>
           </div>
-        </div>
         <api-docs component="MetroListBox"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>metro-list-view</h2>
-        <p>
+      <div class="demo-card">
+        <h2 class="component-title">metro-list-view</h2>
+        <p class="component-desc">
           Virtualized list view with 1,000+ items. Only visible items are
           rendered (check stats below). Supports grouping, cross-slide gestures,
           and keyboard navigation.
@@ -676,9 +644,9 @@ export class MetrinoSelectionPage extends LitElement {
         <api-docs component="MetroListView"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>metro-grid-view</h2>
-        <p>
+      <div class="demo-card">
+        <h2 class="component-title">metro-grid-view</h2>
+        <p class="component-desc">
           Virtualized grid view with 500 items. Supports responsive columns,
           grouping, and selection with cross-slide gestures.
         </p>
@@ -730,9 +698,9 @@ export class MetrinoSelectionPage extends LitElement {
         <api-docs component="MetroGridView"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>metro-flip-view</h2>
-        <p>
+      <div class="demo-card">
+        <h2 class="component-title">metro-flip-view</h2>
+        <p class="component-desc">
           Swipeable carousel with touch gestures and navigation controls. Drag
           or use arrow buttons to navigate.
         </p>
@@ -745,9 +713,9 @@ export class MetrinoSelectionPage extends LitElement {
         <api-docs component="MetroFlipView"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>metro-tree-view</h2>
-        <p>
+      <div class="demo-card">
+        <h2 class="component-title">metro-tree-view</h2>
+        <p class="component-desc">
           Hierarchical tree view with expand/collapse functionality. Click
           folders to expand, use keyboard arrows to navigate.
         </p>
@@ -765,9 +733,9 @@ export class MetrinoSelectionPage extends LitElement {
         <api-docs component="MetroTreeView"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>metro-long-list-selector</h2>
-        <p>
+      <div class="demo-card">
+        <h2 class="component-title">metro-long-list-selector</h2>
+        <p class="component-desc">
           Virtualized long list with 10,000 items grouped alphabetically.
           Features jump list sidebar for quick navigation. Try scrolling and
           clicking letters on the right. With jump-grid, clicking a group header
@@ -816,9 +784,9 @@ export class MetrinoSelectionPage extends LitElement {
         <api-docs component="MetroLongListSelector"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>metro-semantic-zoom</h2>
-        <p>
+      <div class="demo-card">
+        <h2 class="component-title">metro-semantic-zoom</h2>
+        <p class="component-desc">
           Zoom between a grouped list and its overview using a pinch gesture,
           Ctrl+Scroll or the button. Both views carry the same
           <code>data-group-key</code> values, so tapping a group in the overview
@@ -861,9 +829,9 @@ export class MetrinoSelectionPage extends LitElement {
         <api-docs component="MetroSemanticZoom"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>metro-list-picker</h2>
-        <p>
+      <div class="demo-card">
+        <h2 class="component-title">metro-list-picker</h2>
+        <p class="component-desc">
           Modal picker dialog for selecting items from a list. Click the button
           to open the picker.
         </p>
@@ -886,9 +854,8 @@ export class MetrinoSelectionPage extends LitElement {
         <api-docs component="MetroListPicker"></api-docs>
       </div>
 
-      <div class="section">
-        <h2>Performance Stats</h2>
-        <div class="demo-card">
+      <div class="demo-card">
+        <h2 class="component-title">Performance Stats</h2>
           <h3>Virtualization Performance</h3>
           <p>
             All list components use windowing/virtualization to render only
@@ -910,8 +877,8 @@ export class MetrinoSelectionPage extends LitElement {
               items rendered with jump list navigation
             </li>
           </ul>
-        </div>
       </div>
+      </metro-grid>
     `;
   }
 }

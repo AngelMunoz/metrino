@@ -86,10 +86,29 @@ export class MetroTreeView extends LitElement {
         text-overflow: ellipsis;
       }
       .children {
-        display: none;
+        display: grid;
+        grid-template-rows: 0fr;
+        /* The page glide curve, not the micro-interaction snap: a disclosure
+           that finishes 98% of its travel in 60ms reads as a jump. */
+        transition: grid-template-rows var(--metro-transition-normal, 250ms)
+          var(--metro-easing-page, cubic-bezier(0.25, 0.46, 0.45, 0.94));
       }
       .children.expanded {
-        display: block;
+        grid-template-rows: 1fr;
+      }
+      .children-inner {
+        /* A 0fr row only reaches zero outer size if the grid item carries no
+           padding of its own. Visibility keeps collapsed children out of the tab
+           order and the accessibility tree; the delay lets the collapse glide
+           finish before they vanish. */
+        min-height: 0;
+        overflow: hidden;
+        visibility: hidden;
+        transition: visibility 0s linear var(--metro-transition-normal, 250ms);
+      }
+      .children.expanded > .children-inner {
+        visibility: visible;
+        transition-delay: 0s;
       }
     `,
   ];
@@ -167,7 +186,9 @@ export class MetroTreeView extends LitElement {
       ${hasChildren
         ? html`
             <div class="children ${isExpanded ? "expanded" : ""}" role="group">
-              ${this.#renderItems(item.children!, level + 1)}
+              <div class="children-inner">
+                ${this.#renderItems(item.children!, level + 1)}
+              </div>
             </div>
           `
         : null}

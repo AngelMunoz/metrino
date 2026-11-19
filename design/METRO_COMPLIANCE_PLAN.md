@@ -138,6 +138,18 @@ Changelog: none (docs only), unless a behavior changes.
       coordinated scroll. Category: **Added**. (PR7.)
 - [x] **2.7 Reduced-motion policy.** Honor `prefers-reduced-motion` across keyframe and JS
       motion (hub already does). Category: **Added**. (PR5; blanket reaches every shadow.)
+- [x] **2.8 Grab-to-pan on native scrollers.** Hub (x), grid-view / list-view /
+      long-list-selector (y): mouse drag past the tap threshold pans with inertia fling
+      and boundary spring; taps and cross-slide selection untouched; touch stays native.
+      Category: **Added**. (PR11; `attachDragPan` in `touch-physics.ts`,
+      `e2e/interaction-completeness.spec.ts`.)
+- [x] **2.9 List entrance stagger.** grid-view / list-view / long-list-selector run the
+      Metro entrance stagger once per mount; virtualization recycling stays plain.
+      Category: **Added**. (PR11; `animationEntrance` publishes the stagger rules from
+      `animations.css` outside the `.metro-animate-*` API surface.)
+- [x] **2.10 Tree-view disclosure glide.** Children expand/collapse on grid-rows 0fr↔1fr
+      with the page glide curve; collapsed children stay out of tab order and the
+      accessibility tree. Category: **Added**. (PR11; expander pattern, visibility delay.)
 
 ---
 

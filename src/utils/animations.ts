@@ -48,6 +48,7 @@ export interface AnimationRules {
 
 const KEYFRAME_PREFIX = "metro-";
 const ANIMATE_PREFIX = ".metro-animate-";
+const ENTRANCE_PREFIX = ".metro-entrance-stagger";
 const KEYFRAMES_RULE = /^@keyframes\b/i;
 const GROUPING_AT_RULE = /^@(media|supports|container|layer)\b/i;
 const SAFETY_MARGIN_MS = 250;
@@ -70,10 +71,27 @@ export function extractAnimationRules(source: string): AnimationRules {
   return { keyframes: keyframes.join("\n"), classes: classes.join("\n") };
 }
 
+/**
+ * The container-level entrance stagger rules, kept out of the `.metro-animate-*`
+ * API surface: a component applies the class to its item layer once per mount, so
+ * the rules ship separately from `animationClasses` but from the same source sheet.
+ *
+ * @param source - The stylesheet text
+ * @returns the stagger class and per-child delay rules
+ */
+export function extractEntranceRules(source: string): string {
+  const statements = source.replace(/\/\*[\s\S]*?\*\//g, "");
+  const entrance: string[] = [];
+  collectAnimationRules(statements, [], [], entrance);
+
+  return entrance.join("\n");
+}
+
 function collectAnimationRules(
   statements: string,
   keyframes: string[],
   classes: string[],
+  entrance: string[] = [],
 ): void {
   let index = 0;
 
@@ -93,9 +111,11 @@ function collectAnimationRules(
     if (KEYFRAMES_RULE.test(selector)) {
       keyframes.push(rule);
     } else if (GROUPING_AT_RULE.test(selector)) {
-      collectAnimationRules(block, keyframes, classes);
+      collectAnimationRules(block, keyframes, classes, entrance);
     } else if (animatesMetroClass(selector)) {
       classes.push(rule);
+    } else if (selector.startsWith(ENTRANCE_PREFIX)) {
+      entrance.push(rule);
     }
 
     index = close + 1;
@@ -128,6 +148,8 @@ const animationRules = extractAnimationRules(animationsSource);
 export const animationKeyframes: CSSResult = css`${unsafeCSS(animationRules.keyframes)}`;
 
 export const animationClasses: CSSResult = css`${unsafeCSS(animationRules.classes)}`;
+
+export const animationEntrance: CSSResult = css`${unsafeCSS(extractEntranceRules(animationsSource))}`;
 
 export const animationStyles: CSSResult = css`
   ${animationKeyframes}
