@@ -298,6 +298,7 @@ export function animateChildren(
 
 export const METRO_EASING = "cubic-bezier(0.1, 0.9, 0.2, 1)";
 export const METRO_EASING_VALUES = [0.1, 0.9, 0.2, 1] as const;
+export const CONTINUUM_EASING = "cubic-bezier(0.19, 1, 0.22, 1)";
 
 /**
  * Duration the scripted transitions run at. Reduced motion takes it to zero,
@@ -316,10 +317,11 @@ export function createTransition(
   type: TransitionType,
   options: TransitionOptions = {}
 ): Promise<void> {
-  // The continuum runs at its own 150ms, matching its keyframes; every other scripted
-  // transition keeps the slow Metro duration when the caller gives none.
+  // The continuum runs at its own 150ms and easeOutExpo approximation, matching its
+  // keyframes and the measured-delta flight in `continuum.ts`; every other scripted
+  // transition keeps the slow Metro duration and easing when the caller gives none.
   const duration = motionDuration(options, type === "continuum" ? 150 : 333);
-  const easing = options.easing ?? METRO_EASING;
+  const easing = options.easing ?? (type === "continuum" ? CONTINUUM_EASING : METRO_EASING);
   const direction = options.direction ?? "forward";
 
   const transitions: Record<TransitionType, () => void> = {
