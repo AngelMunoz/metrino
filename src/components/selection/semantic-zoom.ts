@@ -1,9 +1,15 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, type PropertyValues } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
 import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 
 export type ZoomState = "in" | "out";
+
+/** Names of the two slots, which are not the same strings as the states. */
+type ZoomSlot = "zoomed-in" | "zoomed-out";
+
+/** How far above the top of the view a group header may sit and still be current. */
+const GROUP_ALIGN_TOLERANCE_PX = 4;
 
 /**
  * The ::view-transition rules of one semantic zoom instance, keyed to its
@@ -31,6 +37,45 @@ html:active-view-transition-type(semantic-zoom)::view-transition-new(${names.in}
 `;
 }
 
+/**
+ * Windows Phone semantic zoom: a detailed view and an overview of the same
+ * content, switched by pinch, Ctrl+Scroll, or the hint button.
+ *
+ * ## Group contract
+ *
+ * Content goes in the `zoomed-in` and `zoomed-out` slots. Whatever element
+ * starts a group carries `data-group-key`, in both views, with the same key in
+ * each one, so the overview is a map of the list rather than a second dataset:
+ *
+ * ```html
+ * <metro-semantic-zoom>
+ *   <div slot="zoomed-in" class="groups">
+ *     <h3 data-group-key="A">A</h3>
+ *     …rows of group A…
+ *   </div>
+ *   <div slot="zoomed-out" class="tiles">
+ *     <button data-group-key="A">A (12)</button>
+ *   </div>
+ * </metro-semantic-zoom>
+ * ```
+ *
+ * With that in place:
+ *
+ * - `scrollToGroup(key)` zooms in when the overview is up, then aligns that
+ *   group with the top of the element that scrolls it.
+ * - Tapping a `[data-group-key]` element of the overview re-enters the list at
+ *   that group.
+ * - `currentGroup` reports the group at the top of the scrolled list, and
+ *   `groupchanged` fires when it changes: bubbles and composed,
+ *   `detail: { key: string | null }`.
+ *
+ * Keys are matched against the elements assigned to the slot, so a group header
+ * inside a slotted component counts as well as a direct child.
+ *
+ * A group is measured where it draws, so the keyed element has to sit in the
+ * normal flow of the list: a header pinned by `position: sticky` always reads
+ * as already aligned, and scrolling back to it then does nothing.
+ */
 export class MetroSemanticZoom extends LitElement {
   static properties = {
     zoomed: { type: String, reflect: true },
@@ -119,6 +164,8 @@ export class MetroSemanticZoom extends LitElement {
   #isPinching = false;
   #isTransitioning = false;
   #transition = createTransitionScope("semantic-zoom", ["in", "out"]);
+  #currentGroup: string | null = null;
+  #groupReadFrame = 0;
 
   constructor() {
     super();
@@ -126,13 +173,187 @@ export class MetroSemanticZoom extends LitElement {
     this.transitionDuration = 400;
   }
 
-  protected updated(): void {
+  protected firstUpdated(): void {
+    // A scroll event neither bubbles nor is composed, so one capture listener can
+    // only see scrollers in its own tree scope: the layer holds the shadow
+    // scrollers, the host holds the content slotted into it. Both are needed,
+    // otherwise a group is only reported by half of the possible layouts.
+    this.shadowRoot
+      ?.querySelector<HTMLElement>(".zoomed-in")
+      ?.addEventListener("scroll", this.#handleScroll, {
+        capture: true,
+        passive: true,
+      });
+    this.addEventListener("scroll", this.#handleScroll, {
+      capture: true,
+      passive: true,
+    });
+
+    this.shadowRoot
+      ?.querySelector<HTMLElement>(".zoomed-out")
+      ?.addEventListener("click", this.#handleOverviewClick);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    // The pending read belongs to a frame of a list that is no longer on screen.
+    cancelAnimationFrame(this.#groupReadFrame);
+    this.#groupReadFrame = 0;
+  }
+
+  protected updated(changed: PropertyValues<this>): void {
     // The CSS fallback transition runs only where there is no View Transition to
     // animate with and the user has not asked for reduced motion.
     const instant =
       prefersReducedMotion() || "startViewTransition" in document;
     const duration = instant ? 0 : this.transitionDuration;
     this.style.setProperty("--sz-dur", `${duration}ms`);
+
+    // Zooming in without scrolling still moves the reading of the current group
+    // from the hidden overview to the list.
+    if (changed.has("zoomed")) this.#scheduleGroupRead();
+  }
+
+  /** The group whose header is at the top of the scrolled list, if it has one. */
+  get currentGroup(): string | null {
+    return this.#currentGroup;
+  }
+
+  /**
+   * Shows one group at the top of the zoomed-in list, zooming in first when the
+   * overview is up.
+   * @param key - The `data-group-key` value of the group to enter
+   */
+  async scrollToGroup(key: string): Promise<void> {
+    if (this.zoomed === "out") {
+      await this.setZoomedState("in");
+    }
+    await this.updateComplete;
+
+    const layer = this.shadowRoot?.querySelector<HTMLElement>(".zoomed-in");
+    const group = this.#findGroup(key, "zoomed-in");
+    if (!layer || !group) return;
+
+    const scroller = this.#scrollerFor(group, layer);
+    const offset =
+      group.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    scroller.scrollTo({
+      top: scroller.scrollTop + offset,
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+    });
+    this.#scheduleGroupRead();
+  }
+
+  /** The `[data-group-key]` elements assigned to one slot, in document order. */
+  #assignedGroups(slotName: ZoomSlot): HTMLElement[] {
+    const slot = this.shadowRoot?.querySelector<HTMLSlotElement>(
+      `slot[name="${slotName}"]`
+    );
+    const groups: HTMLElement[] = [];
+
+    for (const assigned of slot?.assignedElements() ?? []) {
+      if (!(assigned instanceof HTMLElement)) continue;
+      if (assigned.hasAttribute("data-group-key")) groups.push(assigned);
+      groups.push(
+        ...Array.from(
+          assigned.querySelectorAll<HTMLElement>("[data-group-key]")
+        )
+      );
+    }
+
+    return groups;
+  }
+
+  #findGroup(key: string, slotName: ZoomSlot): HTMLElement | null {
+    const selector = `[data-group-key="${CSS.escape(key)}"]`;
+    return (
+      this.#assignedGroups(slotName).find((group) => group.matches(selector)) ??
+      null
+    );
+  }
+
+  /**
+   * The element that actually scrolls a group: its nearest scrollable ancestor
+   * within the zoom, or the zoomed-in layer when the content overflows that
+   * layer directly.
+   */
+  #scrollerFor(group: HTMLElement, layer: HTMLElement): HTMLElement {
+    for (
+      let ancestor = group.parentElement;
+      ancestor && ancestor !== this;
+      ancestor = ancestor.parentElement
+    ) {
+      const overflow = getComputedStyle(ancestor).overflowY;
+      if (overflow === "auto" || overflow === "scroll") return ancestor;
+    }
+    return layer;
+  }
+
+  #handleScroll = (): void => {
+    this.#scheduleGroupRead();
+  };
+
+  #handleOverviewClick = (event: Event): void => {
+    // Slotted content is retargeted at the shadow boundary, so the layer only
+    // ever sees the slot as the target: the tapped element comes from the path.
+    const tapped = event
+      .composedPath()
+      .find((node): node is HTMLElement => node instanceof HTMLElement);
+    const tile = tapped?.closest<HTMLElement>("[data-group-key]");
+    if (!tile) return;
+
+    const key = tile.getAttribute("data-group-key");
+    if (key === null) return;
+    if (!this.#assignedGroups("zoomed-out").includes(tile)) return;
+
+    void this.scrollToGroup(key);
+  };
+
+  #scheduleGroupRead(): void {
+    // One measurement pass per frame: a fling delivers a scroll event every
+    // frame and each pass walks the whole group list.
+    if (this.#groupReadFrame !== 0) return;
+    this.#groupReadFrame = requestAnimationFrame(() => {
+      this.#groupReadFrame = 0;
+      this.#readCurrentGroup();
+    });
+  }
+
+  #readCurrentGroup(): void {
+    const layer = this.shadowRoot?.querySelector<HTMLElement>(".zoomed-in");
+    if (!layer) return;
+
+    let key: string | null = null;
+    let highest = Number.NEGATIVE_INFINITY;
+    let leading: string | null = null;
+
+    for (const group of this.#assignedGroups("zoomed-in")) {
+      const groupKey = group.getAttribute("data-group-key");
+      if (groupKey === null) continue;
+      leading ??= groupKey;
+
+      const scroller = this.#scrollerFor(group, layer);
+      const offset =
+        group.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      // The current group is the last one that crossed the top line, so of those
+      // at or above it the one nearest the line wins.
+      if (offset <= GROUP_ALIGN_TOLERANCE_PX && offset > highest) {
+        highest = offset;
+        key = groupKey;
+      }
+    }
+
+    key ??= leading;
+    if (key === this.#currentGroup) return;
+
+    this.#currentGroup = key;
+    this.dispatchEvent(
+      new CustomEvent("groupchanged", {
+        detail: { key },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   setZoomedState(state: ZoomState): Promise<void> {

@@ -1,5 +1,7 @@
 import { LitElement, html, css, type PropertyValues, type TemplateResult, nothing } from "lit";
 import { baseTypography, scrollbarVisible } from "../../styles/shared.ts";
+import { animationKeyframes } from "../../utils/animations.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 import {
   createGestureState,
   updateGesture,
@@ -22,9 +24,18 @@ export interface LongListSelectorGroup {
 
 type SelectionMode = "none" | "single" | "multiple";
 
+/** Where the jump grid is in its open/close cycle. */
+type JumpGridState = "closed" | "open" | "closing";
+
 const ITEM_HEIGHT = 44;
 const GROUP_HEADER_HEIGHT = 32;
 const OVERSCAN = 10;
+
+/**
+ * Bound on the wait for the grid's exit animation: an element that is hidden or
+ * removed by someone else never reports `animationend`.
+ */
+const GRID_EXIT_GUARD_MS = 400;
 
 export class MetroLongListSelector extends LitElement {
   static properties = {
@@ -36,6 +47,7 @@ export class MetroLongListSelector extends LitElement {
     selectedValue: { type: Object, attribute: "selected-value" },
     maxHeight: { type: String, attribute: "max-height" },
     showJumpList: { type: Boolean, attribute: "show-jump-list" },
+    jumpGrid: { type: Boolean, attribute: "jump-grid" },
   };
 
   declare items: LongListSelectorItem[];
@@ -46,10 +58,12 @@ export class MetroLongListSelector extends LitElement {
   declare selectedValue: unknown;
   declare maxHeight: string;
   declare showJumpList: boolean;
+  declare jumpGrid: boolean;
 
   static styles = [
     baseTypography,
     scrollbarVisible,
+    animationKeyframes,
     css`
       :host {
         display: block;
@@ -160,6 +174,67 @@ export class MetroLongListSelector extends LitElement {
       .jump-list:hover .jump-item:not(.disabled) {
         opacity: 0.9;
       }
+      .group-header[tabindex],
+      .jump-item[tabindex] {
+        cursor: pointer;
+      }
+      .group-header:focus-visible,
+      .jump-item:focus-visible {
+        outline: 2px solid var(--metro-accent, #0078d4);
+        outline-offset: -2px;
+      }
+      /* The jump grid replaces the whole screen, because a list long enough to
+         need it has more groups than the alphabet strip can show at once. */
+      .jump-grid {
+        position: fixed;
+        inset: 0;
+        z-index: 1100;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        align-content: start;
+        gap: 12px;
+        padding: 24px;
+        overflow: auto;
+        background: var(--metro-background, #1f1f1f);
+        color: var(--metro-foreground, #ffffff);
+      }
+      .jump-grid:not(.closing) {
+        animation: metro-turnstile-in 450ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) backwards;
+      }
+      .jump-grid.closing {
+        animation: metro-turnstile-out 350ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
+      }
+      .jump-grid-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: var(--metro-spacing-xs, 4px);
+        min-height: 96px;
+        padding: var(--metro-spacing-md, 12px);
+        border: none;
+        background: var(--metro-accent, #0078d4);
+        color: #ffffff;
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+      }
+      .jump-grid-tile:hover {
+        background: var(--metro-accent-dark, #005a9e);
+      }
+      .jump-grid-tile:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: -4px;
+      }
+      .jump-grid-key {
+        font-size: var(--metro-font-size-xlarge, 28px);
+        font-weight: 600;
+        line-height: 1;
+      }
+      .jump-grid-count {
+        font-size: var(--metro-font-size-small, 12px);
+        opacity: 0.8;
+      }
     `,
   ];
 
@@ -171,6 +246,10 @@ export class MetroLongListSelector extends LitElement {
   #jumpListCache: Map<string, LongListSelectorGroup> = new Map();
   #gestureState: GestureState | null = null;
   #crossSlideIndex: number | null = null;
+  #jumpGridState: JumpGridState = "closed";
+  #jumpGridTrigger: HTMLElement | null = null;
+  #jumpGridNeedsFocus = false;
+  #gridCloseTimer = 0;
 
   constructor() {
     super();
@@ -182,6 +261,7 @@ export class MetroLongListSelector extends LitElement {
     this.selectedValue = null;
     this.maxHeight = "300px";
     this.showJumpList = true;
+    this.jumpGrid = false;
   }
 
   render() {
@@ -209,6 +289,7 @@ export class MetroLongListSelector extends LitElement {
             ${this.#renderJumpList()}
           </div>`
         : nothing}
+      ${this.#renderJumpGrid()}
     `;
   }
 
@@ -273,7 +354,13 @@ export class MetroLongListSelector extends LitElement {
 
       parts.push(html`
         <div style="position: absolute; top: ${groupStart}px; left: 0; right: 0;">
-          <div class="group-header" data-group-key="${group.key}">${group.key}</div>
+          <div
+            class="group-header"
+            data-group-key="${group.key}"
+            tabindex=${this.jumpGrid ? "0" : nothing}
+            @click=${this.#handleGroupHeaderClick}
+            @keydown=${this.#handleGroupHeaderKeyDown}
+          >${group.key}</div>
           <div style="position: relative; top: ${itemsOffsetY}px; height: ${group.contentHeight - itemsOffsetY}px;">
             ${visibleItems}
           </div>
@@ -317,10 +404,133 @@ export class MetroLongListSelector extends LitElement {
       return html`
         <span
           class="jump-item ${hasItems ? "" : "disabled"}"
-          @click=${hasItems ? () => this.#jumpToGroup(letter) : undefined}
+          tabindex=${hasItems && this.jumpGrid ? "0" : nothing}
+          @click=${hasItems ? (e: Event) => this.#handleJumpItemClick(letter, e) : undefined}
+          @keydown=${hasItems ? (e: KeyboardEvent) => this.#handleJumpItemKeyDown(letter, e) : undefined}
         >${letter}</span>
       `;
     });
+  }
+
+  /**
+   * The full-screen group grid: one tile per group, each naming the group and
+   * how many items it holds.
+   */
+  #renderJumpGrid(): TemplateResult | typeof nothing {
+    if (this.#jumpGridState === "closed") return nothing;
+
+    const closing = this.#jumpGridState === "closing" ? "closing" : "";
+
+    return html`
+      <div
+        class="jump-grid ${closing}"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Jump to group"
+        @keydown=${this.#handleGridKeyDown}
+      >
+        ${this.#groups.map(
+          (group) => html`
+            <button
+              type="button"
+              class="jump-grid-tile"
+              data-group-key=${group.key}
+              @click=${() => this.#handleGridTileClick(group)}
+            >
+              <span class="jump-grid-key">${group.key}</span>
+              <span class="jump-grid-count">${group.items.length}</span>
+            </button>
+          `
+        )}
+      </div>
+    `;
+  }
+
+  #handleGroupHeaderClick = (event: Event): void => {
+    this.#openJumpGrid(event.currentTarget as HTMLElement);
+  };
+
+  #handleGroupHeaderKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    this.#openJumpGrid(event.currentTarget as HTMLElement);
+  };
+
+  #handleJumpItemClick = (letter: string, event: Event): void => {
+    if (!this.jumpGrid) {
+      this.#jumpToGroup(letter);
+      return;
+    }
+    this.#openJumpGrid(event.currentTarget as HTMLElement);
+  };
+
+  #handleJumpItemKeyDown = (letter: string, event: KeyboardEvent): void => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    this.#handleJumpItemClick(letter, event);
+  };
+
+  #handleGridKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    this.#closeJumpGrid();
+  };
+
+  #handleGridTileClick = (group: LongListSelectorGroup): void => {
+    this.#scrollToOffset(group.headerOffset);
+    this.#closeJumpGrid();
+  };
+
+  #openJumpGrid(trigger: HTMLElement): void {
+    if (!this.jumpGrid || this.#groups.length === 0) return;
+    if (this.#jumpGridState !== "closed") return;
+
+    this.#jumpGridTrigger = trigger;
+    this.#jumpGridNeedsFocus = true;
+    this.#jumpGridState = "open";
+    this.requestUpdate();
+  }
+
+  #closeJumpGrid(): void {
+    if (this.#jumpGridState !== "open") return;
+
+    const grid = this.shadowRoot?.querySelector<HTMLElement>(".jump-grid");
+    const trigger = this.#jumpGridTrigger;
+    this.#jumpGridTrigger = null;
+
+    if (!grid || prefersReducedMotion()) {
+      this.#jumpGridState = "closed";
+      this.requestUpdate();
+    } else {
+      this.#jumpGridState = "closing";
+      this.requestUpdate();
+      grid.addEventListener("animationend", this.#handleGridAnimationEnd);
+      this.#gridCloseTimer = window.setTimeout(
+        () => this.#finishGridClose(),
+        GRID_EXIT_GUARD_MS
+      );
+    }
+
+    // The list keeps its position: where it ends up is the jump's business, not
+    // the focus move's.
+    trigger?.focus({ preventScroll: true });
+  }
+
+  #handleGridAnimationEnd = (event: AnimationEvent): void => {
+    if (event.animationName !== "metro-turnstile-out") return;
+    this.#finishGridClose();
+  };
+
+  #finishGridClose(): void {
+    window.clearTimeout(this.#gridCloseTimer);
+    this.#gridCloseTimer = 0;
+    this.shadowRoot
+      ?.querySelector<HTMLElement>(".jump-grid")
+      ?.removeEventListener("animationend", this.#handleGridAnimationEnd);
+
+    if (this.#jumpGridState === "closed") return;
+    this.#jumpGridState = "closed";
+    this.requestUpdate();
   }
 
   #handleItemClick(index: number): void {
@@ -449,12 +659,20 @@ export class MetroLongListSelector extends LitElement {
     const group = this.#jumpListCache.get(letter.toUpperCase());
     if (!group) return;
 
-    const container = this.shadowRoot?.querySelector(".list-container") as HTMLElement;
+    this.#scrollToOffset(group.headerOffset);
+  }
+
+  /**
+   * Scrolls the list to a content offset. Reduced motion goes straight there:
+   * a glide is exactly the motion the preference asks not to see.
+   */
+  #scrollToOffset(top: number): void {
+    const container = this.shadowRoot?.querySelector<HTMLElement>(".list-container");
     if (!container) return;
 
     container.scrollTo({
-      top: group.headerOffset,
-      behavior: "smooth",
+      top,
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
     });
   }
 
@@ -544,17 +762,37 @@ export class MetroLongListSelector extends LitElement {
     }
   }
 
-  protected updated(): void {
+  protected updated(changed: PropertyValues<this>): void {
     const container = this.shadowRoot?.querySelector<HTMLElement>(".list-container");
     if (container) {
       container.style.maxHeight = "";
       container.style.maxHeight = this.maxHeight;
+    }
+
+    if (this.#jumpGridState === "open" && this.#jumpGridNeedsFocus) {
+      this.#jumpGridNeedsFocus = false;
+      this.shadowRoot
+        ?.querySelector<HTMLElement>(".jump-grid-tile")
+        ?.focus({ preventScroll: true });
+    }
+
+    if (changed.has("jumpGrid") && !this.jumpGrid) {
+      this.#finishGridClose();
     }
   }
 
   connectedCallback(): void {
     super.connectedCallback();
     this.#rebuildGroups();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.clearTimeout(this.#gridCloseTimer);
+    this.#gridCloseTimer = 0;
+    this.#jumpGridState = "closed";
+    this.#jumpGridTrigger = null;
+    this.#jumpGridNeedsFocus = false;
   }
 
   #syncSelectionFromValue(): void {
