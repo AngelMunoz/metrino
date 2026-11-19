@@ -84,7 +84,7 @@ let manifestPromise: Promise<CEMSchema | null> | null = null;
 async function getManifest(): Promise<CEMSchema | null> {
   if (manifestCache) return manifestCache;
   if (manifestPromise) return manifestPromise;
-  manifestPromise = fetch("/custom-elements.json")
+  manifestPromise = fetch(`${import.meta.env.BASE_URL}custom-elements.json`)
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
       manifestCache = data;

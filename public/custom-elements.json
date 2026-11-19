@@ -3890,7 +3890,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Content Dialog Component\n\nA customizable modal dialog for displaying content with optional title,\ncontent area, and button slot. Uses the View Transitions API for smooth\ncoordinated enter/exit animations of the dialog and backdrop. Suitable\nfor forms, confirmations, or any custom content.\n\nFeatures:\n- Optional title header with border separator\n- Scrollable content area for long content\n- Dedicated button slot for action buttons\n- Optional close button (can be disabled for required dialogs)\n- View Transition-powered enter/exit animations\n- Backdrop click to close (when closable)\n- ARIA dialog role with modal support\n- Programmatic show/hide API\n\nUse for custom modal content that requires user interaction or attention.\nFor simple message dialogs, consider MetroMessageDialog instead.",
+          "description": "Metro Content Dialog Component\n\nA customizable modal dialog for displaying content with optional title,\ncontent area, and button slot. Uses the View Transitions API for smooth\ncoordinated enter/exit animations of the dialog and backdrop. Suitable\nfor forms, confirmations, or any custom content.\n\nFeatures:\n- Optional title header with border separator\n- Scrollable content area for long content\n- Dedicated button slot for action buttons\n- Optional close button (can be disabled for required dialogs)\n- View Transition-powered enter/exit animations\n- Backdrop click to close (when closable)\n- Escape to close, focus moves into the dialog on open and back to the opener\n  on close, and Tab stays inside the dialog while it is open\n- ARIA dialog role with modal support\n- Programmatic show/hide API\n\nUse for custom modal content that requires user interaction or attention.\nFor simple message dialogs, consider MetroMessageDialog instead.",
           "name": "MetroContentDialog",
           "cssProperties": [
             {
@@ -4017,6 +4017,25 @@
               "default": "null"
             },
             {
+              "kind": "field",
+              "name": "#closing",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#transition",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#transitionRules",
+              "privacy": "private"
+            },
+            {
               "kind": "method",
               "name": "#handleKeydown",
               "privacy": "private",
@@ -4035,32 +4054,31 @@
               ]
             },
             {
-              "kind": "method",
-              "name": "#trapFocus",
+              "kind": "field",
+              "name": "#handleEscapeKey",
               "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "void"
-                }
-              },
-              "parameters": [
-                {
-                  "name": "e",
-                  "type": {
-                    "text": "KeyboardEvent"
-                  }
-                }
-              ]
+              "description": "Escape while the dialog is open, listened for on the document: the key is\nhandled even when focus did not move into the dialog."
             },
             {
               "kind": "method",
-              "name": "#saveFocus",
+              "name": "#dialogElement",
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": "HTMLElement | null"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#focusDialog",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Moves focus to the first tab stop in the dialog, slots included."
             },
             {
               "kind": "method",
@@ -4068,9 +4086,10 @@
               "privacy": "private",
               "return": {
                 "type": {
-                  "text": "void"
+                  "text": ""
                 }
-              }
+              },
+              "description": "Returns focus to the element that opened the dialog. A custom-element host is\nnot focusable itself, so the first tab stop inside it takes focus."
             },
             {
               "kind": "method",
@@ -4102,6 +4121,16 @@
             },
             {
               "kind": "method",
+              "name": "#transitionTargets",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "Record<string, HTMLElement | null>"
+                }
+              }
+            },
+            {
+              "kind": "method",
               "name": "#applyChange",
               "privacy": "private",
               "return": {
@@ -4117,7 +4146,7 @@
                   }
                 }
               ],
-              "description": "Applies a property change via View Transitions with headless fallback.\nUses the applied-flag pattern to ensure DOM updates even when\nstartViewTransition skips the callback (headless browsers).\nAwaits both updateCallbackDone and finished to properly clean up\nthe transition before returning."
+              "description": "Applies a property change via View Transitions with headless fallback.\nUses the applied-flag pattern to ensure DOM updates even when\nstartViewTransition skips the callback (headless browsers).\nAwaits both updateCallbackDone and finished to properly clean up\nthe transition before returning.\nUnder `prefers-reduced-motion: reduce` the transition is skipped rather than\nsped up, so the change lands with no entrance motion at all."
             },
             {
               "kind": "method",
@@ -4127,7 +4156,7 @@
                   "text": ""
                 }
               },
-              "description": "Opens the dialog with enter animation and dispatches show event.\nUses View Transitions for a coordinated backdrop + dialog animation."
+              "description": "Opens the dialog with enter animation and dispatches show event.\nUses View Transitions for a coordinated backdrop + dialog animation.\nEscape is listened for on the document from the first moment, so a key\npressed while the entrance is still running dismisses the dialog. Focus\nmoves in only after `open` is applied: the dialog is hidden until then, so an\nearlier focus call would land on the opener."
             },
             {
               "kind": "method",
@@ -4235,7 +4264,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Flyout Component\n\nA floating popup panel that appears relative to a target element.\nFeatures a 3D perspective animation via View Transitions and backdrop overlay.\nThe Flyout is positioned programmatically and is ideal for contextual menus,\ntooltips, or any popup content.\n\nFeatures:\n- 3D perspective enter animation via View Transitions\n- Four placement options: top, bottom, left, right\n- Backdrop overlay for modal-like behavior\n- Automatic positioning based on target element\n- Fixed positioning to appear above other content\n\nUnlike MetroTooltip, the Flyout requires a target element and is\ndesigned for more substantial content like menus or forms.",
+          "description": "Metro Flyout Component\n\nA floating popup panel that appears relative to a target element.\nFeatures a 3D perspective animation via View Transitions and backdrop overlay.\nThe Flyout is positioned programmatically and is ideal for contextual menus,\ntooltips, or any popup content.\n\nFeatures:\n- 3D perspective enter animation via View Transitions\n- Four placement options: top, bottom, left, right\n- Backdrop overlay for modal-like behavior\n- Escape to close, focus moves into the flyout on open and back to the opener on close\n- Automatic positioning based on target element\n- Fixed positioning to appear above other content\n\nUnlike MetroTooltip, the Flyout requires a target element and is\ndesigned for more substantial content like menus or forms.",
           "name": "MetroFlyout",
           "cssProperties": [
             {
@@ -4302,6 +4331,34 @@
               "default": "null"
             },
             {
+              "kind": "field",
+              "name": "#previousFocus",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#closing",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#transition",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#transitionRules",
+              "privacy": "private"
+            },
+            {
               "kind": "method",
               "name": "#handleKeydown",
               "privacy": "private",
@@ -4318,6 +4375,34 @@
                   }
                 }
               ]
+            },
+            {
+              "kind": "field",
+              "name": "#handleEscapeKey",
+              "privacy": "private",
+              "description": "Escape while the flyout is open, listened for on the document: the key is\nhandled even when focus did not move into the flyout."
+            },
+            {
+              "kind": "method",
+              "name": "#focusPanel",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Moves focus into the flyout panel, slots included. Slotted content often\nholds no tab stop, so the panel itself (tabindex -1) takes focus instead."
+            },
+            {
+              "kind": "method",
+              "name": "#restoreFocus",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Returns focus to the element that opened the flyout. A custom-element host is\nnot focusable itself, so the first tab stop inside it takes focus."
             },
             {
               "kind": "method",
@@ -4384,6 +4469,16 @@
               "return": {
                 "type": {
                   "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#transitionTargets",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "Record<string, HTMLElement | null>"
                 }
               }
             }
@@ -4474,7 +4569,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Message Dialog Component\n\nA simplified modal dialog designed for displaying messages with optional\ntitle and content. Smaller than ContentDialog, making it ideal for alerts,\nconfirmations, and simple notifications. Always closable via backdrop click.\n\nFeatures:\n- Compact design optimized for simple messages\n- Optional title header with border separator\n- Content area for message text\n- Dedicated button slot for action buttons (OK, Cancel, etc.)\n- View Transition animations for enter/exit\n- Backdrop click to close\n- ARIA dialog role with modal support\n- Programmatic show/hide API\n\nUse for simple alert messages, confirmations, or any brief notification\nthat requires user acknowledgment. For complex content or forms, use\nMetroContentDialog instead.",
+          "description": "Metro Message Dialog Component\n\nA simplified modal dialog designed for displaying messages with optional\ntitle and content. Smaller than ContentDialog, making it ideal for alerts,\nconfirmations, and simple notifications. Always closable via backdrop click.\n\nFeatures:\n- Compact design optimized for simple messages\n- Optional title header with border separator\n- Content area for message text\n- Dedicated button slot for action buttons (OK, Cancel, etc.)\n- View Transition animations for enter/exit\n- Backdrop click to close\n- Escape to close, focus moves into the dialog on open and back to the opener\n  on close, and Tab stays inside the dialog while it is open\n- ARIA dialog role with modal support\n- Programmatic show/hide API\n\nUse for simple alert messages, confirmations, or any brief notification\nthat requires user acknowledgment. For complex content or forms, use\nMetroContentDialog instead.",
           "name": "MetroMessageDialog",
           "cssProperties": [
             {
@@ -4576,6 +4671,34 @@
               "reflects": true
             },
             {
+              "kind": "field",
+              "name": "#transition",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#transitionRules",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#previousFocus",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#closing",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
               "kind": "method",
               "name": "#handleKeydown",
               "privacy": "private",
@@ -4593,7 +4716,13 @@
                   "description": "The keyboard event"
                 }
               ],
-              "description": "Handles keyboard events for Escape key to close the dialog."
+              "description": "Handles Escape and Tab while focus is inside the dialog."
+            },
+            {
+              "kind": "field",
+              "name": "#handleEscapeKey",
+              "privacy": "private",
+              "description": "Escape while the dialog is open, listened for on the document: the key is\nhandled even when focus did not move into the dialog."
             },
             {
               "kind": "method",
@@ -4602,6 +4731,27 @@
               "return": {
                 "type": {
                   "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#restoreFocus",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Returns focus to the element that opened the dialog. A custom-element host is\nnot focusable itself, so the first tab stop inside it takes focus."
+            },
+            {
+              "kind": "method",
+              "name": "#transitionTargets",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "Record<string, HTMLElement | null>"
                 }
               }
             },
@@ -4632,7 +4782,7 @@
                   "text": ""
                 }
               },
-              "description": "Opens the dialog with enter animation and dispatches show event."
+              "description": "Opens the dialog with enter animation and dispatches show event.\nEscape is listened for on the document from the first moment, so a key\npressed while the entrance is still running dismisses the dialog. Focus\nmoves in only after `open` is applied: the dialog is hidden until then, so an\nearlier focus call would land on the opener."
             },
             {
               "kind": "method",
@@ -4731,7 +4881,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Settings Flyout Component\n\nA specialized flyout panel designed for application settings. Slides in\nfrom the right side of the screen with a backdrop overlay. Features focus\nmanagement, keyboard support (Escape to close), and restore focus on close.\n\nFeatures:\n- Slides in from right side of viewport via View Transitions\n- Two width options: narrow (346px) and wide (646px)\n- Backdrop overlay with click-to-close\n- Title header with close button\n- Focus management (traps focus, restores on close)\n- Keyboard support (Escape key closes)\n\nUse for application settings, preferences, or any side panel that\nrequires user attention and should be dismissible.",
+          "description": "Metro Settings Flyout Component\n\nA specialized flyout panel designed for application settings. Slides in\nfrom the right side of the screen with a backdrop overlay. Features focus\nmanagement, keyboard support (Escape to close), and restore focus on close.\n\nFeatures:\n- Slides in from right side of viewport via View Transitions\n- Two width options: narrow (346px) and wide (646px)\n- Backdrop overlay with click-to-close\n- Title header with close button\n- Focus moves into the panel on open and back to the opener on close\n- Keyboard support (Escape key closes, Tab stays inside while open)\n\nUse for application settings, preferences, or any side panel that\nrequires user attention and should be dismissible.",
           "name": "MetroSettingsFlyout",
           "cssProperties": [
             {
@@ -4849,9 +4999,28 @@
               "name": "#previousFocus",
               "privacy": "private",
               "type": {
-                "text": "Element | null"
+                "text": "HTMLElement | null"
               },
               "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#closing",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#transition",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#transitionRules",
+              "privacy": "private"
             },
             {
               "kind": "method",
@@ -4872,6 +5041,17 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#restoreFocus",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Returns focus to the element that opened the flyout. Restoring happens once\nthe exit transition is over: while it runs the page is a frozen snapshot and\nthe focus change does not stick. A custom-element host is not focusable\nitself, so the first tab stop inside it takes focus."
             },
             {
               "kind": "method",
@@ -4900,6 +5080,34 @@
             },
             {
               "kind": "method",
+              "name": "#handleKeydown",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "#transitionTargets",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "Record<string, HTMLElement | null>"
+                }
+              }
+            },
+            {
+              "kind": "method",
               "name": "#applyChange",
               "privacy": "private",
               "return": {
@@ -4925,7 +5133,7 @@
                   "text": ""
                 }
               },
-              "description": "Opens the flyout with slide-in animation via View Transitions."
+              "description": "Opens the flyout with slide-in animation via View Transitions.\nFocus moves in only after `open` is applied; before that the panel sits\noutside the viewport and cannot take focus."
             },
             {
               "kind": "method",
@@ -5023,6 +5231,383 @@
           "declaration": {
             "name": "MetroSettingsFlyout",
             "module": "src/components/dialogs/settings-flyout.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/dialogs/teaching-tip.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Metro Teaching Tip Component\n\nA WinUI TeachingTip-behaving callout in flat Metro styling: a square,\naccent-edged panel anchored to a target element, used for contextual\nguidance or feature introductions.\n\nFeatures:\n- Swivel/fade entrance (250ms Metro easing, reduced-motion safe)\n- Four placement options: top, bottom, left, right (default bottom)\n- Light dismiss on outside click and document-level Escape, even when\n  focus never moved into the tip\n- Focus moves into the tip on open and returns to the target on close\n- Optional close button (closable, default true)",
+          "name": "MetroTeachingTip",
+          "cssProperties": [
+            {
+              "description": "Tip background color (default: #1f1f1f)",
+              "name": "--metro-background"
+            },
+            {
+              "description": "Accent edge color (default: #0078d4)",
+              "name": "--metro-accent"
+            },
+            {
+              "description": "Transition duration (default: 250ms)",
+              "name": "--metro-transition-normal"
+            },
+            {
+              "description": "Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))",
+              "name": "--metro-easing"
+            }
+          ],
+          "cssParts": [
+            {
+              "description": "The tip panel element",
+              "name": "tip"
+            },
+            {
+              "description": "The close button element",
+              "name": "close-btn"
+            }
+          ],
+          "slots": [
+            {
+              "description": "Default slot for tip body content",
+              "name": ""
+            },
+            {
+              "description": "Slot for the action button",
+              "name": "action"
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "open",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Controls the visibility of the tip. Use show() and hide() for proper\nevent dispatching and focus handling.",
+              "default": "false",
+              "attribute": "open",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "title",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "description": "Title text displayed in the tip header.",
+              "default": "\"\"",
+              "attribute": "title",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "subtitle",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "description": "Subtitle text displayed below the title.",
+              "default": "\"\"",
+              "attribute": "subtitle",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "target",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "description": "Id of the element the tip anchors to. Resolved when the tip opens;\nshow() also accepts an element or id directly.",
+              "default": "\"\"",
+              "attribute": "target",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "placement",
+              "privacy": "public",
+              "type": {
+                "text": "TeachingTipPlacement"
+              },
+              "description": "Position of the tip relative to the target element.",
+              "default": "\"bottom\"",
+              "attribute": "placement",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "closable",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When true, a close button is shown and light dismiss applies.",
+              "default": "true",
+              "attribute": "closable",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "#targetElement",
+              "privacy": "private",
+              "type": {
+                "text": "Element | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#previousFocus",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#handleEscapeKey",
+              "privacy": "private",
+              "description": "Escape at the document level: the tip closes even when focus never\nmoved into it."
+            },
+            {
+              "kind": "field",
+              "name": "#handleOutsidePointer",
+              "privacy": "private",
+              "description": "Light dismiss: a pointer press outside the tip closes it."
+            },
+            {
+              "kind": "method",
+              "name": "#handleCloseClick",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#attachDocumentListeners",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#detachDocumentListeners",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#focusPanel",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Moves focus into the tip panel, slotted content included. Slotted\ncontent often holds no tab stop, so the panel itself (tabindex -1)\ntakes focus instead."
+            },
+            {
+              "kind": "method",
+              "name": "#restoreFocus",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Returns focus to the target element that the tip was shown for."
+            },
+            {
+              "kind": "method",
+              "name": "#resolveTarget",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "Element | null"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "target",
+                  "optional": true,
+                  "type": {
+                    "text": "Element | string"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "show",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "target",
+                  "optional": true,
+                  "type": {
+                    "text": "Element | string"
+                  },
+                  "description": "The element (or element id) to anchor to; falls back to the `target` id property"
+                }
+              ],
+              "description": "Shows the tip anchored to the target element."
+            },
+            {
+              "kind": "method",
+              "name": "hide",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Hides the tip and returns focus to the target."
+            },
+            {
+              "kind": "method",
+              "name": "#positionTip",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            }
+          ],
+          "events": [
+            {
+              "name": "opened",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "Fired when the tip opens (bubbles: true, composed: true)"
+            },
+            {
+              "name": "closed",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "Fired when the tip closes (bubbles: true, composed: true)"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "open",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Controls the visibility of the tip. Use show() and hide() for proper\nevent dispatching and focus handling.",
+              "default": "false",
+              "fieldName": "open"
+            },
+            {
+              "name": "title",
+              "type": {
+                "text": "string"
+              },
+              "description": "Title text displayed in the tip header.",
+              "default": "\"\"",
+              "fieldName": "title"
+            },
+            {
+              "name": "subtitle",
+              "type": {
+                "text": "string"
+              },
+              "description": "Subtitle text displayed below the title.",
+              "default": "\"\"",
+              "fieldName": "subtitle"
+            },
+            {
+              "name": "target",
+              "type": {
+                "text": "string"
+              },
+              "description": "Id of the element the tip anchors to. Resolved when the tip opens;\nshow() also accepts an element or id directly.",
+              "default": "\"\"",
+              "fieldName": "target"
+            },
+            {
+              "name": "placement",
+              "type": {
+                "text": "TeachingTipPlacement"
+              },
+              "description": "Position of the tip relative to the target element.",
+              "default": "\"bottom\"",
+              "fieldName": "placement"
+            },
+            {
+              "name": "closable",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When true, a close button is shown and light dismiss applies.",
+              "default": "true",
+              "fieldName": "closable"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "metro-teaching-tip",
+          "customElement": true
+        },
+        {
+          "kind": "function",
+          "name": "registerMetroTeachingTip",
+          "return": {
+            "type": {
+              "text": "void"
+            }
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MetroTeachingTip",
+          "declaration": {
+            "name": "MetroTeachingTip",
+            "module": "src/components/dialogs/teaching-tip.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "registerMetroTeachingTip",
+          "declaration": {
+            "name": "registerMetroTeachingTip",
+            "module": "src/components/dialogs/teaching-tip.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "metro-teaching-tip",
+          "declaration": {
+            "name": "MetroTeachingTip",
+            "module": "src/components/dialogs/teaching-tip.ts"
           }
         }
       ]
@@ -10202,6 +10787,14 @@
               "type": {
                 "text": "() => void | undefined"
               }
+            },
+            {
+              "kind": "field",
+              "name": "#cleanupExpanded",
+              "privacy": "private",
+              "type": {
+                "text": "() => void | undefined"
+              }
             }
           ],
           "attributes": [
@@ -10274,7 +10867,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro App Bar Separator Component\n\nA visual separator line for use within the Metro App Bar. Creates a\nvertical line between buttons or groups of buttons to visually\ndistinguish different sections of the app bar.\n\nFeatures:\n- Vertical line separator with standard dimensions\n- Configurable visibility (can be hidden while preserving layout)\n- Standard spacing margins on both sides\n- Semi-transparent styling to blend with Metro design\n\nUse within metro-app-bar to separate groups of related buttons.",
+          "description": "Metro App Bar Separator Component\n\nA visual separator line for use within the Metro App Bar. Creates a\nvertical line between buttons or groups of buttons to visually\ndistinguish different sections of the app bar.\n\nFeatures:\n- Vertical line separator with standard dimensions\n- Configurable visibility (hiding keeps the separator's space in the bar)\n- Standard spacing margins on both sides\n- Semi-transparent styling to blend with Metro design\n\nUse within metro-app-bar to separate groups of related buttons.",
           "name": "MetroAppBarSeparator",
           "cssProperties": [
             {
@@ -10300,7 +10893,7 @@
               "type": {
                 "text": "boolean"
               },
-              "description": "Controls the visibility of the separator. When false, the separator\nis hidden but still occupies space in the layout.",
+              "description": "Controls the visibility of the separator. When false the line is hidden\nbut its space is kept, so the app bar does not reflow around it.",
               "default": "true",
               "attribute": "visible",
               "reflects": true
@@ -10312,7 +10905,7 @@
               "type": {
                 "text": "boolean"
               },
-              "description": "Controls the visibility of the separator. When false, the separator\nis hidden but still occupies space in the layout.",
+              "description": "Controls the visibility of the separator. When false the line is hidden\nbut its space is kept, so the app bar does not reflow around it.",
               "default": "true",
               "fieldName": "visible"
             }
@@ -10490,12 +11083,11 @@
             },
             {
               "kind": "field",
-              "name": "#observer",
+              "name": "#cleanupExpanded",
               "privacy": "private",
               "type": {
-                "text": "MutationObserver | null"
-              },
-              "default": "null"
+                "text": "() => void | undefined"
+              }
             },
             {
               "kind": "field",
@@ -10544,37 +11136,6 @@
                 }
               ],
               "description": "Handles keyboard events (Enter/Space) to toggle the checked state."
-            },
-            {
-              "kind": "method",
-              "name": "#setupObserver",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": ""
-                }
-              },
-              "description": "Sets up a mutation observer to watch the parent app bar's expanded attribute."
-            },
-            {
-              "kind": "method",
-              "name": "#updateExpandedState",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": ""
-                }
-              },
-              "parameters": [
-                {
-                  "name": "appBar",
-                  "type": {
-                    "text": "Element"
-                  },
-                  "description": "The parent metro-app-bar element"
-                }
-              ],
-              "description": "Updates the data-expanded attribute based on parent app bar state."
             }
           ],
           "events": [
@@ -10876,6 +11437,499 @@
     },
     {
       "kind": "javascript-module",
+      "path": "src/components/navigation/breadcrumb-bar.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Metro Breadcrumb Bar Component\n\nA WinUI BreadcrumbBar-style trail with flat Metro styling: light-DOM\nmetro-breadcrumb-item children render as a chevron-separated trail inside a\nnav labelled \"breadcrumb\". Every crumb except the last is a button (or a\nlink when the item sets \"href\"); the last crumb carries aria-current=\"page\"\nand is not clickable.\n\nWhen the trail overflows its container, leading crumbs collapse behind an\nellipsis \"...\" button that opens a small flyout listing the collapsed\ncrumbs. The flyout closes on Escape or on pointer presses outside of it.\n\nKeyboard support comes from native buttons and links (Tab, Enter, Space).",
+          "name": "MetroBreadcrumbBar",
+          "cssProperties": [
+            {
+              "description": "Trail text color (default: #ffffff)",
+              "name": "--metro-foreground"
+            },
+            {
+              "description": "Chevron color (default: rgba(255, 255, 255, 0.6))",
+              "name": "--metro-foreground-secondary"
+            },
+            {
+              "description": "Hover color and focus outline (default: #0078d4)",
+              "name": "--metro-accent"
+            },
+            {
+              "description": "Flyout background (default: #1f1f1f)",
+              "name": "--metro-background"
+            },
+            {
+              "description": "Flyout border color (default: rgba(255, 255, 255, 0.2))",
+              "name": "--metro-border"
+            },
+            {
+              "description": "Flyout item hover background (default: rgba(255, 255, 255, 0.1))",
+              "name": "--metro-highlight"
+            },
+            {
+              "description": "Spacing around chevrons (default: 8px)",
+              "name": "--metro-spacing-sm"
+            },
+            {
+              "description": "Hover transition duration (default: 167ms)",
+              "name": "--metro-transition-fast"
+            },
+            {
+              "description": "Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))",
+              "name": "--metro-easing"
+            }
+          ],
+          "cssParts": [
+            {
+              "description": "The nav landmark",
+              "name": "breadcrumb-nav"
+            },
+            {
+              "description": "The ordered list of crumbs",
+              "name": "breadcrumb-list"
+            },
+            {
+              "description": "Each crumb list item",
+              "name": "breadcrumb-item"
+            },
+            {
+              "description": "A non-current crumb button or link",
+              "name": "breadcrumb-link"
+            },
+            {
+              "description": "The current-page crumb",
+              "name": "breadcrumb-current"
+            },
+            {
+              "description": "The overflow ellipsis button",
+              "name": "breadcrumb-ellipsis"
+            },
+            {
+              "description": "The collapsed-items flyout",
+              "name": "breadcrumb-flyout"
+            }
+          ],
+          "slots": [
+            {
+              "description": "Default slot for metro-breadcrumb-item children (not displayed directly; the bar renders the trail from them)",
+              "name": ""
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "collapsedCount",
+              "privacy": "public",
+              "description": "Leading crumbs hidden behind the ellipsis; managed from overflow.",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "attribute": "collapsedCount"
+            },
+            {
+              "kind": "field",
+              "name": "flyoutOpen",
+              "privacy": "public",
+              "description": "Whether the collapsed-items flyout is open.",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "flyoutOpen"
+            },
+            {
+              "kind": "field",
+              "name": "#resizeObserver",
+              "privacy": "private",
+              "type": {
+                "text": "ResizeObserver | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#childObserver",
+              "privacy": "private",
+              "type": {
+                "text": "MutationObserver | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#fitQueued",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "method",
+              "name": "#crumbs",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Reads the light-DOM metro-breadcrumb-item children as crumbs."
+            },
+            {
+              "kind": "method",
+              "name": "#handleItemClick",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "crumb",
+                  "type": {
+                    "text": "Crumb"
+                  },
+                  "description": "The activated crumb"
+                }
+              ],
+              "description": "Fires itemclicked for a non-current crumb activated in the trail."
+            },
+            {
+              "kind": "method",
+              "name": "#handleFlyoutItemClick",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "crumb",
+                  "type": {
+                    "text": "Crumb"
+                  },
+                  "description": "The activated collapsed crumb"
+                }
+              ],
+              "description": "Fires itemclicked for a collapsed crumb and closes the flyout."
+            },
+            {
+              "kind": "field",
+              "name": "#toggleFlyout",
+              "privacy": "private",
+              "description": "Opens or closes the collapsed-items flyout.",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#closeFlyout",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "returnFocus",
+                  "type": {
+                    "text": "boolean"
+                  },
+                  "description": "Whether to move focus back to the ellipsis button"
+                }
+              ],
+              "description": "Closes the collapsed-items flyout."
+            },
+            {
+              "kind": "field",
+              "name": "#handleDocumentPointerDown",
+              "privacy": "private",
+              "description": "Closes the flyout on pointer presses outside the bar (light dismiss).",
+              "parameters": [
+                {
+                  "description": "The pointer event",
+                  "name": "event"
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handleFlyoutKeyDown",
+              "privacy": "private",
+              "description": "Closes the flyout on Escape.",
+              "parameters": [
+                {
+                  "description": "The keyboard event",
+                  "name": "event"
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handleSlotChange",
+              "privacy": "private",
+              "description": "Re-renders the trail when children are added or removed.",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#scheduleFit",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Queues an overflow fit on the next animation frame."
+            },
+            {
+              "kind": "method",
+              "name": "#fit",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Collapses leading crumbs behind the ellipsis until the trail fits, then\nreveals crumbs again while they still fit."
+            },
+            {
+              "kind": "method",
+              "name": "#overflows",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "nav",
+                  "type": {
+                    "text": "HTMLElement"
+                  },
+                  "description": "The nav landmark element"
+                }
+              ],
+              "description": "Reports whether the trail overflows its nav container."
+            }
+          ],
+          "events": [
+            {
+              "name": "itemclicked",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "Fired when a non-current crumb is activated, from the trail or from the collapsed-items flyout. Detail: { index: number, item: MetroBreadcrumbItem | null }"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "collapsedCount",
+              "description": "Leading crumbs hidden behind the ellipsis; managed from overflow.",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "fieldName": "collapsedCount"
+            },
+            {
+              "name": "flyoutOpen",
+              "description": "Whether the collapsed-items flyout is open.",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "flyoutOpen"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "metro-breadcrumb-bar",
+          "customElement": true
+        },
+        {
+          "kind": "function",
+          "name": "registerMetroBreadcrumbBar",
+          "return": {
+            "type": {
+              "text": "void"
+            }
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MetroBreadcrumbBar",
+          "declaration": {
+            "name": "MetroBreadcrumbBar",
+            "module": "src/components/navigation/breadcrumb-bar.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "registerMetroBreadcrumbBar",
+          "declaration": {
+            "name": "registerMetroBreadcrumbBar",
+            "module": "src/components/navigation/breadcrumb-bar.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "metro-breadcrumb-bar",
+          "declaration": {
+            "name": "MetroBreadcrumbBar",
+            "module": "src/components/navigation/breadcrumb-bar.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/navigation/breadcrumb-item.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Metro Breadcrumb Item Component\n\nA child component for MetroBreadcrumbBar that represents a single crumb in\nthe trail. The label comes from the \"header\" attribute, falling back to the\nelement text content. An optional \"href\" turns the crumb into a link instead\nof a button when rendered by the parent bar.\n\nUse as light-DOM children of metro-breadcrumb-bar.",
+          "name": "MetroBreadcrumbItem",
+          "slots": [
+            {
+              "description": "Default slot for the crumb label (used when \"header\" is not set)",
+              "name": ""
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "header",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "description": "Text label for this crumb.\nFalls back to the element text content when not set.",
+              "default": "\"\"",
+              "attribute": "header",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "href",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "description": "Optional URL for this crumb. When set, the parent renders a link;\notherwise it renders a button.",
+              "default": "\"\"",
+              "attribute": "href",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "label",
+              "type": {
+                "text": "string"
+              },
+              "description": "The display label for this crumb: the header attribute or the trimmed\ntext content, whichever carries the label.",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "readonly": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "header",
+              "type": {
+                "text": "string"
+              },
+              "description": "Text label for this crumb.\nFalls back to the element text content when not set.",
+              "default": "\"\"",
+              "fieldName": "header"
+            },
+            {
+              "name": "href",
+              "type": {
+                "text": "string"
+              },
+              "description": "Optional URL for this crumb. When set, the parent renders a link;\notherwise it renders a button.",
+              "default": "\"\"",
+              "fieldName": "href"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "metro-breadcrumb-item",
+          "customElement": true
+        },
+        {
+          "kind": "function",
+          "name": "registerMetroBreadcrumbItem",
+          "return": {
+            "type": {
+              "text": "void"
+            }
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MetroBreadcrumbItem",
+          "declaration": {
+            "name": "MetroBreadcrumbItem",
+            "module": "src/components/navigation/breadcrumb-item.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "registerMetroBreadcrumbItem",
+          "declaration": {
+            "name": "registerMetroBreadcrumbItem",
+            "module": "src/components/navigation/breadcrumb-item.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "metro-breadcrumb-item",
+          "declaration": {
+            "name": "MetroBreadcrumbItem",
+            "module": "src/components/navigation/breadcrumb-item.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
       "path": "src/components/navigation/hub-section.ts",
       "declarations": [
         {
@@ -11109,7 +12163,7 @@
         },
         {
           "kind": "class",
-          "description": "Metro Hub Component\n\nA horizontal scrolling container that groups related sections with headers.\nFree panning with content peek is the default and canonical behavior, as in\nthe Windows 8 / Windows Phone hub: the hub is a passive canvas of related\nsections, and the pivot is the pager.\n\nFeatures:\n- Optional main title displayed above the section container\n- Horizontal scrolling for sections with hidden scrollbar\n- Large, typography-focused section headers\n- Content-sized sections of different widths\n- Programmatic scroll API: `sections`, `selectedIndex`, `scrollToSection()`\n- Smooth programmatic navigation with the Metro easing and duration\n  tokens; instant under `prefers-reduced-motion: reduce`\n- Opt-in `[snap]` section boundary settling (off by default)\n- Keyboard focus and arrow-key scrolling on the section container\n\nThe hub owns no selection state. `selectedIndex` reads the section whose\nstart is nearest the scroll position; the setter scrolls to that section's\nstart. This differs from metro-pivot, whose `selectedIndex` stores state:\nthe pivot event fires at once, while the hub event fires when the pan\nsettles.\n\nSection header clicks belong to the app: attach listeners on the light-DOM\n`metro-hub-section` elements.",
+          "description": "Metro Hub Component\n\nA horizontal scrolling container that groups related sections with headers.\nFree panning with content peek is the default and canonical behavior, as in\nthe Windows 8 / Windows Phone hub: the hub is a passive canvas of related\nsections, and the pivot is the pager.\n\nFeatures:\n- Optional main title displayed above the section container\n- Horizontal scrolling for sections with hidden scrollbar\n- Large, typography-focused section headers\n- Content-sized sections of different widths\n- Programmatic scroll API: `sections`, `selectedIndex`, `scrollToSection()`\n- Smooth programmatic navigation with the Metro easing and duration\n  tokens; instant under `prefers-reduced-motion: reduce`\n- Opt-in `[snap]` section boundary settling (off by default)\n- Opt-in `[zoomable]` section overview, through `metro-semantic-zoom`\n- Keyboard focus and arrow-key scrolling on the section container\n\nThe hub owns no selection state. `selectedIndex` reads the section whose\nstart is nearest the scroll position; the setter scrolls to that section's\nstart. This differs from metro-pivot, whose `selectedIndex` stores state:\nthe pivot event fires at once, while the hub event fires when the pan\nsettles.\n\nSection header clicks belong to the app: attach listeners on the light-DOM\n`metro-hub-section` elements.",
           "name": "MetroHub",
           "cssProperties": [
             {
@@ -11178,6 +12232,17 @@
             },
             {
               "kind": "field",
+              "name": "zoomable",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Section overview through `metro-semantic-zoom`: the section container is\nplaced in the zoom's zoomed-in view and one tile per section is rendered\nin its zoomed-out view. Tapping a tile re-enters the hub at that section\nand reports it through `selectionchanged` like any other pan. Absent by\ndefault: the container is rendered on its own, as before.\n\nThe zoom is a fixed-height region, so a zoomable hub has to be given a\nheight; without one the section container scrolls inside the zoom's\n200px minimum.",
+              "attribute": "zoomable",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "ariaLabel",
               "privacy": "public",
               "description": "Accessible name for the section container region. Falls back to\n`title`, then to \"hub\".",
@@ -11232,12 +12297,45 @@
             },
             {
               "kind": "field",
+              "name": "#detachDragPan",
+              "privacy": "private",
+              "type": {
+                "text": "(() => void) | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#panContainer",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
               "name": "#lastReportedIndex",
               "privacy": "private",
               "type": {
                 "text": "number"
               },
               "default": "-1"
+            },
+            {
+              "kind": "field",
+              "name": "#scrollbarTimer",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "#mirroredKeys",
+              "privacy": "private",
+              "default": "new WeakMap<MetroHubSection, string>()"
             },
             {
               "kind": "field",
@@ -11255,6 +12353,66 @@
                 "text": "number"
               },
               "description": "Zero-based index of the section currently in view: the section whose\nstart position is nearest to the scroll position. Returns -1 when there\nare no sections.\n\nThe setter scrolls that section's start to the container's padding line.\nIt is a scroll, not a state commit: reading it back measures the scroll\nposition."
+            },
+            {
+              "kind": "method",
+              "name": "#ensureDragPan",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Mouse grab-to-pan on the hub's scroller. The zoomable branch moves the\ncontainer between trees, so re-attach whenever the element identity changes."
+            },
+            {
+              "kind": "method",
+              "name": "#groupKey",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "section",
+                  "type": {
+                    "text": "MetroHubSection"
+                  },
+                  "description": "The section to name"
+                },
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  },
+                  "description": "Its position in the hub"
+                }
+              ],
+              "description": "The key that names a section in both views of the zoom."
+            },
+            {
+              "kind": "method",
+              "name": "#syncGroupKeys",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Publishes the sections as the zoom's groups. The keyed element has to be\nthe section itself: it is what the zoomed-in view scrolls to, and what the\noverview's tiles point at. Keys this hub wrote are the only ones it takes\nback off, so an app's own `data-group-key` values stay untouched."
+            },
+            {
+              "kind": "method",
+              "name": "#handleSectionsChange",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Keeps the overview and the group keys in step with the sections."
             },
             {
               "kind": "method",
@@ -11301,16 +12459,6 @@
               "return": {
                 "type": {
                   "text": "HTMLElement | null"
-                }
-              }
-            },
-            {
-              "kind": "method",
-              "name": "#prefersReducedMotion",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "boolean"
                 }
               }
             },
@@ -11391,6 +12539,44 @@
             },
             {
               "kind": "method",
+              "name": "#showScrollbar",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Reveals the auto-hide scrollbar for the pan and hides it 1.5 s after the\nlast scroll event, the idle window metro-scroll-viewer uses."
+            },
+            {
+              "kind": "field",
+              "name": "#handlePointerEnter",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handlePointerLeave",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handleContainerClick",
+              "privacy": "private",
+              "description": "A click on a section header brings that section to the gutter and moves\nfocus into it, the Windows 8.1 hub's clickable-header behaviour. The header\nlives in the section's shadow root, so the path — not the retargeted\ntarget — names it.",
+              "parameters": [
+                {
+                  "description": "The click inside the section container",
+                  "name": "event"
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "method",
               "name": "#handleKeyDown",
               "privacy": "private",
               "return": {
@@ -11444,6 +12630,14 @@
               },
               "description": "Opt-in section boundary settling. When present, the container uses\n`scroll-snap-type: x mandatory` and sections align to the container's\n16px gutter after a pan. Absent by default: free pan with content peek.",
               "fieldName": "snap"
+            },
+            {
+              "name": "zoomable",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Section overview through `metro-semantic-zoom`: the section container is\nplaced in the zoom's zoomed-in view and one tile per section is rendered\nin its zoomed-out view. Tapping a tile re-enters the hub at that section\nand reports it through `selectionchanged` like any other pan. Absent by\ndefault: the container is rendered on its own, as before.\n\nThe zoom is a fixed-height region, so a zoomable hub has to be given a\nheight; without one the section container scrolls inside the zoom's\n200px minimum.",
+              "fieldName": "zoomable"
             },
             {
               "name": "aria-label",
@@ -11651,7 +12845,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Panorama Component\n\nA full-screen, horizontally scrolling view with parallax background effect.\nThe Panorama is inspired by the Windows Phone Panorama control, providing\nan immersive browsing experience with smooth touch-based scrolling and\nmomentum-based physics.\n\nFeatures:\n- Full-width horizontal scrolling with momentum/inertia\n- Parallax background image effect\n- Touch and pointer gesture support with physics-based scrolling\n- Spring-back boundary animation when scrolling past edges\n- Snap points for each panorama item\n- Smooth scroll behavior with optional scroll-snap\n\nThe Panorama is ideal for showcasing featured content, image galleries,\nor any full-screen horizontally-navigable content.",
+          "description": "Metro Panorama Component\n\nA full-screen, horizontally scrolling view with parallax background effect.\nThe Panorama is inspired by the Windows Phone Panorama control, providing\nan immersive browsing experience with smooth touch-based scrolling and\nmomentum-based physics.\n\nFeatures:\n- Full-width horizontal scrolling with momentum/inertia\n- Parallax background image effect\n- Touch and pointer gesture support with physics-based scrolling\n- Spring-back boundary animation when scrolling past edges\n- Snap points for each panorama item\n- Smooth scroll behavior with optional scroll-snap\n- Opt-in circular scrolling through the `wrap` attribute\n\nThe Panorama is ideal for showcasing featured content, image galleries,\nor any full-screen horizontally-navigable content.",
           "name": "MetroPanorama",
           "cssProperties": [
             {
@@ -11717,6 +12911,18 @@
             },
             {
               "kind": "field",
+              "name": "wrap",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Circular scrolling. When present, the item after the last one is the\nfirst item and the item before the first one is the last: a fling that\nruns off either end continues at the other without a visible cut.\nAbsent by default: the ends are bounds and spring back.",
+              "default": "false",
+              "attribute": "wrap",
+              "reflects": true
+            },
+            {
+              "kind": "field",
               "name": "#scrollContainer",
               "privacy": "private",
               "type": {
@@ -11743,6 +12949,46 @@
               "default": "null"
             },
             {
+              "kind": "field",
+              "name": "#savedSnapType",
+              "privacy": "private",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null",
+              "description": "Holds the inline `scroll-snap-type` saved while a scripted animation owns\nthe scroll position, or null while the browser owns it."
+            },
+            {
+              "kind": "field",
+              "name": "#wrapJumpPending",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Set from the frame a wrap jump was written until the next frame begins."
+            },
+            {
+              "kind": "field",
+              "name": "#wrapJumpFrame",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "description": "Frame that clears #wrapJumpPending, or 0 when none is queued."
+            },
+            {
+              "kind": "field",
+              "name": "#clonedFrom",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement[]"
+              },
+              "default": "[]",
+              "description": "The real items the clones were built from, so `slotchange` can ignore itself."
+            },
+            {
               "kind": "method",
               "name": "#handleScroll",
               "privacy": "private",
@@ -11751,7 +12997,18 @@
                   "text": ""
                 }
               },
-              "description": "Handles scroll events to update the parallax background position.\nThe background moves at 20% of the scroll speed for a subtle effect."
+              "description": "Handles scroll events: keeps the wrap seam normalized and moves the\nparallax background."
+            },
+            {
+              "kind": "method",
+              "name": "#updateParallax",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Moves the parallax background to the logical scroll position, so the\nimage stays continuous across the wrap seam."
             },
             {
               "kind": "method",
@@ -11842,6 +13099,160 @@
             },
             {
               "kind": "method",
+              "name": "#suppressSnap",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Takes the snap points away from the browser for the length of a scripted\nanimation. Mandatory snap re-snaps every `scrollLeft` the script writes,\nwhich drags each frame back to the nearest boundary and turns the glide\ninto a stutter. Native scrolling keeps its snap points."
+            },
+            {
+              "kind": "method",
+              "name": "#releaseSnap",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Hands the snap points back to the browser. A scripted glide stops wherever\nits velocity ran out, so land on the nearest item start first: restoring\n`x mandatory` on an off-boundary position would jump the content again."
+            },
+            {
+              "kind": "method",
+              "name": "#snapPoints",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "container",
+                  "type": {
+                    "text": "HTMLElement"
+                  },
+                  "description": "The scroll container element"
+                }
+              ],
+              "description": "The scroll position that puts each item's start edge on the scrollport,\npulled into the range the container can actually scroll to. The seam\nclones are not snap points: they only stand in for a real item while the\nposition is mid-cycle."
+            },
+            {
+              "kind": "method",
+              "name": "#nearestSnapPoint",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "container",
+                  "type": {
+                    "text": "HTMLElement"
+                  },
+                  "description": "The scroll container element"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "#realItems",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "The items the reader authored, in document order: the children that are\nnot seam copies."
+            },
+            {
+              "kind": "method",
+              "name": "#syncClones",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Rebuilds the seam copies. One copy per end is only enough when an item is\nnarrower than half the scrollport: an item is 85% wide, so the copy of the\nfirst item has to sit far enough past the last one that the container can\nactually scroll to it. Each side therefore carries as many copies as cover\none scrollport, taken from the ends of the cycle in cycle order, which\nkeeps the whole strip periodic."
+            },
+            {
+              "kind": "method",
+              "name": "#seamCopy",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "item",
+                  "type": {
+                    "text": "HTMLElement"
+                  },
+                  "description": "The real item to copy"
+                },
+                {
+                  "name": "side",
+                  "type": {
+                    "text": "\"start\" | \"end\""
+                  },
+                  "description": "`\"start\"` before the first item, `\"end\"` after the last"
+                }
+              ],
+              "description": "A decorative copy of one item, marked with the side of the seam it bridges."
+            },
+            {
+              "kind": "method",
+              "name": "#wrapGeometry",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "The seam positions of the current cycle, or null while wrap is off, the\ncopies are missing, or there is nothing to wrap."
+            },
+            {
+              "kind": "method",
+              "name": "#normalizeWrap",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Brings a scroll position that ran past either seam back onto the matching\nspot one cycle away. The two positions draw the same pixels, so the jump\nreads as the scroll continuing instead of the content being moved."
+            },
+            {
+              "kind": "method",
+              "name": "#applyWrap",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Applies a `wrap` change: rebuilds the copies and takes up the position the\ncycle starts from, so turning wrap on does not rest on the first item's\ncopy."
+            },
+            {
+              "kind": "method",
+              "name": "#handleSlotChange",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Rebuilds the seam when the authored items change. The copies are slotted\ntoo, so this also fires for the rebuild itself: the guard against the items\nthe copies were made from keeps that pass a no-op."
+            },
+            {
+              "kind": "method",
               "name": "#stopAnimation",
               "privacy": "private",
               "return": {
@@ -11870,6 +13281,15 @@
               "description": "URL of the background image for the parallax effect.\nThe image is displayed at 15% opacity and moves at 20% of scroll speed.\nOnly relative URLs, http(s) URLs and data:image URLs are applied;\nother schemes are ignored.",
               "default": "\"\"",
               "fieldName": "backgroundImage"
+            },
+            {
+              "name": "wrap",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Circular scrolling. When present, the item after the last one is the\nfirst item and the item before the first one is the last: a fling that\nruns off either end continues at the other without a visible cut.\nAbsent by default: the ends are bounds and spring back.",
+              "default": "false",
+              "fieldName": "wrap"
             }
           ],
           "superclass": {
@@ -12011,7 +13431,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Pivot Component\n\nA tab-based navigation component that allows users to switch between different\ncontent sections. Features large, typography-focused headers with smooth animated\ntransitions between content panes. The Pivot is ideal for organizing related\ncontent into separate views within a single screen.\n\nFeatures:\n- Large typography-based tab headers with scaling animation\n- Horizontal slide animation between content sections\n- Scrollable tab list for overflow scenarios\n- Active tab indicator (accent-colored underline)\n- Smooth opacity and scale transitions for content\n- Keyboard and ARIA accessibility support\n\nUse Pivot when you need to organize related content into separate but\nequally important views, such as different sections of a profile or\ndifferent views of a data set.",
+          "description": "Metro Pivot Component\n\nA tab-based navigation component that allows users to switch between different\ncontent sections. Features large, typography-focused headers with smooth animated\ntransitions between content panes. The Pivot is ideal for organizing related\ncontent into separate views within a single screen.\n\nFeatures:\n- Large typography-based tab headers with scaling animation\n- Horizontal slide animation between content sections\n- Scrollable tab list for overflow scenarios\n- Active tab indicator (accent-colored underline)\n- Smooth opacity and scale transitions for content\n- ARIA tablist/tab roles with aria-selected\n- Keyboard navigation (Arrow/Home/End) and swipe paging with circular loop",
           "name": "MetroPivot",
           "cssProperties": [
             {
@@ -12080,6 +13500,129 @@
               "attribute": "selectedIndex"
             },
             {
+              "kind": "field",
+              "name": "#gesture",
+              "privacy": "private",
+              "type": {
+                "text": "GestureState | null"
+              },
+              "default": "null",
+              "description": "Gesture of the pointer held down on the content, or null when there is none."
+            },
+            {
+              "kind": "field",
+              "name": "#dragPx",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0",
+              "description": "Horizontal drag (px) applied to the slide row on top of its resting position."
+            },
+            {
+              "kind": "field",
+              "name": "#dragging",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "True once the gesture resolved to a horizontal drag."
+            },
+            {
+              "kind": "field",
+              "name": "#wrapSlide",
+              "privacy": "private",
+              "type": {
+                "text": "(() => void) | null"
+              },
+              "default": "null",
+              "description": "Cleanup of the wrap slide that is running, or null. It also gates\n`updated()`: the transform of the row belongs to the slide while it runs."
+            },
+            {
+              "kind": "method",
+              "name": "#items",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement[]"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#slides",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement | null"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#headers",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement[]"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#transformFor",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "position",
+                  "type": {
+                    "text": "number"
+                  },
+                  "description": "Index of the panel to bring onto the viewport"
+                }
+              ],
+              "description": "The transform that puts the panel at slide position `position` on the\nviewport, moved by the live drag offset. Positions outside the real range are\nwhere the row sits mid-wrap."
+            },
+            {
+              "kind": "method",
+              "name": "#applyRestTransform",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Writes the resting transform of the selected item onto the slide row."
+            },
+            {
+              "kind": "method",
+              "name": "#animateToRest",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Returns the row to its resting position, transitioning from wherever a drag\nleft it. The reflow between the two writes is what makes the browser treat the\ndragged position as the start of the transition instead of its own value."
+            },
+            {
+              "kind": "method",
+              "name": "#finishWrapSlide",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "description": "Ends the wrap slide that is running, if any, at once."
+            },
+            {
               "kind": "method",
               "name": "#selectItem",
               "privacy": "private",
@@ -12094,10 +13637,125 @@
                   "type": {
                     "text": "number"
                   },
-                  "description": "The zero-based index of the item to select"
+                  "description": "The index of the item to select, taken modulo the item count"
+                },
+                {
+                  "name": "wrap",
+                  "default": "null",
+                  "type": {
+                    "text": "WrapDirection | null"
+                  },
+                  "description": "Set when the step crossed an end of the row, so the slide can\ncarry it in one viewport instead of running the whole track back"
                 }
               ],
-              "description": "Selects a pivot item by index and updates the view.\nDispatches a selectionchanged event with the new index."
+              "description": "Selects a pivot item by index and updates the view. The index wraps around the\nends of the row, so a step past the last item lands on the first one.\nDispatches a selectionchanged event with the new index."
+            },
+            {
+              "kind": "method",
+              "name": "#startWrapSlide",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "items",
+                  "type": {
+                    "text": "HTMLElement[]"
+                  },
+                  "description": "The pivot items in their real order"
+                },
+                {
+                  "name": "target",
+                  "type": {
+                    "text": "number"
+                  },
+                  "description": "Index of the panel that is arriving"
+                },
+                {
+                  "name": "wrap",
+                  "type": {
+                    "text": "WrapDirection"
+                  },
+                  "description": "Which end of the row the step crossed"
+                }
+              ],
+              "description": "Slides a wrap over one viewport, the way a normal page turn moves.\n\nThe track holds exactly `count` panels, so the panel that has to arrive from\nbeyond an end is simply not there: `translateX(-count * 100%)` shows the blank\npast the last item. Instead the incoming panel is reordered next to the\noutgoing one, which puts both on positions inside a track that is one panel\nlonger. The row is jumped to the start position with no transition, slides one\nviewport, and the order is dropped as soon as it lands, so the same panel is\non screen across the seam."
+            },
+            {
+              "kind": "field",
+              "name": "#handleKeyDown",
+              "privacy": "private",
+              "description": "Handles a key on the tab list. The arrows page with a circular loop, Home and\nEnd go to the ends of the row, and focus follows the selection.",
+              "parameters": [
+                {
+                  "description": "The keyboard event",
+                  "name": "event"
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handlePointerDown",
+              "privacy": "private",
+              "description": "Starts tracking a pointer that went down on the content area.",
+              "parameters": [
+                {
+                  "description": "The pointer event",
+                  "name": "event"
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handlePointerMove",
+              "privacy": "private",
+              "description": "Follows the pointer once the gesture resolves to a horizontal drag, moving the\nslide row under it. A vertical or still-ambiguous gesture is left to the page.",
+              "parameters": [
+                {
+                  "description": "The pointer event",
+                  "name": "event"
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handlePointerUp",
+              "privacy": "private",
+              "description": "Pages the pivot on release when the drag travelled far enough or fast enough,\nand returns the row to its current section otherwise.",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handlePointerCancel",
+              "privacy": "private",
+              "description": "Drops a drag the platform took over, leaving the current section in place.",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
             }
           ],
           "events": [
@@ -12387,6 +14045,525 @@
           "declaration": {
             "name": "MetroSplitView",
             "module": "src/components/navigation/split-view.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/navigation/tab-view-item.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Metro Tab View Item Component\n\nA child component for MetroTabView that owns one tab: the `header` text\nlabels the tab strip entry, an optional `[slot=\"icon\"]` child decorates it,\nand the default slot is the tab panel content shown when selected.\n\nUse as children of metro-tab-view. Set the \"header\" attribute to define\nthe tab label text and add \"closable\" to render a close button for the tab.",
+          "name": "MetroTabViewItem",
+          "cssProperties": [
+            {
+              "description": "Medium spacing for content padding (default: 12px)",
+              "name": "--metro-spacing-md"
+            }
+          ],
+          "slots": [
+            {
+              "description": "Optional icon content projected into the tab strip entry",
+              "name": "icon"
+            },
+            {
+              "description": "Default slot for the tab panel content",
+              "name": ""
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "header",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "description": "Text displayed in the tab strip entry.\nIf not set, a default \"Tab N\" label is generated by the parent.",
+              "default": "\"\"",
+              "attribute": "header",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "closable",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When set, the tab strip entry renders a close button for this tab.",
+              "default": "false",
+              "attribute": "closable",
+              "reflects": true
+            }
+          ],
+          "attributes": [
+            {
+              "name": "header",
+              "type": {
+                "text": "string"
+              },
+              "description": "Text displayed in the tab strip entry.\nIf not set, a default \"Tab N\" label is generated by the parent.",
+              "default": "\"\"",
+              "fieldName": "header"
+            },
+            {
+              "name": "closable",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When set, the tab strip entry renders a close button for this tab.",
+              "default": "false",
+              "fieldName": "closable"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "metro-tab-view-item",
+          "customElement": true
+        },
+        {
+          "kind": "function",
+          "name": "registerMetroTabViewItem",
+          "return": {
+            "type": {
+              "text": "void"
+            }
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MetroTabViewItem",
+          "declaration": {
+            "name": "MetroTabViewItem",
+            "module": "src/components/navigation/tab-view-item.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "registerMetroTabViewItem",
+          "declaration": {
+            "name": "registerMetroTabViewItem",
+            "module": "src/components/navigation/tab-view-item.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "metro-tab-view-item",
+          "declaration": {
+            "name": "MetroTabViewItem",
+            "module": "src/components/navigation/tab-view-item.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/components/navigation/tab-view.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "Metro Tab View Component\n\nA WinUI-style TabView rendered in flat Metro styling: a square-edged tab\nstrip with an accent underline for the selected tab. Distinct from\nMetroPivot (large typography headers with a sliding row): tabs own a short\nheader plus panel content, only the selected panel is shown, and tabs can\nbe closable with an add button for new tabs.\n\nFeatures:\n- Flat Metro tab strip with accent underline for the selected tab\n- Per-item header text with an optional icon slot\n- Closable tabs that fire tabclosed and move selection to a neighbor\n- Optional add button firing addbuttonclick\n- ARIA tablist/tab/tabpanel roles with aria-selected and aria-controls\n- Keyboard navigation (Arrow/Home/End) with clamped ends and roving tabindex",
+          "name": "MetroTabView",
+          "cssProperties": [
+            {
+              "description": "Border color for the tab strip (default: rgba(255, 255, 255, 0.2))",
+              "name": "--metro-border"
+            },
+            {
+              "description": "Selected tab underline color (default: #0078d4)",
+              "name": "--metro-accent"
+            },
+            {
+              "description": "Selected tab text color (default: #ffffff)",
+              "name": "--metro-foreground"
+            },
+            {
+              "description": "Inactive tab text color (default: rgba(255, 255, 255, 0.5))",
+              "name": "--metro-foreground-secondary"
+            },
+            {
+              "description": "Hover background for tabs (default: rgba(255, 255, 255, 0.1))",
+              "name": "--metro-highlight"
+            },
+            {
+              "description": "Small spacing unit (default: 8px)",
+              "name": "--metro-spacing-sm"
+            },
+            {
+              "description": "Medium spacing unit (default: 12px)",
+              "name": "--metro-spacing-md"
+            },
+            {
+              "description": "Fast transition duration (default: 167ms)",
+              "name": "--metro-transition-fast"
+            },
+            {
+              "description": "Easing curve for animations (default: cubic-bezier(0.1, 0.9, 0.2, 1))",
+              "name": "--metro-easing"
+            },
+            {
+              "description": "Font size for tab labels (default: 16px)",
+              "name": "--metro-font-size-medium"
+            }
+          ],
+          "cssParts": [
+            {
+              "description": "Container for the tab entries and the add button",
+              "name": "tab-strip"
+            },
+            {
+              "description": "Container for the tab panels",
+              "name": "tab-panels"
+            }
+          ],
+          "slots": [
+            {
+              "description": "Default slot for metro-tab-view-item children",
+              "name": ""
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "selectedIndex",
+              "privacy": "public",
+              "type": {
+                "text": "number"
+              },
+              "description": "Index of the currently selected tab (0-based).\nChanging this updates the visible panel and the active tab styling.",
+              "default": "0",
+              "attribute": "selectedIndex"
+            },
+            {
+              "kind": "field",
+              "name": "showAddButton",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When set, an add button is rendered after the last tab.",
+              "default": "false",
+              "attribute": "show-add-button",
+              "reflects": true
+            },
+            {
+              "kind": "field",
+              "name": "#initialized",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "description": "Guards the initial sync so connecting never fires selectionchanged."
+            },
+            {
+              "kind": "field",
+              "name": "#observer",
+              "privacy": "private",
+              "type": {
+                "text": "MutationObserver | null"
+              },
+              "default": "null",
+              "description": "Watches light-DOM header, closable, and icon-slot changes so edits made\nafter first render refresh the strip. The attributes this component sets\nitself (active, role, aria-labelledby, id) are not observed, so syncing\nnever schedules another update."
+            },
+            {
+              "kind": "method",
+              "name": "#items",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement[]"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#tabs",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement[]"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#clampIndex",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "number"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "count",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "#panelId",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "item",
+                  "type": {
+                    "text": "HTMLElement"
+                  },
+                  "description": "The tab view item owning the panel"
+                }
+              ],
+              "description": "Returns the panel id for an item, assigning a stable generated one when\nthe item carries none so tabs can always reference their panel."
+            },
+            {
+              "kind": "method",
+              "name": "#tabId",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "item",
+                  "type": {
+                    "text": "HTMLElement"
+                  },
+                  "description": "The tab view item owning the panel"
+                }
+              ],
+              "description": "Returns the id of the tab entry controlling an item panel."
+            },
+            {
+              "kind": "method",
+              "name": "#syncItems",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "items",
+                  "type": {
+                    "text": "HTMLElement[]"
+                  },
+                  "description": "The tab view items in document order"
+                }
+              ],
+              "description": "Marks the selected item active and links every item to its tab entry."
+            },
+            {
+              "kind": "method",
+              "name": "#syncIcons",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "items",
+                  "type": {
+                    "text": "HTMLElement[]"
+                  },
+                  "description": "The tab view items in document order"
+                }
+              ],
+              "description": "Projects each item icon into its tab entry. The original node stays on\nthe item (where the icon sink slot hides it from the panel) and a clone\nwithout slot or id attributes is shown in the strip, so re-renders and\nitem removals can never lose user content."
+            },
+            {
+              "kind": "method",
+              "name": "#selectTab",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  },
+                  "description": "The index of the tab to select"
+                }
+              ],
+              "description": "Selects a tab by index. Out-of-range indexes clamp in willUpdate; the\nselectionchanged event fires from updated() exactly once per change."
+            },
+            {
+              "kind": "method",
+              "name": "#closeTab",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "index",
+                  "type": {
+                    "text": "number"
+                  },
+                  "description": "The index of the tab to close"
+                },
+                {
+                  "name": "event",
+                  "type": {
+                    "text": "MouseEvent"
+                  },
+                  "description": "The click event on the close button"
+                }
+              ],
+              "description": "Closes a tab: fires a cancelable tabclosed event, removes the item unless\nprevented, and moves selection to the neighbor sliding into its place\n(or the previous tab when the last one closed)."
+            },
+            {
+              "kind": "field",
+              "name": "#handleAddButton",
+              "privacy": "private",
+              "description": "Fires addbuttonclick when the add button is pressed.",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handleSlotChange",
+              "privacy": "private",
+              "description": "Re-renders the strip when items are added or removed outside the tab API.",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handleKeyDown",
+              "privacy": "private",
+              "description": "Handles keys on the tab list. Arrows move one tab, Home and End go to the\nends, and the ends clamp: pressing past them keeps selection and focus.\nFocus follows the selection.",
+              "parameters": [
+                {
+                  "description": "The keyboard event",
+                  "name": "event"
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              }
+            }
+          ],
+          "events": [
+            {
+              "name": "selectionchanged",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "Fired when the selected tab changes. Detail: { selectedIndex: number }"
+            },
+            {
+              "name": "tabclosed",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "Fired when a closable tab is closed. Cancelable: preventing the default keeps the tab. Detail: { index: number }"
+            },
+            {
+              "description": "Fired when the add button is pressed.",
+              "name": "addbuttonclick"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "selectedIndex",
+              "type": {
+                "text": "number"
+              },
+              "description": "Index of the currently selected tab (0-based).\nChanging this updates the visible panel and the active tab styling.",
+              "default": "0",
+              "fieldName": "selectedIndex"
+            },
+            {
+              "name": "show-add-button",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "When set, an add button is rendered after the last tab.",
+              "default": "false",
+              "fieldName": "showAddButton"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "metro-tab-view",
+          "customElement": true
+        },
+        {
+          "kind": "function",
+          "name": "registerMetroTabView",
+          "return": {
+            "type": {
+              "text": "void"
+            }
+          }
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "MetroTabView",
+          "declaration": {
+            "name": "MetroTabView",
+            "module": "src/components/navigation/tab-view.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "registerMetroTabView",
+          "declaration": {
+            "name": "registerMetroTabView",
+            "module": "src/components/navigation/tab-view.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "metro-tab-view",
+          "declaration": {
+            "name": "MetroTabView",
+            "module": "src/components/navigation/tab-view.ts"
           }
         }
       ]
@@ -13041,86 +15218,8 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "Metro Expander Component\n\nA collapsible content container with a clickable header. Features smooth\nheight animation when expanding/collapsing and a rotating chevron icon\nto indicate state.\n\nFeatures:\n- Clickable header to toggle expanded state\n- Smooth height transition animation (max-height based)\n- Rotating chevron icon indicating state\n- Optional title attribute or slot for header content\n- Highlight background on header hover\n- ARIA expanded state support\n\nUse for collapsible sections of content, FAQ-style layouts, or anywhere\nyou need to show/hide content while preserving layout space.",
+          "description": "",
           "name": "MetroExpander",
-          "cssProperties": [
-            {
-              "description": "Background color (default: #1f1f1f)",
-              "name": "--metro-background"
-            },
-            {
-              "description": "Header background color (default: rgba(255, 255, 255, 0.1))",
-              "name": "--metro-highlight"
-            },
-            {
-              "description": "Header hover color (default: rgba(255, 255, 255, 0.15))",
-              "name": "--metro-highlight-hover"
-            },
-            {
-              "description": "Title text color (default: #ffffff)",
-              "name": "--metro-foreground"
-            },
-            {
-              "description": "Icon color (default: rgba(255, 255, 255, 0.6))",
-              "name": "--metro-foreground-secondary"
-            },
-            {
-              "description": "Medium spacing (default: 12px)",
-              "name": "--metro-spacing-md"
-            },
-            {
-              "description": "Large spacing (default: 16px)",
-              "name": "--metro-spacing-lg"
-            },
-            {
-              "description": "Header transition (default: 167ms)",
-              "name": "--metro-transition-fast"
-            },
-            {
-              "description": "Content transition (default: 333ms)",
-              "name": "--metro-transition-slow"
-            },
-            {
-              "description": "Easing curve (default: cubic-bezier(0.1, 0.9, 0.2, 1))",
-              "name": "--metro-easing"
-            },
-            {
-              "description": "Title font size (default: 14px)",
-              "name": "--metro-font-size-normal"
-            }
-          ],
-          "cssParts": [
-            {
-              "description": "The clickable header element",
-              "name": "expander-header"
-            },
-            {
-              "description": "The title text element",
-              "name": "expander-title"
-            },
-            {
-              "description": "The chevron icon element",
-              "name": "expander-icon"
-            },
-            {
-              "description": "The collapsible content container",
-              "name": "expander-content"
-            },
-            {
-              "description": "The inner content wrapper",
-              "name": "expander-inner"
-            }
-          ],
-          "slots": [
-            {
-              "description": "Default slot for collapsible content",
-              "name": ""
-            },
-            {
-              "description": "Slot for custom header content (used when title attribute not set)",
-              "name": "header"
-            }
-          ],
           "members": [
             {
               "kind": "field",
@@ -13147,6 +15246,32 @@
               "reflects": true
             },
             {
+              "kind": "field",
+              "name": "#contentId",
+              "privacy": "private",
+              "default": "`metro-expander-content-${(expanderSerial += 1)}`"
+            },
+            {
+              "kind": "method",
+              "name": "#handleKeydown",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": ""
+                }
+              },
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "KeyboardEvent"
+                  },
+                  "description": "The keyboard event"
+                }
+              ],
+              "description": "Toggles the header with Enter or Space, the keys a disclosure control takes."
+            },
+            {
               "kind": "method",
               "name": "#toggle",
               "privacy": "private",
@@ -13163,8 +15288,7 @@
               "name": "expanded",
               "type": {
                 "text": "CustomEvent"
-              },
-              "description": "Fired when the expander state changes Detail: { expanded: boolean }"
+              }
             }
           ],
           "attributes": [
@@ -13700,6 +15824,20 @@
           "kind": "class",
           "description": "Metro Media Element Component\n\nAudio/video player. `src` and `poster` are rendered in `<audio>`/`<video>`\nelements, where executable schemes such as `javascript:` are inert; http(s),\nrelative, `blob:` and `data:` URLs are the meaningful values.",
           "name": "MetroMediaElement",
+          "cssProperties": [
+            {
+              "description": "Accent color of the native control bar (default: #0078d4)",
+              "name": "--metro-accent"
+            },
+            {
+              "description": "Player background color (default: #1f1f1f)",
+              "name": "--metro-background"
+            },
+            {
+              "description": "Time display color (default: #ffffff)",
+              "name": "--metro-foreground"
+            }
+          ],
           "members": [
             {
               "kind": "field",
@@ -14866,7 +17004,7 @@
                   "description": "The toast ID to hide"
                 }
               ],
-              "description": "Hides a specific toast by ID with exit animation."
+              "description": "Hides a specific toast by ID and fires `toasthidden`."
             },
             {
               "kind": "method",
@@ -14881,12 +17019,18 @@
           ],
           "events": [
             {
-              "description": "Fired when a toast is displayed",
-              "name": "toastshown"
+              "name": "toastshown",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "Fired when a toast is added (bubbles: true, composed: true) Detail: { id: string, severity: string, message: string }"
             },
             {
-              "description": "Fired when a toast is dismissed",
-              "name": "toashidden"
+              "name": "toasthidden",
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "Fired when a toast is dismissed, by duration or by the close button (bubbles: true, composed: true) Detail: { id: string }"
             }
           ],
           "superclass": {
@@ -16071,6 +18215,64 @@
                 "text": "GestureState | null"
               },
               "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#detachDragPan",
+              "privacy": "private",
+              "type": {
+                "text": "(() => void) | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#panContainer",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#entrancePlayed",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#entranceTimer",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "method",
+              "name": "#ensureDragPan",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Mouse grab-to-pan on the grid scroller; touch keeps native scrolling."
+            },
+            {
+              "kind": "method",
+              "name": "#playEntranceOnce",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "The Metro entrance stagger, once per mount. The class comes off after the\nstagger tail so virtualization recycling during scroll never re-animates."
             },
             {
               "kind": "method",
@@ -17259,6 +19461,64 @@
               "default": "null"
             },
             {
+              "kind": "field",
+              "name": "#detachDragPan",
+              "privacy": "private",
+              "type": {
+                "text": "(() => void) | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#panContainer",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#entrancePlayed",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#entranceTimer",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "method",
+              "name": "#ensureDragPan",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Mouse grab-to-pan on the list scroller; touch keeps native scrolling."
+            },
+            {
+              "kind": "method",
+              "name": "#playEntranceOnce",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "The Metro entrance stagger, once per mount. The class comes off after the\nstagger tail so virtualization recycling during scroll never re-animates."
+            },
+            {
               "kind": "method",
               "name": "#onScroll",
               "privacy": "private",
@@ -17794,6 +20054,16 @@
             },
             {
               "kind": "field",
+              "name": "jumpGrid",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "jump-grid"
+            },
+            {
+              "kind": "field",
               "name": "#selectedIndices",
               "privacy": "private",
               "type": {
@@ -17865,6 +20135,78 @@
               "default": "null"
             },
             {
+              "kind": "field",
+              "name": "#jumpGridState",
+              "privacy": "private",
+              "type": {
+                "text": "JumpGridState"
+              },
+              "default": "\"closed\""
+            },
+            {
+              "kind": "field",
+              "name": "#jumpGridTrigger",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#jumpGridNeedsFocus",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#gridCloseTimer",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "#detachDragPan",
+              "privacy": "private",
+              "type": {
+                "text": "(() => void) | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#panContainer",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#entrancePlayed",
+              "privacy": "private",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "#entranceTimer",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
               "kind": "method",
               "name": "#onScroll",
               "privacy": "private",
@@ -17933,6 +20275,90 @@
               "return": {
                 "type": {
                   "text": "TemplateResult[]"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#renderJumpGrid",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "TemplateResult | typeof nothing"
+                }
+              },
+              "description": "The full-screen group grid: one tile per group, each naming the group and\nhow many items it holds."
+            },
+            {
+              "kind": "field",
+              "name": "#handleGroupHeaderClick",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handleGroupHeaderKeyDown",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handleJumpItemClick",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handleJumpItemKeyDown",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handleGridKeyDown",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handleGridTileClick",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "#openJumpGrid",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "trigger",
+                  "type": {
+                    "text": "HTMLElement"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "#closeJumpGrid",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "#handleGridAnimationEnd",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "#finishGridClose",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
                 }
               }
             },
@@ -18136,6 +20562,25 @@
             },
             {
               "kind": "method",
+              "name": "#scrollToOffset",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "top",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ],
+              "description": "Scrolls the list to a content offset. Reduced motion goes straight there:\na glide is exactly the motion the preference asks not to see."
+            },
+            {
+              "kind": "method",
               "name": "#getValue",
               "privacy": "private",
               "return": {
@@ -18171,6 +20616,28 @@
                   "text": "void"
                 }
               }
+            },
+            {
+              "kind": "method",
+              "name": "#ensureDragPan",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Mouse grab-to-pan on the list scroller; touch keeps native scrolling."
+            },
+            {
+              "kind": "method",
+              "name": "#playEntranceOnce",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "The Metro entrance stagger, once per mount. The class comes off after the\nstagger tail so virtualization recycling during scroll never re-animates."
             },
             {
               "kind": "method",
@@ -18322,6 +20789,14 @@
               },
               "default": "true",
               "fieldName": "showJumpList"
+            },
+            {
+              "name": "jump-grid",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "jumpGrid"
             }
           ],
           "superclass": {
@@ -18374,7 +20849,7 @@
       "declarations": [
         {
           "kind": "class",
-          "description": "",
+          "description": "Windows Phone semantic zoom: a detailed view and an overview of the same\ncontent, switched by pinch, Ctrl+Scroll, or the hint button.\n\n## Group contract\n\nContent goes in the `zoomed-in` and `zoomed-out` slots. Whatever element\nstarts a group carries `data-group-key`, in both views, with the same key in\neach one, so the overview is a map of the list rather than a second dataset:\n\n```html\n<metro-semantic-zoom>\n  <div slot=\"zoomed-in\" class=\"groups\">\n    <h3 data-group-key=\"A\">A</h3>\n    …rows of group A…\n  </div>\n  <div slot=\"zoomed-out\" class=\"tiles\">\n    <button data-group-key=\"A\">A (12)</button>\n  </div>\n</metro-semantic-zoom>\n```\n\nWith that in place:\n\n- `scrollToGroup(key)` zooms in when the overview is up, then aligns that\n  group with the start edge of the element that actually scrolls it — the\n  inline start of a horizontal scroller, the top edge of a vertical one.\n- Tapping a `[data-group-key]` element of the overview re-enters the list at\n  that group.\n- `currentGroup` reports the group at the start line of the axis the list\n  scrolls on (top for a vertical list, inline start for a horizontal one),\n  and `groupchanged` fires when it changes: bubbles and composed,\n  `detail: { key: string | null }`. The read measures the top edge, so it\n  describes a vertically scrolled list.\n\nKeys are matched against the content assigned to the slot, following the\nslots it passes through, so a group header inside a slotted component counts\nas well as a direct child.\n\nA group is measured where it draws, so the keyed element has to sit in the\nnormal flow of the list: a header pinned by `position: sticky` always reads\nas already aligned, and scrolling back to it then does nothing.",
           "name": "MetroSemanticZoom",
           "members": [
             {
@@ -18426,6 +20901,155 @@
               "default": "false"
             },
             {
+              "kind": "field",
+              "name": "#transition",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#currentGroup",
+              "privacy": "private",
+              "type": {
+                "text": "string | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#groupReadFrame",
+              "privacy": "private",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "currentGroup",
+              "type": {
+                "text": "string | null"
+              },
+              "description": "The group at the start line of the scrolled axis, if the list has one.",
+              "readonly": true
+            },
+            {
+              "kind": "method",
+              "name": "scrollToGroup",
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "key",
+                  "type": {
+                    "text": "string"
+                  },
+                  "description": "The `data-group-key` value of the group to enter"
+                }
+              ],
+              "description": "Shows one group at the start of the zoomed-in list, zooming in first when\nthe overview is up. The alignment follows the axis the scroller actually\npans on: a horizontal list — a hub, a tile row — is aligned on its inline\nstart, everything else on its top edge."
+            },
+            {
+              "kind": "method",
+              "name": "#assignedGroups",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement[]"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "slotName",
+                  "type": {
+                    "text": "ZoomSlot"
+                  }
+                }
+              ],
+              "description": "The `[data-group-key]` elements assigned to one slot, in document order."
+            },
+            {
+              "kind": "method",
+              "name": "#findGroup",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement | null"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "key",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "slotName",
+                  "type": {
+                    "text": "ZoomSlot"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "#scrollerFor",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "HTMLElement"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "group",
+                  "type": {
+                    "text": "HTMLElement"
+                  }
+                },
+                {
+                  "name": "layer",
+                  "type": {
+                    "text": "HTMLElement"
+                  }
+                }
+              ],
+              "description": "The element that actually scrolls a group: its nearest scrollable ancestor\nin the drawn tree — which includes the container a component slots its\ncontent into — or the zoomed-in layer when the content overflows that\nlayer directly."
+            },
+            {
+              "kind": "field",
+              "name": "#handleScroll",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "#handleOverviewClick",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "#scheduleGroupRead",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "#readCurrentGroup",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
               "kind": "method",
               "name": "setZoomedState",
               "return": {
@@ -18459,6 +21083,16 @@
                   }
                 }
               ]
+            },
+            {
+              "kind": "method",
+              "name": "#transitionTargets",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "Record<string, HTMLElement | null>"
+                }
+              }
             },
             {
               "kind": "method",
@@ -18554,6 +21188,12 @@
             }
           ],
           "events": [
+            {
+              "name": "groupchanged",
+              "type": {
+                "text": "CustomEvent"
+              }
+            },
             {
               "name": "zoomchanged",
               "type": {
@@ -19150,24 +21790,6 @@
                   "text": "void"
                 }
               }
-            },
-            {
-              "kind": "method",
-              "name": "#handleClick",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "void"
-                }
-              }
-            }
-          ],
-          "events": [
-            {
-              "name": "click",
-              "type": {
-                "text": "CustomEvent"
-              }
             }
           ],
           "attributes": [
@@ -19422,24 +22044,6 @@
               "privacy": "private",
               "type": {
                 "text": "() => void | undefined"
-              }
-            },
-            {
-              "kind": "method",
-              "name": "#handleClick",
-              "privacy": "private",
-              "return": {
-                "type": {
-                  "text": "void"
-                }
-              }
-            }
-          ],
-          "events": [
-            {
-              "name": "click",
-              "type": {
-                "text": "CustomEvent"
               }
             }
           ],
