@@ -1,6 +1,29 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, modalBackdrop, closeButton } from "../../styles/shared.ts";
 import { registerMetroIcon } from "../primitives/icon.ts";
+import { createTransitionScope } from "../../utils/view-transition.ts";
+
+/**
+ * The ::view-transition rules of one dialog instance, keyed to its scoped part
+ * names. Injected only while the dialog is active, so a closed instance holds no
+ * name and a second instance on the page cannot repeat one.
+ */
+function dialogTransitionRules(names: Record<string, string>): string {
+  return `
+html:active-view-transition-type(content-dialog)::view-transition-new(${names.content}) {
+  animation: metro-dialog-enter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(content-dialog)::view-transition-old(${names.content}) {
+  animation: metro-dialog-exit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+html:active-view-transition-type(content-dialog)::view-transition-new(${names.backdrop}) {
+  animation: metro-fade-in 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(content-dialog)::view-transition-old(${names.backdrop}) {
+  animation: metro-fade-out 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+`;
+}
 
 /**
  * Metro Content Dialog Component
@@ -107,10 +130,6 @@ export class MetroContentDialog extends LitElement {
         max-height: 80vh;
         display: flex;
         flex-direction: column;
-        view-transition-name: dialog-content;
-      }
-      .backdrop {
-        view-transition-name: dialog-backdrop;
       }
       .dialog-header {
         padding: var(--metro-spacing-lg, 16px);
@@ -143,6 +162,8 @@ export class MetroContentDialog extends LitElement {
   ];
 
   #previousFocus: HTMLElement | null = null;
+  #transition = createTransitionScope("content-dialog", ["content", "backdrop"]);
+  #transitionRules = dialogTransitionRules(this.#transition.names);
 
   constructor() {
     super();
@@ -238,6 +259,14 @@ export class MetroContentDialog extends LitElement {
     void this.hide();
   }
 
+  #transitionTargets(): Record<string, HTMLElement | null> {
+    const root = this.shadowRoot;
+    return {
+      content: root?.querySelector<HTMLElement>(".dialog") ?? null,
+      backdrop: root?.querySelector<HTMLElement>(".backdrop") ?? null,
+    };
+  }
+
   /**
    * Applies a property change via View Transitions with headless fallback.
    * Uses the applied-flag pattern to ensure DOM updates even when
@@ -291,6 +320,8 @@ export class MetroContentDialog extends LitElement {
     if (this.open) return;
     this.#saveFocus();
     this.dispatchEvent(new CustomEvent("show", { bubbles: true }));
+    await this.updateComplete;
+    this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
   }
 
@@ -302,7 +333,9 @@ export class MetroContentDialog extends LitElement {
   async hide(): Promise<void> {
     if (!this.open) return;
     this.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+    // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
+    this.#transition.detach(this.#transitionTargets());
     this.#restoreFocus();
   }
 }

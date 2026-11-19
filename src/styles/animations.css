@@ -389,56 +389,42 @@
   }
 }
 
-html:active-view-transition-type(semantic-zoom)::view-transition-old(semantic-zoom-out) {
-  animation-name: metro-semantic-zoom-out;
-  animation-duration: 400ms;
-  animation-timing-function: var(--metro-easing);
+html:active-view-transition-type(turnstile)::view-transition-old(root) {
+  animation: metro-view-transition-out 350ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
 }
 
-html:active-view-transition-type(semantic-zoom)::view-transition-new(semantic-zoom-in) {
-  animation-name: metro-semantic-zoom-in;
-  animation-duration: 400ms;
-  animation-timing-function: var(--metro-easing);
+html:active-view-transition-type(turnstile)::view-transition-new(root) {
+  animation: metro-view-transition-in 450ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
 }
+
+/* The ::view-transition-old/new rules for content-dialog, message-dialog,
+   settings-flyout, flyout and semantic-zoom are not here: createTransitionScope()
+   injects them per instance, against a view-transition-name minted for that
+   instance. A name in a static style stays reserved while the component is
+   closed, and a second instance of the same component repeats it. */
 
 /* ===== Content Dialog View Transitions ===== */
 
 @keyframes metro-dialog-enter {
   from {
     opacity: 0;
-    transform: scale(0.85) translateY(20px);
+    transform: perspective(1000px) rotateX(90deg);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: perspective(1000px) rotateX(0deg);
   }
 }
 
 @keyframes metro-dialog-exit {
   from {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: perspective(1000px) rotateX(0deg);
   }
   to {
     opacity: 0;
-    transform: scale(0.85) translateY(20px);
+    transform: perspective(1000px) rotateX(90deg);
   }
-}
-
-html:active-view-transition-type(content-dialog)::view-transition-new(dialog-content) {
-  animation: metro-dialog-enter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(content-dialog)::view-transition-new(dialog-backdrop) {
-  animation: metro-fade-in 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(content-dialog)::view-transition-old(dialog-content) {
-  animation: metro-dialog-exit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
-}
-
-html:active-view-transition-type(content-dialog)::view-transition-old(dialog-backdrop) {
-  animation: metro-fade-out 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
 }
 
 /* ===== Message Dialog View Transitions ===== */
@@ -465,22 +451,6 @@ html:active-view-transition-type(content-dialog)::view-transition-old(dialog-bac
   }
 }
 
-html:active-view-transition-type(message-dialog)::view-transition-new(msg-dialog-content) {
-  animation: metro-msg-dialog-enter 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(message-dialog)::view-transition-old(msg-dialog-content) {
-  animation: metro-msg-dialog-exit 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
-}
-
-html:active-view-transition-type(message-dialog)::view-transition-new(msg-dialog-backdrop) {
-  animation: metro-fade-in 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(message-dialog)::view-transition-old(msg-dialog-backdrop) {
-  animation: metro-fade-out 280ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
-}
-
 /* ===== Settings Flyout View Transitions ===== */
 
 @keyframes metro-settings-panel-slide-in {
@@ -491,22 +461,6 @@ html:active-view-transition-type(message-dialog)::view-transition-old(msg-dialog
 @keyframes metro-settings-panel-slide-out {
   from { transform: translateX(0); }
   to { transform: translateX(100%); }
-}
-
-html:active-view-transition-type(settings-flyout)::view-transition-new(settings-flyout-panel) {
-  animation: metro-settings-panel-slide-in var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(settings-flyout)::view-transition-old(settings-flyout-panel) {
-  animation: metro-settings-panel-slide-out var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
-}
-
-html:active-view-transition-type(settings-flyout)::view-transition-new(settings-flyout-backdrop) {
-  animation: metro-fade-in var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(settings-flyout)::view-transition-old(settings-flyout-backdrop) {
-  animation: metro-fade-out var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
 }
 
 /* ===== Flyout View Transitions ===== */
@@ -531,20 +485,4 @@ html:active-view-transition-type(settings-flyout)::view-transition-old(settings-
     opacity: 0;
     transform: perspective(800px) rotateX(-15deg);
   }
-}
-
-html:active-view-transition-type(flyout)::view-transition-new(flyout-panel) {
-  animation: metro-flyout-enter var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(flyout)::view-transition-old(flyout-panel) {
-  animation: metro-flyout-exit var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
-}
-
-html:active-view-transition-type(flyout)::view-transition-new(flyout-backdrop) {
-  animation: metro-fade-in var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-}
-
-html:active-view-transition-type(flyout)::view-transition-old(flyout-backdrop) {
-  animation: metro-fade-out var(--metro-transition-normal, 250ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
 }

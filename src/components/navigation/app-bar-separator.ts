@@ -10,7 +10,7 @@ import { baseTypography } from "../../styles/shared.ts";
  *
  * Features:
  * - Vertical line separator with standard dimensions
- * - Configurable visibility (can be hidden while preserving layout)
+ * - Configurable visibility (hiding removes the separator from the layout)
  * - Standard spacing margins on both sides
  * - Semi-transparent styling to blend with Metro design
  *
@@ -24,8 +24,9 @@ import { baseTypography } from "../../styles/shared.ts";
 export class MetroAppBarSeparator extends LitElement {
   static properties = {
     /**
-     * Controls the visibility of the separator. When false, the separator
-     * is hidden but still occupies space in the layout.
+     * Controls the visibility of the separator. When false the separator is
+     * removed from the layout, so the app bar reflows around it. A
+     * space-preserving hide is planned (roadmap P3, item 3.7).
      * @default true
      */
     visible: { type: Boolean, reflect: true },

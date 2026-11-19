@@ -272,7 +272,8 @@ Use `data-theme` on `<html>` to override the system preference:
 
 ### Accent Colors
 
-21 accent colors are available via the `accent` attribute:
+21 accent colors are available: 20 named colors applied through the `accent` attribute, plus
+`blue`, which is the `:root` default and needs no attribute.
 
 ```html
 <html accent="red">

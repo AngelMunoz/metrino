@@ -4,7 +4,6 @@ import { navigateToComponent } from "../router/index.ts";
 import "../components/api-docs.ts";
 import "@src/styles/tokens.css";
 import "@src/styles/typography.css";
-import "@src/styles/animations.css";
 import { registerMetroHub } from "@src/components/navigation/hub.ts";
 import { registerMetroHubSection } from "@src/components/navigation/hub-section.ts";
 import { registerMetroStackPanel } from "@src/components/layout/stack-panel.ts";

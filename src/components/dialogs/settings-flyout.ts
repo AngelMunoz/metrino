@@ -2,6 +2,30 @@ import { LitElement, html, css } from "lit";
 import { baseTypography, closeButton } from "../../styles/shared.ts";
 import type { PropertyValueMap } from "lit";
 import { registerMetroIcon } from "../primitives/icon.ts";
+import { createTransitionScope } from "../../utils/view-transition.ts";
+
+/**
+ * The ::view-transition rules of one settings flyout instance, keyed to its
+ * scoped part names. The panel and backdrop are always rendered, so a static
+ * name would stay reserved while the flyout is closed and repeated by a second
+ * instance on the same page.
+ */
+function settingsFlyoutTransitionRules(names: Record<string, string>): string {
+  return `
+html:active-view-transition-type(settings-flyout)::view-transition-new(${names.panel}) {
+  animation: metro-settings-panel-slide-in var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(settings-flyout)::view-transition-old(${names.panel}) {
+  animation: metro-settings-panel-slide-out var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+html:active-view-transition-type(settings-flyout)::view-transition-new(${names.backdrop}) {
+  animation: metro-fade-in var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+}
+html:active-view-transition-type(settings-flyout)::view-transition-old(${names.backdrop}) {
+  animation: metro-fade-out var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)) both;
+}
+`;
+}
 
 /**
  * Settings flyout width options.
@@ -94,7 +118,6 @@ export class MetroSettingsFlyout extends LitElement {
         transition: opacity var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
           visibility var(--metro-transition-slow, 333ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
         z-index: 1000;
-        view-transition-name: settings-flyout-backdrop;
       }
       :host([open]) .flyout-backdrop {
         opacity: 1;
@@ -113,7 +136,6 @@ export class MetroSettingsFlyout extends LitElement {
         z-index: 1001;
         display: flex;
         flex-direction: column;
-        view-transition-name: settings-flyout-panel;
       }
       :host([open]) .flyout-panel {
         transform: translateX(0);
@@ -159,6 +181,8 @@ export class MetroSettingsFlyout extends LitElement {
   ];
 
   #previousFocus: Element | null = null;
+  #transition = createTransitionScope("settings-flyout", ["panel", "backdrop"]);
+  #transitionRules = settingsFlyoutTransitionRules(this.#transition.names);
 
   constructor() {
     super();
@@ -239,6 +263,14 @@ export class MetroSettingsFlyout extends LitElement {
     }
   };
 
+  #transitionTargets(): Record<string, HTMLElement | null> {
+    const root = this.shadowRoot;
+    return {
+      panel: root?.querySelector<HTMLElement>(".flyout-panel") ?? null,
+      backdrop: root?.querySelector<HTMLElement>(".flyout-backdrop") ?? null,
+    };
+  }
+
   /**
    * Applies a property change via View Transitions with headless fallback.
    */
@@ -283,6 +315,8 @@ export class MetroSettingsFlyout extends LitElement {
    */
   async show(): Promise<void> {
     if (this.open) return;
+    await this.updateComplete;
+    this.#transition.attach(this.#transitionTargets(), this.#transitionRules);
     await this.#applyChange(() => { this.open = true; });
   }
 
@@ -292,7 +326,9 @@ export class MetroSettingsFlyout extends LitElement {
    */
   async hide(): Promise<void> {
     if (!this.open) return;
+    // Names stay held until the exit transition has captured them.
     await this.#applyChange(() => { this.open = false; });
+    this.#transition.detach(this.#transitionTargets());
   }
 }
 

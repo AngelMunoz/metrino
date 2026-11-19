@@ -15,7 +15,7 @@ import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
  * - Scrollable tab list for overflow scenarios
  * - Active tab indicator (accent-colored underline)
  * - Smooth opacity and scale transitions for content
- * - Keyboard and ARIA accessibility support
+ * - ARIA tablist/tab roles with aria-selected
  *
  * Use Pivot when you need to organize related content into separate but
  * equally important views, such as different sections of a profile or

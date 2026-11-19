@@ -49,9 +49,6 @@ const VALID_SEVERITIES = new Set(Object.keys(severityIcons));
  * The component is typically managed by the exported ToastHost class for
  * simple global toast notifications, or instantiated directly for more control.
  *
- * @fires toastshown - Fired when a toast is displayed
- * @fires toashidden - Fired when a toast is dismissed
- *
  * @cssprop --metro-background - Toast background color (default: #1f1f1f)
  * @cssprop --metro-accent - Default border and icon color (default: #0078d4)
  * @cssprop --metro-foreground - Title text color (default: #ffffff)

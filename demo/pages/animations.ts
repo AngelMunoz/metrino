@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import type { CSSResultGroup, HTMLTemplateResult } from "lit";
 import "../components/api-docs.ts";
+import { animationKeyframes } from "@src/utils/animations.ts";
 
 type AnimationType =
   | "metro-animate-fade-in"
@@ -53,7 +54,7 @@ const EASING_OPTIONS: { value: EasingType; label: string }[] = [
 ];
 
 export class MetrinoAnimationsPage extends LitElement {
-  static styles: CSSResultGroup = css`
+  static styles: CSSResultGroup = [animationKeyframes, css`
     :host {
       display: block;
       font-family: var(--metro-font-family, system-ui, -apple-system, "Segoe UI", sans-serif);
@@ -281,11 +282,11 @@ export class MetrinoAnimationsPage extends LitElement {
     }
 
     .animation-target.animate-turnstile-in {
-      animation: turnstileIn var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
+      animation: metro-turnstile-in var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
     }
 
     .animation-target.animate-turnstile-out {
-      animation: turnstileOut var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
+      animation: metro-turnstile-out var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
     }
 
     .animation-target.animate-continuum-enter {
@@ -342,16 +343,6 @@ export class MetrinoAnimationsPage extends LitElement {
     @keyframes progressRingSpin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
-    }
-
-    @keyframes turnstileIn {
-      from { transform: rotateY(-90deg); opacity: 0; }
-      to { transform: rotateY(0deg); opacity: 1; }
-    }
-
-    @keyframes turnstileOut {
-      from { transform: rotateY(0deg); opacity: 1; }
-      to { transform: rotateY(90deg); opacity: 0; }
     }
 
     @keyframes continuumEnter {
@@ -469,7 +460,7 @@ export class MetrinoAnimationsPage extends LitElement {
       font-family: 'Consolas', 'Monaco', monospace;
       color: var(--metro-foreground-secondary, rgba(255, 255, 255, 0.6));
     }
-  `;
+  `];
 
   static properties = {
     selectedAnimation: { type: String },

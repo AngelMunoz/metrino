@@ -15,7 +15,6 @@ import { registerMetroIcon } from "./icon.ts";
  * - Rotating chevron icon indicating state
  * - Optional title attribute or slot for header content
  * - Highlight background on header hover
- * - ARIA expanded state support
  *
  * Use for collapsible sections of content, FAQ-style layouts, or anywhere
  * you need to show/hide content while preserving layout space.

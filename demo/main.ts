@@ -9,6 +9,7 @@ import { initTheme } from "./state";
 import "./components/app-shell";
 
 import "@src/styles/tokens.css";
+import "@src/styles/animations.css";
 
 import { initRouter, type RouteDef } from "./router";
 
@@ -168,9 +169,12 @@ export class MetrinoApp extends LitElement {
       : html`<div style="padding: 24px;">Not Found</div>`;
 
     if ("startViewTransition" in document) {
-      document.startViewTransition(() => {
-        this.routeContent = newContent;
-        return this.updateComplete;
+      document.startViewTransition({
+        update: () => {
+          this.routeContent = newContent;
+          return this.updateComplete;
+        },
+        types: ["turnstile"],
       });
     } else {
       this.routeContent = newContent;

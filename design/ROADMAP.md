@@ -23,6 +23,9 @@ this roadmap. See the component audit summary at the bottom for the hand-off fac
 | Tilt on 9 components | `applyTiltEffect(this)`: button, hyperlink-button, repeat-button, app-bar-button, app-bar-toggle-button, flip-tile, live-tile, cycle-tile, iconic-tile |
 | Hub programmatic API: Metro-eased glide, snap suppression, RTL, `scrollend`, reduced motion | `src/components/navigation/hub.ts` |
 | Message dialog swivel entrance (rotateX 90°) | `src/styles/animations.css` `metro-msg-dialog-enter` |
+| Per-instance view-transition-name scoping (5 components; names held only while active) | `src/utils/view-transition.ts` `createTransitionScope`; `e2e/view-transitions.spec.ts` |
+| Root turnstile wired for demo route changes | `animations.css` `::view-transition-old/new(root)` under type `turnstile`; `demo/main.ts` passes `types` |
+| Content dialog swivel entrance (rotateX 90°, matches message dialog) | `animations.css` `metro-dialog-enter/exit`; e2e CSSOM gate |
 | Settings flyout widths 346 px (narrow) / 646 px (wide) | `src/components/dialogs/settings-flyout.ts:108,122` |
 | ARIA roles: list-view `listbox`, grid-view `grid`, panorama `region` | `list-view.ts:101`, `grid-view.ts:132`, `panorama.ts` |
 | App bar Escape + `aria-controls` | `src/components/navigation/app-bar.ts:167,190` |
@@ -55,7 +58,7 @@ These were listed as done or missing in the previous roadmap and are **wrong**:
 |---|---|
 | "Touch physics engine missing" (old P1) | Engine exists and is consumed by 6 components. Remaining work is the integrator bug (§3) and adoption gaps |
 | "Auto-hide scrollbars missing" (old P8) | Implemented in scroll-viewer |
-| "Turnstile animations for `::view-transition-old(root)` / `new(root)`" | No root selectors exist anywhere. `metro-view-transition-in/out` keyframes are **dead CSS**. Demo routes use the UA default cross-fade |
+| "Turnstile animations for `::view-transition-old(root)` / `new(root)`" | At audit: no root selectors existed; `metro-view-transition-in/out` keyframes were dead CSS and demo routes used the UA cross-fade. Wired in PR2 (2026-11-17) |
 | "View Transition API for pivot tab switching" | Pivot uses CSS transitions only |
 | "Typography type ramp (15px body …)" | `typography.css .body` is 15 px but `tokens.css --metro-font-size-normal` is 14 px. Demo pages bypass the ramp |
 | "Turnstile correct rotation angles" | Unverified against any primary source. Library uses 10° in / −15° out; the demo page uses ±90°. Not a fidelity claim |
@@ -70,13 +73,19 @@ These were listed as done or missing in the previous roadmap and are **wrong**:
 Rationale: defects that disable motion page-wide come first, then shipped motion defects,
 then missing Metro interactions, then bugs, packaging, docs, RTL.
 
-### P0 — Page-wide motion killer + cheap wins
+### P0 — Landed 2026-11-17 (PR2, branch `phase/2-p0-motion`)
 
-| Item | Detail |
-|---|---|
-| **View-transition-name collision** | 12 hardcoded names across 5 files (`content-dialog`, `message-dialog`, `flyout`, `settings-flyout`, `semantic-zoom`), set unconditionally on always-rendered elements. Per MDN, duplicate names on rendered elements reject `ViewTransition.ready` and skip the transition. Two instances of one component disable **all** view transitions on the page, including route changes. Fix: per-instance names assigned only while active |
-| **Wire root turnstile** | Add `::view-transition-old(root)` / `new(root)` rules using the existing dead keyframes; pass `types` from `demo/main.ts`. Pairing job, not a feature build |
-| **Content dialog swivel** | Replace `scale(0.85) translateY(20px)` with rotateX swivel to match message-dialog. **Owner decision: fix** |
+All three P0 items are implemented and e2e-verified (`e2e/view-transitions.spec.ts`,
+Chromium + Firefox): per-instance view-transition-name scoping, root turnstile wiring,
+content dialog swivel. See §1 for evidence.
+
+**Measured correction to the original P0 premise** (standalone probe, 2026-11-17,
+Chromium 153 + Firefox 155): duplicate `view-transition-name` values **within one tree
+scope** reject `ViewTransition.ready` in both engines; duplicates **across separate shadow
+roots** are currently tolerated by both. The original claim that two instances disable all
+page transitions was therefore overstated. The real defects were: closed instances
+reserving names on always-rendered elements (the spec requires uniqueness document-wide),
+and same-scope duplicates rejecting the transition. Scoping removes both risks.
 
 ### P1 — Motion correctness (shipped defects)
 
@@ -127,11 +136,8 @@ See §6.
 
 | Bug | File |
 |---|---|
-| View-transition-name collision (P0) | 5 dialog/zoom files |
-| Dead root-turnstile keyframes | `animations.css` |
 | Panorama snap vs inertia conflict; parallax lag | `panorama.ts` |
 | Semantic zoom blocks inner touch scroll; unused `transition-duration`; no non-VT fallback | `semantic-zoom.ts` |
-| Content dialog entrance is scale+translate, not swivel; fallback is fade only | `content-dialog.ts`, `animations.css` |
 | Frame-rate-dependent inertia/spring | `touch-physics.ts` |
 | Progress dots animate `left` | `progress-bar.ts` |
 | Three ring geometries; flip axis mismatch | `progress-ring.ts`, `flip-tile.ts`, `animations.css` |
@@ -178,7 +184,7 @@ See §6.
 |---|---|
 | Utils modules ship in `dist/utils` (5 modules) but have **0 entries** in the 53-entry exports map; not exported from `src/index.ts` | `package.json`, `dist/utils` |
 | `customElements` field points to `public/custom-elements.json`, which is not in `files: ["dist","README.md","LICENSE"]` → manifest never published | `package.json` |
-| View-transition rules live only in `animations.css`; cherry-pick component imports carry the names with no rules → silent UA default fade | `src/index.ts` is the only src importer of `animations.css` |
+| View-transition rules: the 5 components' `::view-transition` rules now travel with the component via `createTransitionScope`; the keyframes still live only in `animations.css`, so cherry-pick consumers need `./styles.css` for them (the demo entry imports it since PR2) | `src/utils/view-transition.ts`, `src/index.ts` |
 | `--metro-gap` is defined nowhere; `grid.ts` falls back 8 px, `stack-panel.ts` 0 | token scan |
 | Fallbacks encode the dark theme: 60 `--metro-foreground` sites in components fall back to white; light token value is `#1f1f1f`. `--metro-foreground-secondary` / `--metro-border` / `--metro-highlight` carry 3–5 different fallback literals each | component scan (630 `var()` sites, 6 tokens with 2+ fallbacks) |
 | Type ramp conflict: token normal 14 px vs `typography.css .body` 15 px; home title 72 px vs `.display` 56 px | `tokens.css`, `typography.css`, `demo/pages/home.ts` |
@@ -227,9 +233,10 @@ patterns and circular centering.
 ### Still open (bounded)
 
 - **Continuum primary reference.** Retrieve archived Windows Phone design guidance for the
-  continuum transition. The roadmap previously cited "spec Section 5.2 / 7.2" — **no such
-  spec file exists in the repo**; locate it or treat those citations as ungrounded. Fallback
-  evidence: the WP7 toolkit reproduction (150 ms, translate-only, ExponentialEase, item
+  continuum transition. The "spec Section 5.2 / 7.2" citations are **ungrounded**: no spec
+  file exists in the repo. Searched 2026-11-17 — `design/` holds only `ROADMAP.md` and
+  `METRO_COMPLIANCE_PLAN.md`. The citations are dropped, not resolved; do not invent a spec.
+  Fallback evidence: the WP7 toolkit reproduction (150 ms, translate-only, ExponentialEase, item
   origin). Cite whatever is used; do not invent values.
 - WP type ramp and original turnstile/tilt values are **not pursued** (owner decision).
 

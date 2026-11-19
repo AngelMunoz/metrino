@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **content-dialog**, **message-dialog**, **flyout**, **settings-flyout**, **semantic-zoom**: `view-transition-name` values are now scoped per instance and held only while the component is active. The names were hardcoded in static styles on elements that stay rendered, so a closed dialog still reserved its name and a second instance of the same component duplicated it. Each component now builds a scope through `src/utils/view-transition.ts`, which assigns `<component>-<part>-<id>` when the component opens and releases it after the exit transition finishes, and each component's `::view-transition` rules moved out of `animations.css` into that scope so they match its scoped names. The `@keyframes` stay in `animations.css`.
+- **demo**: route changes now animate with the Metro root turnstile. `metro-view-transition-out` and `metro-view-transition-in` existed but no `::view-transition-old(root)` / `::view-transition-new(root)` rule referenced them, so they never ran; the rules are added under a `turnstile` transition type and `demo/main.ts` passes that type.
+- **demo**: `animations.css` is imported by the app entry instead of only by the home page, so every deep-linked route gets the view-transition rules. A route that never loaded home previously had no view-transition rules at all.
+
+### Changed
+
+- **content-dialog**: the entrance is now the Metro swivel (`perspective(1000px) rotateX(90deg)` to `0deg`), matching the message dialog; it was a scale and translate (`scale(0.85) translateY(20px)`). The 280ms duration, the easing and the backdrop fade are unchanged, as is the exit, which reverses the swivel.
+
 ## [0.5.2] - 2026-09-20
 
 ### Added
