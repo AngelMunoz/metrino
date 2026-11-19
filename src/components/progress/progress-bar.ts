@@ -41,6 +41,8 @@ export class MetroProgressBar extends LitElement {
         background: var(--metro-highlight, rgba(255, 255, 255, 0.1));
         position: relative;
         overflow: hidden;
+        /* The dots travel the full track with 100cqw, so the track is a query container. */
+        container-type: inline-size;
       }
 
       /*
@@ -51,6 +53,7 @@ export class MetroProgressBar extends LitElement {
       .indeterminate-dot {
         position: absolute;
         top: 0;
+        left: 0;
         width: 4px;
         height: 4px;
         border-radius: 50%;
@@ -64,9 +67,13 @@ export class MetroProgressBar extends LitElement {
       .indeterminate-dot:nth-child(4) { animation-delay: 0.66s; }
       .indeterminate-dot:nth-child(5) { animation-delay: 0.88s; }
 
+      /*
+       * The travel is a transform over the container's inline size: the dot's left edge
+       * stays pinned to the track's inline-start edge, so it never resizes or reflows it.
+       */
       @keyframes dot-flow {
         0% {
-          left: -2%;
+          transform: translateX(-4px);
           opacity: 0;
         }
         5% {
@@ -79,7 +86,7 @@ export class MetroProgressBar extends LitElement {
           opacity: 1;
         }
         100% {
-          left: 100%;
+          transform: translateX(100cqw);
           opacity: 0;
         }
       }

@@ -34,7 +34,7 @@ const ANIMATION_OPTIONS: AnimationOption[] = [
   { value: "metro-animate-slide-left", label: "Slide Left", category: "Slide" },
   { value: "metro-animate-slide-right", label: "Slide Right", category: "Slide" },
   { value: "metro-animate-tile-flip", label: "Tile Flip", category: "3D" },
-  { value: "metro-animate-progress-ring", label: "Progress Ring Spin", category: "Motion" },
+  { value: "metro-animate-progress-ring", label: "Progress Ring Orbit", category: "Motion" },
   { value: "metro-entrance-stagger", label: "Entrance Stagger", category: "Entrance" },
   { value: "metro-animate-turnstile-in", label: "Turnstile In", category: "3D" },
   { value: "metro-animate-turnstile-out", label: "Turnstile Out", category: "3D" },
@@ -270,15 +270,11 @@ export class MetrinoAnimationsPage extends LitElement {
     }
 
     .animation-target.animate-tile-flip {
-      animation: tileFlip var(--duration, 333ms) var(--easing, cubic-bezier(0.1, 0.9, 0.2, 1)) forwards;
+      animation: metro-tile-flip var(--duration, 500ms) var(--easing, ease-in-out) forwards;
     }
 
     .animation-target.animate-progress-ring {
-      animation: progressRingSpin var(--duration, 167ms) linear infinite;
-      border-radius: 50%;
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top-color: var(--metro-accent, #0078d4);
-      background: transparent;
+      animation: metro-ring-orbit-normal var(--duration, 3s) cubic-bezier(0.7, 0.0, 0.3, 1.0) infinite;
     }
 
     .animation-target.animate-turnstile-in {
@@ -333,16 +329,6 @@ export class MetrinoAnimationsPage extends LitElement {
     @keyframes slideRight {
       from { transform: translateX(-100px); opacity: 0; }
       to { translateX(0); opacity: 1; }
-    }
-
-    @keyframes tileFlip {
-      0% { transform: rotateY(0deg); }
-      100% { transform: rotateY(180deg); }
-    }
-
-    @keyframes progressRingSpin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
 
     @keyframes continuumEnter {

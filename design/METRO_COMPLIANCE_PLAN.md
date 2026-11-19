@@ -98,15 +98,19 @@ Changelog: none (docs only), unless a behavior changes.
       `dt/16.67`; `calculateVelocity` returns a time-based unit. Update `scroll-viewer.ts`
       and `panorama.ts` call sites; update `touch-physics.test.ts`. Category: **Fixed**.
       (PR3; px/ms contract, spring sub-steps, frame-rate independence tests.)
-- [ ] **1.7 Progress dots transform.** Animate `transform: translateX(...)` instead of `left`.
-      Category: **Fixed**.
-- [ ] **1.8 Unify ring geometry.** Canonical = 5-dot orbit component. Align the
-      `metro-progress-ring-spin` class and the demo preview to it. Category: **Changed**.
-- [ ] **1.9 Unify flip axis.** Align the global `metro-tile-flip` keyframe to the component
-      (rotateY). Category: **Changed**.
-- [ ] **1.10 Single animation source.** Make `animations.css` canonical;
+- [x] **1.7 Progress dots transform.** Animate `transform: translateX(...)` instead of `left`.
+      Category: **Fixed**. (PR4; `100cqw` over an inline-size container, e2e on the demo page.)
+- [x] **1.8 Unify ring geometry.** Canonical = 5-dot orbit component. Align the
+      `.metro-animate-progress-ring` class and the demo preview to it. Category: **Changed**.
+      (PR4; `metro-ring-orbit-small|normal|large` in `animations.css`, adopted into the
+      component's shadow; the 1.5s spin and the demo border spinner are gone.)
+- [x] **1.9 Unify flip axis.** Align the global `metro-tile-flip` keyframe to the component
+      (rotateY). Category: **Changed**. (PR4; demo preview uses the shared keyframe too.)
+- [x] **1.10 Single animation source.** Make `animations.css` canonical;
       `utils/animations.ts` consumes it; `playAnimation` resolves on `animationend`.
-      Category: **Changed**.
+      Category: **Changed**. (PR4; `extractAnimationRules` reads the stylesheet through
+      Vite's `?inline` import — stubbed in `web-test-runner.config.mjs`, which already
+      stubs plain `.css`; `animationend` plus a bounded safety timeout.)
 - [x] **1.11 Semantic zoom fallback + dead property.** Wire `transition-duration` or remove
       it; add a CSS transition fallback for non-VT browsers. Category: **Fixed**. (PR3;
       `--sz-dur` fallback, per-transition rule duration; e2e no-VT cases.)

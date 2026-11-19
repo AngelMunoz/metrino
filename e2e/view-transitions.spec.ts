@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { gotoReadyRoute } from "./page-ready.ts";
 
 declare global {
   interface Window {
@@ -87,7 +88,11 @@ test.describe("view transitions", () => {
     page,
   }) => {
     await instrumentViewTransitions(page);
-    await gotoWithViewTransitions(page, "/#/dialogs");
+    await gotoReadyRoute(
+      page,
+      "/#/dialogs",
+      page.locator("metrino-dialogs-page h1")
+    );
     await appendToDialogsPage(
       page,
       "metro-content-dialog",
@@ -160,7 +165,11 @@ test.describe("view transitions", () => {
     page,
   }) => {
     await instrumentViewTransitions(page);
-    await gotoWithViewTransitions(page, "/#/dialogs");
+    await gotoReadyRoute(
+      page,
+      "/#/dialogs",
+      page.locator("metrino-dialogs-page h1")
+    );
     await appendToDialogsPage(
       page,
       "metro-settings-flyout",
