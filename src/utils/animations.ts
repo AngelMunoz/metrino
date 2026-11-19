@@ -1,5 +1,6 @@
 import { css, unsafeCSS, type CSSResult } from "lit";
 import animationsSource from "../styles/animations.css?inline";
+import { prefersReducedMotion } from "./reduced-motion.ts";
 
 export type AnimationName =
   | "fade-in"
@@ -178,6 +179,10 @@ function keyframeName(animation: AnimationName): string {
 }
 
 export function playAnimation(element: Element, animation: AnimationName): Promise<void> {
+  // Reduced motion skips the animation instead of running it faster: the class is
+  // never added, so the element rests at the style it already has.
+  if (prefersReducedMotion()) return Promise.resolve();
+
   return new Promise((resolve) => {
     const className = ANIMATION_CLASS_MAP[animation];
     const name = keyframeName(animation);
@@ -213,6 +218,10 @@ export function animateChildren(
   animation: AnimationName,
   staggerDelay: number = 50
 ): Promise<void> {
+  // Same policy as playAnimation: under reduce nothing is hidden and nothing is
+  // staged, the children simply render as they are.
+  if (prefersReducedMotion()) return Promise.resolve();
+
   return new Promise((resolve) => {
     const children = Array.from(container.children);
     const className = ANIMATION_CLASS_MAP[animation];
@@ -268,12 +277,24 @@ export function animateChildren(
 export const METRO_EASING = "cubic-bezier(0.1, 0.9, 0.2, 1)";
 export const METRO_EASING_VALUES = [0.1, 0.9, 0.2, 1] as const;
 
+/**
+ * Duration the scripted transitions run at. Reduced motion takes it to zero,
+ * which leaves the final styles applied in place of the animation; the callers
+ * still resolve on their own timer, one frame later.
+ * @param options - The caller's options
+ * @param fallback - The Metro duration to use when the caller gave none
+ * @returns milliseconds
+ */
+function motionDuration(options: TransitionOptions, fallback: number): number {
+  return prefersReducedMotion() ? 0 : (options.duration ?? fallback);
+}
+
 export function createTransition(
   element: HTMLElement,
   type: TransitionType,
   options: TransitionOptions = {}
 ): Promise<void> {
-  const duration = options.duration ?? 333;
+  const duration = motionDuration(options, 333);
   const easing = options.easing ?? METRO_EASING;
   const direction = options.direction ?? "forward";
 
@@ -326,7 +347,7 @@ export function createZoomTransition(
   element: HTMLElement,
   options: ZoomTransitionOptions = {}
 ): Promise<void> {
-  const duration = options.duration ?? 400;
+  const duration = motionDuration(options, 400);
   const easing = options.easing ?? METRO_EASING;
   const fromScale = options.fromScale ?? 0.5;
   const toScale = options.toScale ?? 1;
@@ -355,7 +376,7 @@ export function semanticZoomTransition(
   direction: "in" | "out",
   options: TransitionOptions = {}
 ): Promise<void> {
-  const duration = options.duration ?? 400;
+  const duration = motionDuration(options, 400);
   const easing = options.easing ?? METRO_EASING;
 
   element.style.transition = `transform ${duration}ms ${easing}, opacity ${duration}ms ${easing}, filter ${duration}ms ${easing}`;
@@ -387,7 +408,7 @@ export function crossFadeTransition(
   enteringEl: HTMLElement,
   options: TransitionOptions = {}
 ): Promise<void> {
-  const duration = options.duration ?? 333;
+  const duration = motionDuration(options, 333);
   const easing = options.easing ?? METRO_EASING;
 
   return new Promise((resolve) => {

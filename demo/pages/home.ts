@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { animationStyles } from "@src/utils/animations.ts";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import { navigateToComponent } from "../router/index.ts";
 import "../components/api-docs.ts";
 import "@src/styles/tokens.css";
@@ -131,6 +132,7 @@ const ALL_COMPONENTS: Record<string, Array<{ name: string; desc: string }>> = {
 
 export class MetrinoHome extends LitElement {
   static styles = [
+    reducedMotionBlanket,
     animationStyles,
     css`
       :host {

@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { inputBase } from "../../styles/shared.ts";
+import { inputBase, reducedMotionBlanket } from "../../styles/shared.ts";
 import { numberValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 export class MetroNumberBox extends LitElement {
@@ -28,6 +28,7 @@ export class MetroNumberBox extends LitElement {
   declare required: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     inputBase,
     css`
       .input-container {

@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroFlipTile } from "@src/components/tiles/flip-tile.ts";
 import { registerMetroCycleTile } from "@src/components/tiles/cycle-tile.ts";
@@ -17,7 +18,9 @@ registerMetroSlider();
 registerMetroButton();
 
 export class MetrinoTilesPage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       padding: var(--metro-spacing-xl, 24px);
@@ -133,7 +136,8 @@ export class MetrinoTilesPage extends LitElement {
     .flip-back {
       background: #1f1f1f;
     }
-  `;
+    `,
+  ];
 
   static properties = {
     cycleInterval: { state: true },

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
 import { METRO_EASING_VALUES } from "../../utils/animations.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 import type { MetroHubSection } from "./hub-section.ts";
 
 /** Time without scroll events before the hub treats a pan as settled. */
@@ -287,7 +288,7 @@ export class MetroHub extends LitElement {
     if (target === undefined) {
       return;
     }
-    const resolved = resolveScrollBehavior(behavior, this.#prefersReducedMotion());
+    const resolved = resolveScrollBehavior(behavior, prefersReducedMotion());
     if (resolved === "smooth") {
       this.#animateScrollTo(container, target);
     } else {
@@ -341,10 +342,6 @@ export class MetroHub extends LitElement {
 
   #container(): HTMLElement | null {
     return this.renderRoot?.querySelector<HTMLElement>(".hub-container") ?? null;
-  }
-
-  #prefersReducedMotion(): boolean {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
   #smoothDuration(): number {

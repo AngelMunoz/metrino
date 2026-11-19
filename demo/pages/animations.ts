@@ -2,6 +2,7 @@ import { LitElement, html, css } from "lit";
 import type { CSSResultGroup, HTMLTemplateResult } from "lit";
 import "../components/api-docs.ts";
 import { animationKeyframes } from "@src/utils/animations.ts";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 
 type AnimationType =
   | "metro-animate-fade-in"
@@ -54,7 +55,7 @@ const EASING_OPTIONS: { value: EasingType; label: string }[] = [
 ];
 
 export class MetrinoAnimationsPage extends LitElement {
-  static styles: CSSResultGroup = [animationKeyframes, css`
+  static styles: CSSResultGroup = [reducedMotionBlanket, animationKeyframes, css`
     :host {
       display: block;
       font-family: var(--metro-font-family, system-ui, -apple-system, "Segoe UI", sans-serif);

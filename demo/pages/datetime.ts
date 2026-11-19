@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroDatePicker } from "@src/components/datetime/date-picker.ts";
 import { registerMetroTimePicker } from "@src/components/datetime/time-picker.ts";
@@ -15,7 +16,9 @@ registerMetroCalendar();
 registerMetroCalendarDatePicker();
 
 export class MetrinoDatetimePage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       font-family: var(
@@ -111,7 +114,8 @@ export class MetrinoDatetimePage extends LitElement {
       color: var(--metro-accent, #0078d4);
       margin-top: var(--metro-spacing-sm, 8px);
     }
-  `;
+    `,
+  ];
 
   static properties = {
     dateValue: { state: true },

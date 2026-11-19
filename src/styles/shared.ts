@@ -1,4 +1,5 @@
 import { css } from "lit";
+import { watchReducedMotion } from "../utils/reduced-motion.ts";
 
 export const focusRing = css`
   :host(:focus) {
@@ -33,10 +34,32 @@ export const tiltEffect = css`
   }
 `;
 
+/**
+ * The shadow-scope half of the reduced-motion blanket: it flattens every
+ * keyframe animation and transition inside a component's own tree. The
+ * document scope carries the same block in `styles/tokens.css`.
+ *
+ * `:host` is listed next to `*` because the universal selector does not match a
+ * shadow host, and components animate and transition on the host itself.
+ */
+export const reducedMotionBlanket = css`
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after, :host {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+`;
+
 export const baseTypography = css`
   :host {
     font-family: var(--metro-font-family, system-ui, -apple-system, "Segoe UI", sans-serif);
   }
+  ${reducedMotionBlanket}
 `;
 
 export const interactiveHost = css`
@@ -129,6 +152,7 @@ export const tileBase = css`
     cursor: pointer;
     font-family: var(--metro-font-family, system-ui, -apple-system, "Segoe UI", sans-serif);
   }
+  ${reducedMotionBlanket}
 `;
 
 export const tileBadge = css`
@@ -420,6 +444,15 @@ export const borderStandard = css`
   border: 2px solid var(--metro-border, rgba(255, 255, 255, 0.2));
 `;
 
+/**
+ * Attaches the Metro pointer tilt to a host element.
+ *
+ * Under `prefers-reduced-motion: reduce` the tilt is a motion the user asked to
+ * have reduced, so it must not be attached at all; the subscription below makes
+ * the preference apply to elements that are already on the page.
+ * @param el - The element to tilt under the pointer
+ * @returns a function that detaches the tilt and the preference watcher
+ */
 export function applyTiltEffect(el: HTMLElement): () => void {
   const handlePointerDown = (e: PointerEvent) => {
     const rect = el.getBoundingClientRect();
@@ -439,14 +472,36 @@ export function applyTiltEffect(el: HTMLElement): () => void {
     el.style.transition = "transform 167ms var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1))";
   };
 
-  el.addEventListener("pointerdown", handlePointerDown);
-  el.addEventListener("pointerup", handlePointerUp);
-  el.addEventListener("pointerleave", handlePointerUp);
+  let detach: (() => void) | null = null;
+
+  const attach = () => {
+    if (detach !== null) return;
+    el.addEventListener("pointerdown", handlePointerDown);
+    el.addEventListener("pointerup", handlePointerUp);
+    el.addEventListener("pointerleave", handlePointerUp);
+    detach = () => {
+      el.removeEventListener("pointerdown", handlePointerDown);
+      el.removeEventListener("pointerup", handlePointerUp);
+      el.removeEventListener("pointerleave", handlePointerUp);
+      detach = null;
+    };
+  };
+
+  const stop = () => {
+    detach?.();
+    // A tilt that is switched off mid-press must not leave the element skewed.
+    el.style.transform = "";
+    el.style.transition = "";
+  };
+
+  const unsubscribe = watchReducedMotion((reduce) => {
+    if (reduce) stop();
+    else attach();
+  });
 
   return () => {
-    el.removeEventListener("pointerdown", handlePointerDown);
-    el.removeEventListener("pointerup", handlePointerUp);
-    el.removeEventListener("pointerleave", handlePointerUp);
+    unsubscribe();
+    stop();
   };
 }
 

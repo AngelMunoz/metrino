@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, scrollbarHiddenClass } from "../../styles/shared.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 import {
   createGestureState,
   updateGesture,
@@ -208,6 +209,11 @@ export class MetroPanorama extends LitElement {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     this.#stopAnimation();
     this.#gestureState = createGestureState(normalizePointerEvent(e));
+    // The drag writes `scrollLeft` on every move exactly like the inertia loop
+    // does, so it owns the snap points from pointer down too: with
+    // `x mandatory` live the browser re-snaps each write back to the nearest
+    // boundary and the content never follows the pointer.
+    this.#suppressSnap();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
@@ -247,11 +253,26 @@ export class MetroPanorama extends LitElement {
     const result = resolveGesture(this.#gestureState);
     this.#gestureState = null;
 
-    if (result.type === "tap") return;
+    if (result.type === "tap") {
+      this.#releaseSnap();
+      return;
+    }
+
+    // Reduced motion skips the momentum instead of running it faster: the
+    // container lands on the nearest item boundary in one step, with no glide
+    // and no spring. That landing is exactly what `#releaseSnap` performs when
+    // it hands the snap points back, so the release path runs through it.
+    if (prefersReducedMotion()) {
+      this.#releaseSnap();
+      return;
+    }
 
     // Apply inertia for momentum scrolling
     let inertia = createInertiaState(-result.velocityX);
-    if (!inertia.moving) return;
+    if (!inertia.moving) {
+      this.#releaseSnap();
+      return;
+    }
 
     const container = this.#scrollContainer;
     const maxScroll = container.scrollWidth - container.clientWidth;

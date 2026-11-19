@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import { navigate } from "../router";
 import {
   themeState,
@@ -119,7 +120,9 @@ const SECTIONS: Section[] = [
 ];
 
 export class MetrinoAppShell extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: flex;
       flex-direction: column;
@@ -267,7 +270,8 @@ export class MetrinoAppShell extends LitElement {
     slot {
       display: block;
     }
-  `;
+    `,
+  ];
 
   static properties = {
     settingsOpen: { state: true },

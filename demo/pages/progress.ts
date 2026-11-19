@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroProgressBar } from "@src/components/progress/progress-bar.ts";
 import { registerMetroProgressRing } from "@src/components/progress/progress-ring.ts";
@@ -11,7 +12,9 @@ registerMetroSlider();
 registerMetroButton();
 
 export class MetrinoProgressPage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       padding: var(--metro-spacing-xl, 24px);
@@ -108,7 +111,8 @@ export class MetrinoProgressPage extends LitElement {
       color: var(--metro-accent, #0078d4);
       margin-bottom: var(--metro-spacing-xs, 4px);
     }
-  `;
+    `,
+  ];
 
   static properties = {
     progressValue: { state: true },

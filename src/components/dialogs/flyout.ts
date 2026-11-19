@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 
 /**
  * The ::view-transition rules of one flyout instance, keyed to its scoped part
@@ -142,35 +143,36 @@ export class MetroFlyout extends LitElement {
    * Applies a property change via View Transitions with headless fallback.
    */
   async #applyChange(setter: () => void): Promise<void> {
-    if ("startViewTransition" in document) {
-      let applied = false;
+    if (prefersReducedMotion() || !("startViewTransition" in document)) {
+      setter();
+      await this.updateComplete;
+      return;
+    }
+
+    let applied = false;
+    try {
+      const transition = document.startViewTransition({
+        update: () => {
+          setter();
+          applied = true;
+          return this.updateComplete;
+        },
+        types: ["flyout"],
+      });
       try {
-        const transition = document.startViewTransition({
-          update: () => {
-            setter();
-            applied = true;
-            return this.updateComplete;
-          },
-          types: ["flyout"],
-        });
-        try {
-          await transition.updateCallbackDone;
-        } catch {
-          // updateCallbackDone rejected
-        }
-        try {
-          await transition.finished;
-        } catch {
-          // finished rejected
-        }
+        await transition.updateCallbackDone;
       } catch {
-        // startViewTransition threw
+        // updateCallbackDone rejected
       }
-      if (!applied) {
-        setter();
-        await this.updateComplete;
+      try {
+        await transition.finished;
+      } catch {
+        // finished rejected
       }
-    } else {
+    } catch {
+      // startViewTransition threw
+    }
+    if (!applied) {
       setter();
       await this.updateComplete;
     }

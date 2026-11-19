@@ -6,6 +6,7 @@
  */
 
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 
 interface CEMDeclaration {
   kind: string;
@@ -94,7 +95,9 @@ async function getManifest(): Promise<CEMSchema | null> {
 }
 
 export class ApiDocs extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       font-family: var(
@@ -239,7 +242,8 @@ export class ApiDocs extends LitElement {
       padding: 2px 6px;
       font-size: 11px;
     }
-  `;
+    `,
+  ];
 
   static properties = {
     component: { type: String },

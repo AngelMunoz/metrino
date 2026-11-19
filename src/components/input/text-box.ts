@@ -1,5 +1,5 @@
 import { LitElement, html, type PropertyValues } from "lit";
-import { inputBase } from "../../styles/shared.ts";
+import { inputBase, reducedMotionBlanket } from "../../styles/shared.ts";
 import { textValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 /**
@@ -86,7 +86,7 @@ export class MetroTextBox extends LitElement {
   declare name: string;
   declare required: boolean;
 
-  static styles = inputBase;
+  static styles = [reducedMotionBlanket, inputBase];
 
   #internals: ElementInternals;
   #input?: HTMLInputElement;

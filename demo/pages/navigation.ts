@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroPivot } from "@src/components/navigation/pivot.ts";
 import { registerMetroPivotItem } from "@src/components/navigation/pivot-item.ts";
@@ -50,7 +51,9 @@ export class MetrinoNavigationPage extends LitElement {
   declare hubSmooth: boolean;
   declare hubSelectedIndex: number;
 
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       padding: var(--metro-spacing-xl, 24px);
@@ -182,7 +185,8 @@ export class MetrinoNavigationPage extends LitElement {
     .demo-app-bar {
       position: absolute;
     }
-  `;
+    `,
+  ];
 
   constructor() {
     super();

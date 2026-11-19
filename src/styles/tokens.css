@@ -224,3 +224,20 @@ body {
   --metro-accent-light: #b0a070;
   --metro-accent-dark: #5f5530;
 }
+
+/*
+  Reduced-motion blanket, document scope: it flattens every keyframe animation
+  and transition on the light DOM, including the root view-transition targets.
+  `styles/shared.ts` carries the same block for the shadow scopes, which this
+  rule cannot reach.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

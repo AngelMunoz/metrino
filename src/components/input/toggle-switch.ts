@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from "lit";
-import { toggleControlBase } from "../../styles/shared.ts";
+import { toggleControlBase, reducedMotionBlanket } from "../../styles/shared.ts";
 import { checkedValidation, updateFormControlState } from "../../utils/form-control.ts";
 
 /**
@@ -76,6 +76,7 @@ export class MetroToggleSwitch extends LitElement {
   declare required: boolean;
 
   static styles = [
+    reducedMotionBlanket,
     toggleControlBase,
     css`
       :host {

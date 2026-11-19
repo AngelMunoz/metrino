@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography, modalBackdrop } from "../../styles/shared.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 
 /**
  * The ::view-transition rules of one message dialog instance, keyed to its
@@ -193,35 +194,36 @@ export class MetroMessageDialog extends LitElement {
    * the transition before returning.
    */
   async #applyChange(setter: () => void): Promise<void> {
-    if ("startViewTransition" in document) {
-      let applied = false;
+    if (prefersReducedMotion() || !("startViewTransition" in document)) {
+      setter();
+      await this.updateComplete;
+      return;
+    }
+
+    let applied = false;
+    try {
+      const transition = document.startViewTransition({
+        update: () => {
+          setter();
+          applied = true;
+          return this.updateComplete;
+        },
+        types: ["message-dialog"],
+      });
       try {
-        const transition = document.startViewTransition({
-          update: () => {
-            setter();
-            applied = true;
-            return this.updateComplete;
-          },
-          types: ["message-dialog"],
-        });
-        try {
-          await transition.updateCallbackDone;
-        } catch {
-          // updateCallbackDone rejected — transition was skipped
-        }
-        try {
-          await transition.finished;
-        } catch {
-          // finished rejected — transition was skipped
-        }
+        await transition.updateCallbackDone;
       } catch {
-        // startViewTransition threw synchronously
+        // updateCallbackDone rejected — transition was skipped
       }
-      if (!applied) {
-        setter();
-        await this.updateComplete;
+      try {
+        await transition.finished;
+      } catch {
+        // finished rejected — transition was skipped
       }
-    } else {
+    } catch {
+      // startViewTransition threw synchronously
+    }
+    if (!applied) {
       setter();
       await this.updateComplete;
     }

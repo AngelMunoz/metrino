@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseTypography } from "../../styles/shared.ts";
 import { createTransitionScope } from "../../utils/view-transition.ts";
+import { prefersReducedMotion } from "../../utils/reduced-motion.ts";
 
 export type ZoomState = "in" | "out";
 
@@ -66,7 +67,8 @@ export class MetroSemanticZoom extends LitElement {
         /* Fallback for engines without View Transitions: the state change is a
            CSS transition of the same three properties the snapshots animate.
            --sz-dur is 0ms wherever startViewTransition exists, so a View
-           Transition never stacks its own animation on top of this one. */
+           Transition never stacks its own animation on top of this one, and 0ms
+           under prefers-reduced-motion, where the change is applied directly. */
         transition:
           transform var(--sz-dur, 0ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
           opacity var(--sz-dur, 0ms) var(--metro-easing, cubic-bezier(0.1, 0.9, 0.2, 1)),
@@ -125,8 +127,11 @@ export class MetroSemanticZoom extends LitElement {
   }
 
   protected updated(): void {
-    const duration =
-      "startViewTransition" in document ? 0 : this.transitionDuration;
+    // The CSS fallback transition runs only where there is no View Transition to
+    // animate with and the user has not asked for reduced motion.
+    const instant =
+      prefersReducedMotion() || "startViewTransition" in document;
+    const duration = instant ? 0 : this.transitionDuration;
     this.style.setProperty("--sz-dur", `${duration}ms`);
   }
 
@@ -154,7 +159,7 @@ export class MetroSemanticZoom extends LitElement {
 
     await this.updateComplete;
 
-    if ("startViewTransition" in document) {
+    if (!prefersReducedMotion() && "startViewTransition" in document) {
       let applied = false;
       this.#transition.attach(
         this.#transitionTargets(),

@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "../../styles/shared.ts";
 
 /**
  * Metro Pivot Item Component
@@ -32,13 +33,16 @@ export class MetroPivotItem extends LitElement {
 
   declare header: string;
 
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       padding: var(--metro-spacing-md, 12px);
       box-sizing: border-box;
     }
-  `;
+    `,
+  ];
 
   constructor() {
     super();

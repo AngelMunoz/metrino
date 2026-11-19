@@ -1,4 +1,5 @@
 import { LitElement, html, css } from "lit";
+import { reducedMotionBlanket } from "@src/styles/shared.ts";
 import "../components/api-docs.ts";
 import { registerMetroStackPanel } from "@src/components/layout/stack-panel.ts";
 import { registerMetroGrid } from "@src/components/layout/grid.ts";
@@ -19,7 +20,9 @@ registerMetroTileGrid();
 registerMetroVariableSizedWrapGrid();
 
 export class MetrinoLayoutPage extends LitElement {
-  static styles = css`
+  static styles = [
+    reducedMotionBlanket,
+    css`
     :host {
       display: block;
       padding: var(--metro-spacing-xl, 24px);
@@ -136,7 +139,8 @@ export class MetrinoLayoutPage extends LitElement {
       height: 150px;
       border: 1px solid var(--metro-border, rgba(255, 255, 255, 0.2));
     }
-  `;
+    `,
+  ];
 
   render() {
     return html`
